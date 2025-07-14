@@ -1,0 +1,13 @@
+@import 'tailwindcss/base';  
+@import 'tailwindcss/components';  
+@import 'tailwindcss/utilities';  
+  
+:root {  
+  --color-bg: #f9f9f9;  
+  --color-panel: #ffffff;  
+  --color-primary: #2979ff;  
+  --font-base: 'Montserrat', sans-serif;  
+}  
+  
+/* Importar fuente Montserrat */  
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
