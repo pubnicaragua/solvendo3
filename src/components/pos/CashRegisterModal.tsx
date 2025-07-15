@@ -11,13 +11,11 @@ interface CashRegisterModalProps {
 
 export const CashRegisterModal: React.FC<CashRegisterModalProps> = ({
   isOpen,
-  onClose,
-  type
-}) => {
+  onClose}) => {
   const [amount, setAmount] = useState('')
   const [loading, setLoading] = useState(false)
   const { openCaja } = usePOS()
-  const { user } = useAuth() 
+  useAuth() 
 
   if (!isOpen) return null
 

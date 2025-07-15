@@ -16,12 +16,6 @@ export const CashCloseModal: React.FC<CashCloseModalProps> = ({
 
   if (!isOpen) return null
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-CL', {
-      style: 'currency',
-      currency: 'CLP'
-    }).format(price)
-  }
 
   const handleCloseCash = async () => {
     setLoading(true)
