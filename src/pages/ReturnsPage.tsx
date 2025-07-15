@@ -1,237 +1,344 @@
-// src/pages/ReturnsPage.tsx
-
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react';
 import {
   RotateCcw,
   Search,
-  Calendar,
   Plus,
   Minus,
   X as XIcon,
   Check,
   Info
-} from 'lucide-react'
-import { HeaderWithMenu } from '../components/common/HeaderWithMenu'
-import { supabase } from '../lib/supabase'
+} from 'lucide-react';
+import { HeaderWithMenu } from '../components/common/HeaderWithMenu';
+import { supabase } from '../lib/supabase';
+import toast from 'react-hot-toast';
+import { ReturnsModal } from '../components/pos/ReturnsModal'; // Importamos el ReturnsModal
 
 interface VentaItem {
-  id: number
-  nombre: string
-  cantidad: number
-  precio: number
-  returnable: number
+  id: number;
+  nombre: string;
+  cantidad: number;
+  precio: number;
+  returnable: number;
 }
 
 export const ReturnsPage: React.FC = () => {
-  const [folio, setFolio] = useState('')
-  const [ventaItems, setVentaItems] = useState<VentaItem[]>([])
-  const [selectedItems, setSelectedItems] = useState<Record<number, number>>({})
-  const [loading, setLoading] = useState(false)
-  const [showForm, setShowForm] = useState(false)
-  const [tipoNota, setTipoNota] = useState('Nota de crédito manual')
+  const [folio, setFolio] = useState('');
+  const [folioInput, setFolioInput] = useState('');
+  const [ventaItems, setVentaItems] = useState<VentaItem[]>([]);
+  const [selectedItems, setSelectedItems] = useState<Record<number, number>>({});
+  const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [tipoNota, setTipoNota] = useState('Nota de crédito manual');
+  const [clienteSearch, setClienteSearch] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false); // Nuevo estado para controlar la visibilidad del modal
 
-  // Total
+  // Datos de usuario de ejemplo para el Header
+  const userName = "Emilio Aguilera";
+  // Cambia esta URL si quieres una imagen específica para el avatar
+  const userAvatarUrl = "https://i.pravatar.cc/40?img=68";
+
+  // Total calculado de los ítems seleccionados para devolución
   const total = Object.entries(selectedItems).reduce((sum, [id, qty]) => {
-    const item = ventaItems.find(i => i.id === +id)
-    return sum + (item ? item.precio * qty : 0)
-  }, 0)
+    const item = ventaItems.find(i => i.id === +id);
+    return sum + (item ? item.precio * qty : 0);
+  }, 0);
+
+  // Formateador de moneda
   const formatPrice = (n: number) =>
-    new Intl.NumberFormat('es-CL',{ style:'currency', currency:'CLP' }).format(n)
+    new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(n);
 
   // Buscar venta y cargar ítems
   const handleSearchFolio = async () => {
-    if (!folio.trim()) return
-    setLoading(true)
+    if (!folioInput.trim()) {
+      toast.error('Por favor, ingresa un número de folio.');
+      return;
+    }
+    setLoading(true);
     try {
       const { data: venta, error: errV } = await supabase
         .from('ventas')
         .select('id,folio')
-        .eq('folio', folio)
-        .single()
-      if (errV || !venta) throw errV || new Error('No encontrada')
+        .eq('folio', folioInput)
+        .single();
 
-      const { data: lines } = await supabase
+      if (errV || !venta) {
+        toast.error('Venta no encontrada para el folio ingresado.');
+        setFolio('');
+        setVentaItems([]);
+        setSelectedItems({});
+        setShowForm(false);
+        return;
+      }
+
+      setFolio(folioInput);
+      const { data: lines, error: linesError } = await supabase
         .from('ventas_items')
         .select('id,cantidad,precio,producto:productos(nombre)')
-        .eq('venta_id', venta.id)
+        .eq('venta_id', venta.id);
+
+      if (linesError) {
+        throw linesError;
+      }
 
       const enriched = await Promise.all(
-        (lines||[]).map(async line => {
-          const { data: sumObj } = await supabase
+        (lines || []).map(async line => {
+          const { data: sumObj, error: sumError } = await supabase
             .from('credit_notes_items')
-            .select('quantity',{ head:false })
-            .eq('venta_item_id', line.id)
-          const used = sumObj?.reduce((s,x)=>s+x.quantity,0) || 0
+            .select('quantity')
+            .eq('venta_item_id', line.id);
+
+          if (sumError) {
+            console.error("Error fetching credit_notes_items:", sumError);
+            return {
+              id: line.id,
+              nombre: line.producto.nombre,
+              cantidad: line.cantidad,
+              precio: line.precio,
+              returnable: line.cantidad
+            };
+          }
+
+          const used = sumObj?.reduce((s, x) => s + x.quantity, 0) || 0;
           return {
             id: line.id,
             nombre: line.producto.nombre,
             cantidad: line.cantidad,
             precio: line.precio,
             returnable: line.cantidad - used
-          }
+          };
         })
-      )
-      setVentaItems(enriched.filter(i=>i.returnable>0))
-      setSelectedItems({})
-      setShowForm(true)
-    } catch {
-      alert('No se pudo cargar la venta.')
-      setShowForm(false)
+      );
+      setVentaItems(enriched.filter(i => i.returnable > 0));
+      setSelectedItems({});
+      setShowForm(true);
+    } catch (error: any) {
+      toast.error('Error al cargar la venta: ' + error.message);
+      setFolio('');
+      setShowForm(false);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  // Confirmar devolución
-  const handleConfirm = async () => {
-    if (!showForm || total===0) return
-    setLoading(true)
-    try {
-      const { data: note } = await supabase
-        .from('credit_notes')
-        .insert([{ venta_folio: folio, tipo: tipoNota, fecha: new Date() }])
-        .single()
-      const inserts = Object.entries(selectedItems).map(([id,qty]) => ({
-        nota_id: note!.id,
-        venta_item_id: +id,
-        quantity: qty
-      }))
-      await supabase.from('credit_notes_items').insert(inserts)
-      alert('Nota generada')
-      // reset
-      setFolio('')
-      setVentaItems([])
-      setSelectedItems({})
-      setShowForm(false)
-    } catch {
-      alert('Error generando nota')
-    } finally {
-      setLoading(false)
+  // Esta función ahora solo abre el modal de devoluciones
+  const handleOpenReturnsModal = () => {
+    if (!showForm || total === 0) {
+      toast.error('No hay ítems seleccionados para devolver o la venta no ha sido cargada.');
+      return;
     }
-  }
+    setIsModalOpen(true);
+    // Podemos pasar datos al modal si es necesario, por ahora no lo hace directamente
+  };
+
+  const handleCancel = () => {
+    setFolio('');
+    setFolioInput('');
+    setVentaItems([]);
+    setSelectedItems({});
+    setShowForm(false);
+    setTipoNota('Nota de crédito manual');
+    setClienteSearch('');
+    toast('Devolución cancelada.', { icon: '👋' });
+  };
+
+  const handleAnularVenta = () => {
+    toast.error('La anulación de venta completa no está implementada en este demo.');
+  };
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
-      {/* Header idéntico al mock */}
+      {/* Header con nombre de usuario y avatar */}
       <HeaderWithMenu
         title="Devolución"
         icon={<RotateCcw className="w-6 h-6 text-gray-600" />}
         showClock
+        userName={userName}
+        userAvatarUrl={userAvatarUrl}
       />
 
       <div className="flex-1 flex overflow-hidden">
         {/* LEFT PANEL */}
-        <div className="flex-1 bg-white p-6">
+        <div className="flex-1 bg-white p-6 shadow-md flex flex-col">
           {/* Buscador productos */}
           <div className="relative mb-6">
             <input
               type="text"
               placeholder="Ingresa aquí el producto o servicio"
-              className="w-full pl-4 pr-10 py-3 border rounded-lg bg-gray-50"
+              className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
             />
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5"/>
           </div>
 
-          {/* Tabla */}
-          <div className="grid grid-cols-4 gap-4 text-sm font-medium border-b pb-2 mb-4">
-            <span>Producto</span>
-            <span>Cantidad</span>
-            <span>Descuento</span>
-            <span>Importe</span>
+          {/* Encabezados de la tabla de ítems */}
+          <div className="grid grid-cols-4 gap-4 text-sm font-medium border-b border-gray-200 pb-2 mb-4 text-gray-600">
+            <span className="pl-1">Producto</span>
+            <span className="text-center">Cantidad</span>
+            <span className="text-center">Descuento</span>
+            <span className="text-right pr-1">Importe</span>
           </div>
-          <div className="space-y-3 overflow-y-auto max-h-[60vh]">
-            {ventaItems.map(item => {
-              const qty = selectedItems[item.id]||0
-              return (
-                <div key={item.id}
-                  className="grid grid-cols-4 gap-4 items-center p-3 bg-gray-50 rounded-lg"
+          <div className="space-y-3 pb-4 flex-grow overflow-y-auto">
+            {ventaItems.length === 0 && showForm ? (
+              <p className="text-center text-gray-500 py-8">No hay ítems retornables para este folio.</p>
+            ) : (
+              ventaItems.map(item => {
+                const qty = selectedItems[item.id] || 0;
+                return (
+                  <div key={item.id}
+                    className="grid grid-cols-4 gap-4 items-center p-3 bg-gray-50 rounded-lg border border-gray-200"
+                  >
+                    <span className="text-gray-800">{item.nombre}</span>
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        disabled={qty <= 0}
+                        onClick={() => setSelectedItems(s => ({ ...s, [item.id]: qty - 1 }))}
+                        className="p-1 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Minus className="w-4 h-4"/>
+                      </button>
+                      <span className="w-8 text-center font-semibold text-gray-800">{qty}</span>
+                      <button
+                        disabled={qty >= item.returnable}
+                        onClick={() => setSelectedItems(s => ({ ...s, [item.id]: qty + 1 }))}
+                        className="p-1 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Plus className="w-4 h-4"/>
+                      </button>
+                    </div>
+                    <span className="text-center text-gray-800">0%</span>
+                    <div className="flex items-center justify-between pl-4">
+                      <span className="font-semibold text-gray-800">{formatPrice(item.precio * qty)}</span>
+                      <button
+                        onClick={() => {
+                          const s = { ...selectedItems }; delete s[item.id]; setSelectedItems(s);
+                        }}
+                        className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      >
+                        <XIcon className="w-4 h-4"/>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Sección inferior compacta del panel izquierdo */}
+          <div className="mt-auto pt-4 border-t border-gray-200">
+            {/* Fila superior: Líneas/Ítems, Selector Nota, Buscar Cliente */}
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+              <div className="text-sm text-gray-600 flex-none">
+                N° Líneas: {ventaItems.length} / Tot. ítems: {Object.values(selectedItems).reduce((s, n) => s + n, 0)}
+              </div>
+              <select
+                value={tipoNota}
+                onChange={e => setTipoNota(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 focus:ring-blue-500 focus:border-blue-500 flex-grow max-w-[200px]"
+              >
+                <option>Nota de crédito manual</option>
+                <option>Nota electrónica</option>
+              </select>
+              <div className="relative flex-grow min-w-[180px] max-w-[250px]">
+                <input
+                  type="text"
+                  placeholder="Buscar cliente"
+                  value={clienteSearch}
+                  onChange={e => setClienteSearch(e.target.value)}
+                  className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4"/>
+              </div>
+            </div>
+
+            {/* Fila inferior: Botones de acción y Total/Devolver */}
+            <div className="flex items-center justify-between mt-4">
+              {/* Botones de acción */}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCancel}
+                  className="px-4 py-2 bg-gray-100 rounded-lg flex items-center gap-1 text-sm text-gray-700 hover:bg-gray-200 transition-colors border border-gray-200 shadow-sm"
                 >
-                  <span>{item.nombre}</span>
-                  <div className="flex items-center gap-2">
-                    <button disabled={qty<=0}
-                      onClick={()=>setSelectedItems(s=>({...s,[item.id]:qty-1}))}
-                      className="p-1 bg-gray-200 rounded"
-                    ><Minus className="w-4 h-4"/></button>
-                    <span className="w-6 text-center">{qty}</span>
-                    <button disabled={qty>=item.returnable}
-                      onClick={()=>setSelectedItems(s=>({...s,[item.id]:qty+1}))}
-                      className="p-1 bg-gray-200 rounded"
-                    ><Plus className="w-4 h-4"/></button>
-                  </div>
-                  <span>0%</span>
-                  <div className="flex items-center justify-between">
-                    <span>{formatPrice(item.precio*qty)}</span>
-                    <button onClick={()=>{
-                      const s={...selectedItems}; delete s[item.id]; setSelectedItems(s)
-                    }} className="text-red-500"><XIcon className="w-4 h-4"/></button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                  <XIcon className="w-4 h-4 text-gray-500"/> Cancelar
+                </button>
+                <button
+                  onClick={handleAnularVenta}
+                  className="px-4 py-2 bg-gray-100 rounded-lg flex items-center gap-1 text-sm text-gray-700 hover:bg-gray-200 transition-colors border border-gray-200 shadow-sm"
+                >
+                  <XIcon className="w-4 h-4 text-gray-500"/> Anular venta
+                </button>
+              </div>
 
-          {/* Pie */}
-          <div className="mt-6 flex flex-wrap items-center gap-4">
-            <div className="text-xs text-gray-600">
-              N° Líneas {ventaItems.length} / Tot. ítems {Object.values(selectedItems).reduce((s,n)=>s+n,0)}
+              {/* Total y botón "Devolver" */}
+              <div className="flex items-center gap-4">
+                <span className="text-lg font-semibold text-gray-800">Total</span>
+                <span className="text-xl font-bold text-gray-900">{formatPrice(total)}</span>
+                <button
+                  onClick={handleOpenReturnsModal} // Llama a la función que abre el modal
+                  disabled={!showForm || total === 0 || loading}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-md text-base"
+                >
+                  {loading ? 'Procesando...' : 'Devolver'}
+                </button>
+              </div>
             </div>
-            <select
-              value={tipoNota}
-              onChange={e=>setTipoNota(e.target.value)}
-              className="px-3 py-2 border rounded-lg bg-white text-sm"
-            >
-              <option>Nota de crédito manual</option>
-              <option>Nota electrónica</option>
-            </select>
-            <div className="relative flex-1 max-w-xs">
-              <input
-                type="text"
-                placeholder="Buscar cliente..."
-                className="w-full pl-4 pr-4 py-2 border rounded-lg bg-white text-sm"
-              />
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4"/>
-            </div>
-          </div>
-
-          {/* Botones inferiores */}
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button className="px-4 py-2 bg-gray-100 rounded-lg flex items-center gap-1 text-sm">
-              <XIcon className="w-4 h-4"/> Cancelar
-            </button>
-            <button className="px-4 py-2 bg-gray-100 rounded-lg flex items-center gap-1 text-sm">
-              <XIcon className="w-4 h-4"/> Anular venta
-            </button>
           </div>
         </div>
 
-        {/* RIGHT PANEL */}
-        <aside className="w-96 bg-gray-50 p-6 flex flex-col justify-start">
-          <div className="flex items-center gap-2 mb-4">
-            <Search className="w-4 h-4 text-blue-600"/>
-            <span className="text-blue-800 font-medium">Folio de documento</span>
-          </div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="font-semibold">{folio || '—'}</span>
-            {folio && <Check className="w-5 h-5 text-green-600"/>}
-            {folio && <Info className="w-5 h-5 text-gray-400"/>}
+        {/* RIGHT PANEL (SOLO BUSCADOR DE FOLIO) */}
+        <aside className="w-96 bg-white p-6 flex flex-col shadow-md border-l border-gray-200">
+          <div className="mb-4">
+            <div className="flex items-center text-blue-800 font-medium mb-3">
+                <Search className="w-4 h-4 mr-2" /> Folio de documento
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Ingresa aquí el número de folio"
+                value={folioInput}
+                onChange={e => setFolioInput(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') handleSearchFolio();
+                }}
+                className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <button
+                onClick={handleSearchFolio}
+                disabled={loading}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-blue-600 focus:outline-none"
+              >
+                <Search className="w-5 h-5"/>
+              </button>
+            </div>
           </div>
 
-          {/* Spacer */}
-          <div className="mt-auto">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-lg font-semibold">Total</span>
-              <span className="text-xl font-bold">{formatPrice(total)}</span>
+          {folio && (
+            <div className="flex flex-col gap-1 mb-4 text-gray-700">
+                <span className="text-sm">Folio:</span>
+                <div className="flex items-center justify-between bg-gray-100 p-3 rounded-lg border border-gray-200">
+                    <span className="font-semibold text-base">{folio}</span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-green-600">
+                           <Check className="w-5 h-5"/>
+                        </span>
+                        <span className="text-gray-400">
+                           <Info className="w-5 h-5"/>
+                        </span>
+                    </div>
+                </div>
             </div>
-            <button
-              onClick={handleConfirm}
-              disabled={!showForm || total===0 || loading}
-              className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? 'Procesando...' : 'Devolver'}
-            </button>
+          )}
+
+          {/* Este div está ahora vacío ya que los elementos fueron movidos al panel izquierdo */}
+          <div className="mt-auto">
+            {/* Contenido movido al panel izquierdo */}
           </div>
         </aside>
       </div>
+
+      {/* Renderiza el ReturnsModal */}
+      <ReturnsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)} // Cierra el modal
+      />
     </div>
-)
-}
+  );
+};

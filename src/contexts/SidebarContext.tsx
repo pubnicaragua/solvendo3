@@ -11,7 +11,8 @@ import {
 
 interface SidebarContextValue {
   isOpen: boolean
-  toggleSidebar: () => void
+  toggleSidebar: () => void;
+  closeSidebar: () => void; // Añadir esta línea
   handleSidebarAction: (action: SidebarItem['id']) => void
   items: SidebarItem[]
 }
@@ -31,6 +32,7 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const navigate = useNavigate()
 
   const toggleSidebar = () => setIsOpen(open => !open)
+  const closeSidebar = () => setIsOpen(false); // Definir la función closeSidebar
 
   const items: SidebarItem[] = [
     { id: 'cierre',     label: 'Cierre de caja',          icon: <DollarSign className="w-5 h-5" /> },
@@ -69,7 +71,7 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }
 
   return (
-    <SidebarContext.Provider value={{ isOpen, toggleSidebar, handleSidebarAction, items }}>
+    <SidebarContext.Provider value={{ isOpen, toggleSidebar, closeSidebar, handleSidebarAction, items }}>
       {children}
     </SidebarContext.Provider>
   )

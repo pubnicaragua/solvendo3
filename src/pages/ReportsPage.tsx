@@ -218,7 +218,7 @@ export const ReportsPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col relative">
+    <div className="h-screen bg-white flex flex-col relative">
       {/* Header */}
       <HeaderWithMenu
         title="Reportes"
@@ -253,7 +253,7 @@ export const ReportsPage: React.FC = () => {
             ].map((kpi, idx) => (
               <div
                 key={idx}
-                className="bg-white p-4 rounded-2xl flex flex-col justify-between shadow-sm"
+                className="bg-gray-50 p-4 rounded-2xl flex flex-col justify-between shadow-sm"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700">
@@ -279,7 +279,7 @@ export const ReportsPage: React.FC = () => {
         {/* CONTENEDOR PRINCIPAL: Gráfico y Panel de Acciones Lateral */}
         <div className="flex flex-col lg:flex-row gap-6 relative">
           {/* Chart Section */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4 flex-1">
+          <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4 flex-1 ">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold text-gray-900">
                 Ventas totales por mes

@@ -1,8 +1,8 @@
 // src/pages/CashMovementPage.tsx
 
 import React, { useState, useEffect } from 'react'
-import { TrendingUp, Calendar, X as XIcon } from 'lucide-react'
-import { HeaderWithMenu } from '../components/common/HeaderWithMenu'
+import { DollarSign, X as XIcon } from 'lucide-react' // CAMBIO: Importar DollarSign en lugar de TrendingUp
+import { HeaderWithMenu } from '../components/common/HeaderWithMenu' 
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 
@@ -78,18 +78,24 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({ onClose })
     }
   }
 
+  // Función para formatear la fecha a 'DD/MM/YYYY' como en la imagen
+  const formatDate = (dateString: string) => {
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
       {/* Header idéntico */}
       <HeaderWithMenu
         title="Movimiento de efectivo"
-        icon={<TrendingUp className="w-6 h-6 text-gray-600" />}
+        icon={<DollarSign className="w-6 h-6 text-gray-600" />} // CAMBIO: Icono en Header
         showClock
       />
 
       <div className="flex-1 flex overflow-hidden">
-        {/* LEFT PANEL */}
-        <div className="w-1/2 bg-white p-6 flex flex-col justify-between">
+        {/* LEFT PANEL - 60% */}
+        <div className="w-3/5 bg-white p-6 flex flex-col justify-between"> {/* CAMBIO: w-1/2 a w-3/5 */}
           <form className="grid grid-cols-[auto,1fr] gap-x-6 gap-y-6">
             {/* Número de caja */}
             <label className="text-sm font-medium text-gray-700">Número de caja</label>
@@ -109,9 +115,8 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({ onClose })
                 type="date"
                 value={fecha}
                 onChange={e => setFecha(e.target.value)}
-                className="w-full h-12 pl-4 pr-12 bg-gray-50 border border-gray-200 rounded-lg"
+                className="w-full h-12 pl-4 pr-2 bg-gray-50 border border-gray-200 rounded-lg"
               />
-              <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
             </div>
 
             {/* Tipo de movimiento */}
@@ -163,23 +168,36 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({ onClose })
           </div>
         </div>
 
-        {/* RIGHT PANEL */}
-        <div className="w-1/2 bg-gray-50 p-6 flex flex-col overflow-auto">
-          {/* Tarjeta Movimientos disponibles */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-800">
+        {/* RIGHT PANEL - 40% - Adaptado al estilo de la imagen */}
+        <div className="w-2/5 bg-gray-50 p-6 flex flex-col overflow-auto"> {/* CAMBIO: w-1/2 a w-2/5 */}
+          {/* Se elimina la tarjeta azul y se adapta el contenido */}
+          <div className="space-y-4 mb-6"> 
+            {/* Movimientos disponibles - Estilo de la imagen */}
+            <div className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-blue-600" /> {/* CAMBIO: TrendingUp a DollarSign */}
+              <span className="text-lg font-semibold text-blue-600">
                 Movimientos disponibles
               </span>
             </div>
-            <div className="text-xs text-blue-600">Fecha movimiento: {fecha}</div>
-            <div className="text-xs text-blue-600 mt-1">
+
+            {/* Fecha movimiento */}
+            <div className="grid grid-cols-[auto,1fr] items-center gap-x-4">
+              <span className="text-sm text-gray-700">Fecha movimiento</span>
+              <div className="bg-gray-200 p-3 rounded-lg text-sm text-gray-800">
+                {formatDate(fecha)} 
+              </div>
+            </div>
+
+            {/* Sin registros / X registros */}
+            <div className="text-gray-700 text-sm mt-2">
               {movements.length === 0 ? 'Sin registros' : `${movements.length} registros`}
             </div>
           </div>
 
-          {/* Lista de movimientos */}
+          {/* Línea divisora */}
+          <hr className="border-t border-gray-200 my-6" /> 
+
+          {/* Lista de movimientos - se mantiene igual, ya que no se especifica cambio */}
           <div className="space-y-3">
             {movements.map(m => (
               <div

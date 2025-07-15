@@ -1,7 +1,5 @@
-// src/pages/ReprintPage.tsx
-
 import React, { useState, useEffect } from 'react'
-import { Printer, Search, Calendar as CalendarIcon } from 'lucide-react'
+import { Printer, Search, FileText } from 'lucide-react'
 import { HeaderWithMenu } from '../components/common/HeaderWithMenu'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
@@ -16,6 +14,7 @@ interface Document {
 
 export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { empresaId } = useAuth()
+  // Aseguramos que today siempre esté en formato 'YYYY-MM-DD'
   const today = new Date().toISOString().split('T')[0]
 
   const [fecha, setFecha] = useState(today)
@@ -24,6 +23,10 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null)
   const [copies, setCopies] = useState(1)
   const [loading, setLoading] = useState(false)
+
+  // Datos de usuario de ejemplo para el Header
+  const userName = "Emilio Aguilera";
+  const userAvatarUrl = "https://i.pravatar.cc/40?img=68";
 
   useEffect(() => {
     loadDocs()
@@ -86,23 +89,35 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         title="Reimprimir"
         icon={<Printer className="w-6 h-6 text-gray-600" />}
         showClock
+        userName={userName}
+        userAvatarUrl={userAvatarUrl}
       />
 
       <div className="flex-1 flex overflow-hidden">
-        {/* LEFT */}
-        <div className="w-1/2 bg-white p-10">
-          {!selectedDoc && (
-            <p className="text-gray-400 italic text-lg text-center mt-20">
+        {/* LEFT - 60% */}
+        <div className="w-3/5 bg-white p-10 flex items-center justify-center">
+          {!selectedDoc ? (
+            <p className="text-gray-400 italic text-lg text-center">
               Debe seleccionar el documento a reimprimir
             </p>
+          ) : (
+            <div className="p-4 rounded-lg bg-gray-100 text-gray-700 w-full max-w-lg">
+                <h3 className="font-semibold text-lg mb-2">Detalle del documento seleccionado:</h3>
+                <p>Tipo: {selectedDoc.tipo}</p>
+                <p>Folio: {selectedDoc.folio}</p>
+                <p>Total: {formatPrice(selectedDoc.total)}</p>
+                <p>Fecha: {new Date(selectedDoc.fecha).toLocaleDateString()}</p>
+            </div>
           )}
         </div>
 
-        {/* RIGHT */}
-        <aside className="w-1/2 bg-gray-50 p-10 overflow-auto space-y-8">
-          {/* CARD */}
-          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-8 shadow-sm">
-            <h4 className="text-base font-semibold text-blue-800 mb-6">
+        {/* RIGHT - 40% */}
+        <aside className="w-2/5 bg-gray-100 py-10 pl-6 pr-10 overflow-auto space-y-8">
+          {/* CARD - Documentos disponibles */}
+          {/* Fondo gris liso, sin bordes ni sombras */}
+          <div className="rounded-2xl p-8 bg-gray-100"> 
+            <h4 className="text-base font-semibold text-blue-600 mb-6 flex items-center">
+              <FileText className="w-5 h-5 mr-2 text-blue-600" />
               Documentos disponibles
             </h4>
 
@@ -114,22 +129,21 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                   type="date"
                   value={fecha}
                   onChange={e => setFecha(e.target.value)}
-                  className="w-full h-12 px-4 bg-white border border-gray-200 rounded-lg"
+                  className="w-full h-12 px-4 bg-gray-200 border border-gray-300 rounded-lg"
                 />
-                <CalendarIcon className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
             </div>
 
             {/* Búsqueda */}
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 w-5 h-5" />
               <input
                 type="text"
                 placeholder="Ingresa aquí el número de documento"
                 value={searchFolio}
                 onChange={e => setSearchFolio(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                className="w-full h-12 pl-12 pr-4 bg-white border border-gray-200 rounded-lg"
+                className="w-full h-12 pl-12 pr-4 bg-gray-200 border border-gray-300 rounded-lg"
               />
             </div>
           </div>
@@ -137,8 +151,8 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           {/* LISTA o DETALLE */}
           {selectedDoc ? (
             <div className="space-y-6">
-              {/* Detalle */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 flex justify-between items-center shadow-sm">
+              <div className={`p-6 rounded-2xl flex justify-between items-center bg-gray-200 
+                ${selectedDoc.tipo === 'Boleta manual (no válida al SII)' ? 'border-b border-gray-200 pb-6' : ''}`}>
                 <div>
                   <h5 className="font-semibold text-gray-900">
                     {selectedDoc.tipo} N°{selectedDoc.folio}
@@ -155,15 +169,16 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
               {/* Copias + Botón */}
               <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm">
+                {/* Fondo gris, sin sombra */}
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-200">
                   <button
                     onClick={() => setCopies(c => Math.max(1, c - 1))}
-                    className="w-6 h-6 flex items-center justify-center hover:bg-gray-100 rounded-full"
+                    className="w-6 h-6 flex items-center justify-center hover:bg-gray-300 rounded-full"
                   >−</button>
                   <span className="w-8 text-center font-medium">{copies}</span>
                   <button
                     onClick={() => setCopies(c => Math.min(10, c + 1))}
-                    className="w-6 h-6 flex items-center justify-center hover:bg-gray-100 rounded-full"
+                    className="w-6 h-6 flex items-center justify-center hover:bg-gray-300 rounded-full"
                   >+</button>
                   <span className="text-sm text-gray-600 ml-3">Copias</span>
                 </div>
@@ -181,14 +196,16 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 <div
                   key={doc.id}
                   onClick={() => setSelectedDoc(doc)}
-                  className="bg-white p-4 rounded-2xl border border-gray-200 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition"
+                  className="p-4 rounded-2xl flex justify-between items-center cursor-pointer bg-gray-50" 
                 >
-                  <span className="text-sm font-medium">
-                    {doc.tipo} N°{doc.folio}
-                  </span>
-                  <span className="text-sm font-semibold">
-                    {formatPrice(doc.total)}
-                  </span>
+                  <div>
+                    <span className="text-sm font-medium">
+                      {doc.tipo} N°{doc.folio}
+                    </span>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formatPrice(doc.total)}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>

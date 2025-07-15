@@ -37,9 +37,9 @@ const Dashboard: React.FC = () => {
     currentCliente, selectClient
   } = usePOS()
 
-  // UI states
   const [activeTab, setActiveTab]         = useState<TabId>('destacado')
   const [searchTerm, setSearchTerm]       = useState('')
+  const [clientSearchTerm, setClientSearchTerm] = useState('')
   const [currentTime, setCurrentTime]     = useState('')
   const [showDraftModal, setShowDraftModal] = useState(false)
   const [draftName, setDraftName]         = useState('')
@@ -47,7 +47,6 @@ const Dashboard: React.FC = () => {
   const [inPaymentFlow, setInPaymentFlow]   = useState(false)
   const [showReceipt, setShowReceipt]     = useState(false)
 
-  // Reloj
   useEffect(() => {
     const tick = () =>
       setCurrentTime(
@@ -59,7 +58,6 @@ const Dashboard: React.FC = () => {
     return () => clearInterval(id)
   },[])
 
-  // Carga inicial
   useEffect(() => {
     loadBorradores()
   },[loadBorradores])
@@ -67,7 +65,6 @@ const Dashboard: React.FC = () => {
   const fmt = (n:number) =>
     new Intl.NumberFormat('es-CL',{ style:'currency',currency:'CLP' }).format(n)
 
-  // Borradores handlers
   const handleSaveDraft = async () => {
     if (!draftName.trim() || carrito.length===0) return
     setShowDraftModal(false)
@@ -88,7 +85,6 @@ const Dashboard: React.FC = () => {
     }
   }
 
-  // Flujo pago
   const startPayment = () => setInPaymentFlow(true)
   const handlePaymentComplete = () => setShowReceipt(true)
   const handleReceiptClose = () => {
@@ -98,14 +94,12 @@ const Dashboard: React.FC = () => {
     setActiveTab('destacado')
   }
 
-  // Filtrado productos
   const filteredProducts = productos.filter(p =>
     p.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* HEADER */}
       <header className="flex items-center justify-between px-6 py-3 bg-white border-b">
         <div className="flex items-center gap-3">
           <button onClick={toggleSidebar} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -131,9 +125,7 @@ const Dashboard: React.FC = () => {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* LEFT PANEL */}
         <div className="flex-[2] p-6 bg-white flex flex-col">
-          {/* Buscador */}
           <div className="relative mb-6">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -144,7 +136,6 @@ const Dashboard: React.FC = () => {
               className="w-full pl-12 pr-4 py-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          {/* Lista carrito */}
           <div className="flex-1 overflow-y-auto mb-6 space-y-4">
             {filteredProducts.map(p => {
               const item = carrito.find(i=>i.id===p.id)
@@ -152,12 +143,12 @@ const Dashboard: React.FC = () => {
               return (
                 <div key={p.id} className="flex justify-between items-center py-4 border-b last:border-b-0">
                   <div className="flex-1"><h4 className="font-medium">{p.nombre}</h4></div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2"> {/* quitamos justify-center del padre para que el span w-8 sea el que centre */}
                     <button onClick={()=>qty>0&&updateQuantity(p.id,qty-1)}
                       className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
                       <Minus className="w-4 h-4" />
                     </button>
-                    <span className="w-8 text-center">{qty}</span>
+                    <span className="w-8 text-center flex-shrink-0">{qty}</span> {/* flex-shrink-0 para que no se encoja */}
                     <button onClick={()=>addToCart(p)}
                       className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
                       <Plus className="w-4 h-4" />
@@ -166,7 +157,7 @@ const Dashboard: React.FC = () => {
                   <div className="flex items-center space-x-4 ml-6">
                     <span className="font-semibold">{fmt(qty*p.precio)}</span>
                     {qty>0&&(
-                      <button onClick={()=>removeFromCart(p.id)} className="text-red-500">
+                      <button onClick={()=>removeFromCart(p.id)} className="text-gray-600 p-1 rounded-full hover:bg-gray-100"> {/* Cambiado a text-gray-600 (negro) */}
                         <XIcon className="w-4 h-4" />
                       </button>
                     )}
@@ -175,33 +166,48 @@ const Dashboard: React.FC = () => {
               )
             })}
           </div>
-          {/* Pie */}
-          <div className="border-t pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex-1 pr-4">
-                <div className="text-gray-600 text-sm mb-2">
-                  N° Líneas {carrito.length} / Tot. ítems {carrito.reduce((s,i)=>s+i.quantity,0)}
-                </div>
-                <select className="w-full px-3 py-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500">
-                  <option>Boleta manual</option>
-                  <option>Boleta electrónica</option>
-                  <option>Factura electrónica</option>
+          <div className="border-t pt-4 flex flex-col">
+            <div className="grid grid-cols-2 gap-4 items-center mb-4">
+                <span className="text-gray-600 text-sm">
+                    N° Líneas {carrito.length} / Tot. ítems {carrito.reduce((s,i)=>s+i.quantity,0)}
+                </span>
+                <select className="px-2 py-1.5 border rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 w-fit ml-auto">
+                    <option>Boleta manual</option>
+                    <option>Boleta electrónica</option>
+                    <option>Factura electrónica</option>
                 </select>
-              </div>
-              <div className="flex space-x-3">
-                <button onClick={()=>clearCart()} className="px-4 py-2 bg-gray-100 rounded flex items-center">
-                  <XIcon className="w-4 h-4 mr-1" />Cancelar
-                </button>
-                <button onClick={()=>setShowDraftModal(true)} className="px-4 py-2 bg-gray-100 rounded flex items-center">
-                  <FileText className="w-4 h-4 mr-1" />Guardar borrador
-                </button>
-              </div>
             </div>
-            <div className="text-right">
+
+            <div className="grid grid-cols-2 gap-4 items-center mb-3">
+                <div className="relative">
+                    <input
+                        type="text"
+                        placeholder="Cliente"
+                        value={currentCliente ? `${currentCliente.nombre} ${currentCliente.apellidos}` : clientSearchTerm}
+                        onChange={e=>setClientSearchTerm(e.target.value)}
+                        className="w-full pl-4 pr-10 py-2 border rounded-lg bg-gray-100 focus:ring-2 focus:ring-blue-500 text-sm"
+                    />
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                </div>
+                <div className="flex items-center justify-end">
+                    <span className="text-lg font-semibold mr-2">Total</span>
+                    <div className="bg-gray-100 p-2 rounded-lg text-right min-w-[100px]">
+                        <span className="text-xl font-bold">{fmt(total)}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="mt-auto flex gap-2">
+              <button onClick={()=>clearCart()} className="flex-1 px-4 py-2 bg-gray-100 rounded flex items-center justify-center text-sm">
+                <XIcon className="w-4 h-4 mr-1" />Cancelar
+              </button>
+              <button onClick={()=>setShowDraftModal(true)} className="flex-1 px-4 py-2 bg-gray-100 rounded flex items-center justify-center text-sm">
+                <FileText className="w-4 h-4 mr-1" />Guardar borrador
+              </button>
               <button
                 onClick={startPayment}
                 disabled={carrito.length===0 || !currentCliente}
-                className="px-6 py-2 bg-blue-600 text-white rounded font-semibold disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded font-semibold text-base disabled:opacity-50"
               >
                 Pagar {fmt(total)}
               </button>
@@ -209,7 +215,6 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* RIGHT PANEL */}
         <aside className="flex-1 p-6 bg-gray-50 border-l flex flex-col overflow-y-auto">
           {!inPaymentFlow ? (
             <>
@@ -223,7 +228,7 @@ const Dashboard: React.FC = () => {
               )}
               {activeTab==='productos'  && <ProductsPanel />}
               {activeTab==='clientes'   && (
-                <ClientsPanel onClientSelected={startPayment} />
+                <ClientsPanel onClientSelected={selectClient} clientSearchTerm={clientSearchTerm} />
               )}
             </>
           ) : (
@@ -252,7 +257,6 @@ const Dashboard: React.FC = () => {
         </aside>
       </div>
 
-      {/* Modales */}
       <DraftSaveModal
         isOpen={showDraftModal}
         draftName={draftName}
