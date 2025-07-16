@@ -20,7 +20,9 @@ export interface Producto {
   created_at: string;  
 }  
   
-export interface Cliente {  
+export interface Cliente {
+  apellidos: any;
+  nombre: any;  
   id: string;  
   empresa_id: string;  
   razon_social: string;  

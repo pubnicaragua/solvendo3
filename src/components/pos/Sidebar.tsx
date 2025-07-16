@@ -1,12 +1,6 @@
 import React from 'react'
 import {
   X,
-  TrendingUp,
-  Printer,
-  BarChart3,
-  Truck,
-  RotateCcw,
-  DollarSign
 } from 'lucide-react'
 import { useSidebar } from '../../contexts/SidebarContext'
 

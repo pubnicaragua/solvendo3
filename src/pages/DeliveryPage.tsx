@@ -111,6 +111,25 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     setClientError(false);
   };
 
+  const handleCancelDespacho = () => {
+    clearCart();
+    setSelectedClient(null);
+    setProductSearch('');
+    setDocSearch('');
+    setDespachoData({
+      fecha: new Date().toISOString().split('T')[0],
+      tipo: 'Guía de despacho manual',
+      destinatario: '',
+      direccion: '',
+      comuna: '',
+      ciudad: '',
+      region: '',
+      numDocumento: ''
+    });
+    setClientError(false);
+    onClose();
+  };
+
   const handleConfirm = async () => {
     if (!selectedClient) {
       setClientError(true);
@@ -178,6 +197,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         region: '',
         numDocumento: ''
       });
+      onClose(); 
     } catch (error) {
       console.error('Error general en el despacho:', error);
       alert('Ocurrió un error inesperado al despachar.');
@@ -195,9 +215,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       />
 
       <div className="flex-1 flex overflow-hidden">
-        {/* LEFT PANEL */}
         <div className="flex-1 bg-white p-6 flex flex-col">
-          {/* Buscador productos */}
           <div className="relative mb-6">
             <input
               type="text"
@@ -209,7 +227,6 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5"/>
           </div>
 
-          {/* Encabezados de la tabla de ítems */}
           <div className="grid grid-cols-4 gap-4 text-sm font-medium border-b border-gray-200 pb-2 mb-4 text-gray-600">
             <span className="pl-1">Producto</span>
             <span className="text-center">Cantidad</span>
@@ -258,15 +275,13 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             )}
           </div>
 
-          {/* Sección inferior compacta del panel izquierdo */}
           <div className="mt-auto pt-4 border-t border-gray-200">
-            {/* Fila superior: Líneas/Ítems y el selector de tipo */}
-            <div className="flex items-center justify-start text-sm text-gray-600 mb-3">
+            <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
               <div>
                 N° Líneas: {carrito.length} / Tot. ítems: {carrito.reduce((acc, item) => acc + item.quantity, 0)}
               </div>
               <select
-                className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 focus:ring-blue-500 focus:border-blue-500 ml-64"
+                className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 focus:ring-blue-500 focus:border-blue-500"
                 value={despachoData.tipo}
                 onChange={(e) => setDespachoData(p => ({ ...p, tipo: e.target.value }))}
               >
@@ -274,7 +289,6 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               </select>
             </div>
 
-            {/* Botón de selección de cliente */}
             <button
               onClick={() => setShowClientModal(true)}
               className={`w-3/4 py-2.5 mb-3 text-sm rounded-md font-medium transition-colors flex items-center justify-center gap-2 ${
@@ -287,23 +301,29 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               {selectedClient ? selectedClient.razon_social : 'Seleccionar cliente'}
             </button>
 
-            {/* Total y botón "Despachar" */}
-            <div className="flex items-center justify-end mt-4"> 
-              <span className="text-lg font-semibold text-gray-800 mr-2">Total</span> 
-              <span className="text-xl font-bold text-gray-900 mr-4">{formatPrice(total)}</span> 
+            <div className="flex items-center justify-between mt-4"> 
               <button
-                onClick={handleConfirm}
-                disabled={!selectedClient || carrito.length === 0}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors text-base"
+                onClick={handleCancelDespacho}
+                className="px-4 py-2 bg-gray-100 rounded-lg flex items-center gap-1 text-sm text-gray-700 hover:bg-gray-200 transition-colors border border-gray-200 shadow-sm"
               >
-                Despachar
+                <XIcon className="w-4 h-4 text-gray-500"/> Cancelar
               </button>
+              <div className="flex items-center gap-4">
+                <span className="text-lg font-semibold text-gray-800">Total</span> 
+                <span className="text-xl font-bold text-gray-900">{formatPrice(total)}</span> 
+                <button
+                  onClick={handleConfirm}
+                  disabled={!selectedClient || carrito.length === 0}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors text-base"
+                >
+                  Despachar
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT PANEL */}
-        <aside className="w-96 bg-gray-100 p-6 flex flex-col border-l-0 shadow-none"> {/* Cambios aquí */}
+        <aside className="w-96 bg-gray-100 p-6 flex flex-col border-l-0 shadow-none">
           <div className="mb-4">
             <div className="flex items-center text-blue-800 font-medium mb-3">
               <FileText className="w-4 h-4 mr-2" /> Documentos disponibles

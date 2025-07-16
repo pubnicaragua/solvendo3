@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import {
   Search, Star, FileText, Gift, User,
-  Plus, Minus, X as XIcon, Clock, Menu as MenuIcon
+  Plus, Minus, X as XIcon
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-
 import { usePOS } from '../contexts/POSContext'
 import { useAuth } from '../contexts/AuthContext'
-import { useSidebar } from '../contexts/SidebarContext'
-
 import ProductHighlights from '../components/pos/ProductHighlights'
 import DraftsPanel       from '../components/pos/DraftsPanel'
 import ProductsPanel     from '../components/pos/ProductsPanel'
@@ -17,7 +14,10 @@ import PaymentPanel      from '../components/pos/PaymentPanel'
 import { ReceiptModal}       from '../components/pos/ReceiptModal'
 import { DraftSaveModal}     from '../components/pos/DraftSaveModal'
 
-import { Logo }          from '../components/common/Logo'
+// Importamos el nuevo componente HeaderWithMenu
+import { HeaderWithMenu } from '../components/common/HeaderWithMenu' 
+// Logo ya no es necesario importarlo directamente aquí, si HeaderWithMenu lo usa internamente
+// import { Logo }          from '../components/common/Logo' 
 
 type TabId = 'destacado' | 'borradores' | 'productos' | 'clientes'
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
@@ -28,7 +28,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
 ]
 
 const Dashboard: React.FC = () => {
-  const { toggleSidebar } = useSidebar()
+  // toggleSidebar y user se obtienen de sus respectivos contextos y se pasan a HeaderWithMenu
   const { user }         = useAuth()
   const {
     productos, carrito, total,
@@ -40,23 +40,12 @@ const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab]         = useState<TabId>('destacado')
   const [searchTerm, setSearchTerm]       = useState('')
   const [clientSearchTerm, setClientSearchTerm] = useState('')
-  const [currentTime, setCurrentTime]     = useState('')
+  // currentTime ya no se necesita aquí si HeaderWithMenu lo gestiona
+  // const [currentTime, setCurrentTime]     = useState('')
   const [showDraftModal, setShowDraftModal] = useState(false)
   const [draftName, setDraftName]         = useState('')
-  const [creatingClient, setCreatingClient] = useState(false)
   const [inPaymentFlow, setInPaymentFlow]   = useState(false)
   const [showReceipt, setShowReceipt]     = useState(false)
-
-  useEffect(() => {
-    const tick = () =>
-      setCurrentTime(
-        new Intl.DateTimeFormat('es-CL',{ hour:'2-digit',minute:'2-digit',hour12:false })
-          .format(new Date())
-      )
-    tick()
-    const id = setInterval(tick,1000)
-    return () => clearInterval(id)
-  },[])
 
   useEffect(() => {
     loadBorradores()
@@ -100,29 +89,13 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      <header className="flex items-center justify-between px-6 py-3 bg-white border-b">
-        <div className="flex items-center gap-3">
-          <button onClick={toggleSidebar} className="p-2 hover:bg-gray-100 rounded-lg">
-            <MenuIcon className="w-5 h-5 text-gray-600" />
-          </button>
-          <span className="text-lg font-semibold">POS</span>
-        </div>
-        <Logo size="md" />
-        <div className="flex items-center gap-4">
-          <div className="flex items-center px-3 py-1 bg-gray-100 rounded-lg">
-            <Clock className="w-4 h-4 text-gray-500" />
-            <span className="ml-1 text-sm">{currentTime}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm">
-                {user?.nombre?.[0]||'U'}{user?.apellidos?.[0]||''}
-              </span>
-            </div>
-            <span className="font-medium">{user?.nombre} {user?.apellidos}</span>
-          </div>
-        </div>
-      </header>
+      {/* Reemplazamos el <header> manual con el componente HeaderWithMenu */}
+      <HeaderWithMenu 
+        title="POS" // Título para el POS
+        userName={user?.nombre || 'Usuario'} // Nombre del usuario
+        userAvatarUrl={user?.avatar_url || undefined} // URL del avatar si existe en tu objeto user
+        showClock={true} // Mostrar el reloj
+      />
 
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-[2] p-6 bg-white flex flex-col">
@@ -143,12 +116,12 @@ const Dashboard: React.FC = () => {
               return (
                 <div key={p.id} className="flex justify-between items-center py-4 border-b last:border-b-0">
                   <div className="flex-1"><h4 className="font-medium">{p.nombre}</h4></div>
-                  <div className="flex items-center space-x-2"> {/* quitamos justify-center del padre para que el span w-8 sea el que centre */}
+                  <div className="flex items-center space-x-2">
                     <button onClick={()=>qty>0&&updateQuantity(p.id,qty-1)}
                       className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
                       <Minus className="w-4 h-4" />
                     </button>
-                    <span className="w-8 text-center flex-shrink-0">{qty}</span> {/* flex-shrink-0 para que no se encoja */}
+                    <span className="w-8 text-center flex-shrink-0">{qty}</span>
                     <button onClick={()=>addToCart(p)}
                       className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
                       <Plus className="w-4 h-4" />
@@ -157,7 +130,7 @@ const Dashboard: React.FC = () => {
                   <div className="flex items-center space-x-4 ml-6">
                     <span className="font-semibold">{fmt(qty*p.precio)}</span>
                     {qty>0&&(
-                      <button onClick={()=>removeFromCart(p.id)} className="text-gray-600 p-1 rounded-full hover:bg-gray-100"> {/* Cambiado a text-gray-600 (negro) */}
+                      <button onClick={()=>removeFromCart(p.id)} className="text-gray-600 p-1 rounded-full hover:bg-gray-100">
                         <XIcon className="w-4 h-4" />
                       </button>
                     )}

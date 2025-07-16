@@ -19,6 +19,7 @@ import { CustomerHistoryPage } from './pages/CustomerHistoryPage'
 import { PromotionsPage } from './pages/PromotionsPage'
 import { BillingPage } from './pages/BillingPage'
 import { POSLayout } from './components/pos/POSLayout'
+import { LoginPage } from './components/auth/LoginPage'
 
 const AppRoutes: React.FC = () => {
   const { user, loading } = useAuth()
@@ -32,18 +33,24 @@ const AppRoutes: React.FC = () => {
   }
 
   if (!user) {
+
     return (
-      <div className="min-h-screen bg-gray-50">
-        <LoginForm />
-      </div>
+      <Routes> {/* Nuevas Routes aquí para rutas públicas */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/loginform" element={<LoginForm />} /> {/* Rutas públicas */}
+        {/* Cualquier otra ruta no autenticada que necesites */}
+        <Route path="*" element={<Navigate to="/login" replace />} /> {/* Redirige todo lo demás a login si no está autenticado */}
+      </Routes>
     )
   }
 
+  // Si hay usuario autenticado, se renderizan las rutas protegidas
   return (
     <POSProvider>
       <SidebarProvider>
         <POSLayout>
           <Routes>
+            {/* Estas son las rutas PROTEGIDAS (solo accesibles si user existe) */}
             <Route path="/" element={<Dashboard />} />
             <Route path="/movimiento" element={<CashMovementPage onClose={() => {}} />} />
             <Route path="/reimprimir" element={<ReprintPage onClose={() => {}} />} />
@@ -58,7 +65,8 @@ const AppRoutes: React.FC = () => {
             <Route path="/historial-cliente" element={<CustomerHistoryPage onClose={() => {}} />} />
             <Route path="/promociones" element={<PromotionsPage onClose={() => {}} />} />
             <Route path="/facturacion" element={<BillingPage onClose={() => {}} />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* Redirige a dashboard si intenta acceder a una ruta inexistente estando autenticado */}
+            <Route path="*" element={<Navigate to="/" replace />} /> 
           </Routes>
         </POSLayout>
       </SidebarProvider>

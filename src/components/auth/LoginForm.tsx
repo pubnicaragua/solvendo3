@@ -96,7 +96,6 @@ export const LoginForm: React.FC = () => {
               className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors h-12"
             >
               {loading ? 'Ingresando...' : 'Ingresar'}
-              <span className="block text-xs mt-1">Usar: 78.168.951-3 / 123456</span>
             </button>
           </form>
         </div>
