@@ -26,7 +26,7 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [loading, setLoading] = useState(false)
 
   // Obtener datos del usuario del contexto de autenticación
-  const { user, empresaId } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadDocs()
