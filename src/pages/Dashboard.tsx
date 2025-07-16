@@ -10,7 +10,6 @@ import ProductHighlights from '../components/pos/ProductHighlights'
 import DraftsPanel       from '../components/pos/DraftsPanel'
 import ProductsPanel     from '../components/pos/ProductsPanel'
 import ClientsPanel      from '../components/pos/ClientsPanel'
-import PaymentPanel      from '../components/pos/PaymentPanel'
 import { ReceiptModal}       from '../components/pos/ReceiptModal'
 import { DraftSaveModal}     from '../components/pos/DraftSaveModal'
 
@@ -46,7 +45,6 @@ const Dashboard: React.FC = () => {
   // const [currentTime, setCurrentTime]     = useState('')
   const [showDraftModal, setShowDraftModal] = useState(false)
   const [draftName, setDraftName]         = useState('')
-  const [inPaymentFlow, setInPaymentFlow]   = useState(false)
   const [showReceipt, setShowReceipt]     = useState(false) 
   const navigate = useNavigate()
 
@@ -84,11 +82,6 @@ const Dashboard: React.FC = () => {
       return
     }
     
-    if (!currentCliente) {
-      toast.error('Debe seleccionar un cliente')
-      return
-    }
-    
     navigate('/facturacion')
   }
   
@@ -96,7 +89,6 @@ const Dashboard: React.FC = () => {
   const handleReceiptClose = () => {
     setShowReceipt(false)
     clearCart()
-    setInPaymentFlow(false)
     setActiveTab('destacado')
   }
 
@@ -206,84 +198,73 @@ const Dashboard: React.FC = () => {
         </div>
 
         <aside className="flex-1 p-6 bg-gray-50 border-l flex flex-col overflow-y-auto">
-          {!inPaymentFlow ? (
-            <>
-              {activeTab==='destacado' && <ProductHighlights />}
-              {activeTab==='borradores' && (
-                <DraftsPanel
-                  borradores={borradores}
-                  onLoad={handleLoadDraft}
-                  onDelete={handleDeleteDraft}
-                />
-              )}
-              {activeTab==='promociones' && (
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-2 mb-4">
-                    <Percent className="w-5 h-5 text-blue-600" />
-                    <h3 className="text-blue-600 font-semibold text-lg">Promociones</h3>
-                  </div>
-                  
-                  {promociones.length === 0 ? (
-                    <p className="text-gray-500 text-center py-4">No hay promociones disponibles</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {promociones.map(promo => (
-                        <div key={promo.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                          <h4 className="font-medium text-gray-900">{promo.nombre}</h4>
-                          <p className="text-sm text-gray-600 mt-1">{promo.descripcion}</p>
-                          <div className="flex justify-between items-center mt-2">
-                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                              {promo.tipo === 'descuento_porcentaje' ? `${promo.valor}% descuento` : 
-                               promo.tipo === 'descuento_monto' ? `$${promo.valor} descuento` : 
-                               promo.tipo}
-                            </span>
-                            <button 
-                              onClick={() => toast.info('Seleccione un producto primero')}
-                              className="text-sm text-blue-600 hover:text-blue-800"
-                            >
-                              Aplicar
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+          {activeTab==='destacado' && <ProductHighlights />}
+          {activeTab==='borradores' && (
+            <DraftsPanel
+              borradores={borradores}
+              onLoad={handleLoadDraft}
+              onDelete={handleDeleteDraft}
+            />
+          )}
+          {activeTab==='promociones' && (
+            <div className="space-y-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <Percent className="w-5 h-5 text-blue-600" />
+                <h3 className="text-blue-600 font-semibold text-lg">Promociones</h3>
+              </div>
+              
+              {promociones.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No hay promociones disponibles</p>
+              ) : (
+                <div className="space-y-3">
+                  {promociones.map(promo => (
+                    <div key={promo.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                      <h4 className="font-medium text-gray-900">{promo.nombre}</h4>
+                      <p className="text-sm text-gray-600 mt-1">{promo.descripcion}</p>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                          {promo.tipo === 'descuento_porcentaje' ? `${promo.valor}% descuento` : 
+                           promo.tipo === 'descuento_monto' ? `$${promo.valor} descuento` : 
+                           promo.tipo}
+                        </span>
+                        <button 
+                          onClick={() => toast.info('Seleccione un producto primero')}
+                          className="text-sm text-blue-600 hover:text-blue-800"
+                        >
+                          Aplicar
+                        </button>
+                      </div>
                     </div>
-                  )}
+                  ))}
                 </div>
               )}
-              {activeTab==='productos' && <ProductsPanel onAddToCart={addToCart} searchTerm={searchTerm} />}
-              {activeTab==='clientes' && (
-                <ClientsPanel 
-                  onClientSelected={(cliente) => {
-                    selectClient(cliente);
-                    setClientSearchTerm(cliente.razon_social);
-                  }} 
-                  clientSearchTerm={clientSearchTerm} 
-                />
-              )}
-            </>
-          ) : (
-            <PaymentPanel
-              total={total}
-              onPaymentComplete={handlePaymentComplete}
+            </div>
+          )}
+          {activeTab==='productos' && <ProductsPanel onAddToCart={addToCart} searchTerm={searchTerm} />}
+          {activeTab==='clientes' && (
+            <ClientsPanel 
+              onClientSelected={(cliente) => {
+                selectClient(cliente);
+                setClientSearchTerm(cliente ? cliente.razon_social : '');
+              }} 
+              clientSearchTerm={clientSearchTerm} 
             />
           )}
 
-          {!inPaymentFlow && (
-            <nav className="flex justify-around items-center h-16 bg-white border-t mt-auto">
-              {TABS.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={()=>setActiveTab(tab.id)}
-                  className={`flex-1 flex flex-col items-center py-3 ${
-                    activeTab===tab.id ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  {tab.icon}
-                  <span className="text-xs font-medium">{tab.label}</span>
-                </button>
-              ))}
-            </nav>
-          )}
+          <nav className="flex justify-around items-center h-16 bg-white border-t mt-auto">
+            {TABS.map(tab => (
+              <button
+                key={tab.id}
+                onClick={()=>setActiveTab(tab.id)}
+                className={`flex-1 flex flex-col items-center py-3 ${
+                  activeTab===tab.id ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {tab.icon}
+                <span className="text-xs font-medium">{tab.label}</span>
+              </button>
+            ))}
+          </nav>
         </aside>
       </div>
 

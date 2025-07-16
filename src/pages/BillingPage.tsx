@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FileText, Truck, Plus, Calendar, CreditCard, DollarSign, Percent } from 'lucide-react'
 import { HeaderWithMenu } from '../components/common/HeaderWithMenu'
 import { usePOS } from '../contexts/POSContext'
@@ -31,10 +32,13 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
   const { carrito, total, procesarVenta, clearCart } = usePOS()
   const { user } = useAuth() 
   const navigate = useNavigate()
+  const navigate = useNavigate()
 
   const handleClose = () => {
     if (onClose) {
       onClose()
+    } else {
+      navigate('/')
     } else {
       navigate('/')
     }
@@ -68,7 +72,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
       // 1. Crear la venta
       const result = await procesarVenta(
         billingData.metodoPago, 
-        billingData.tipoDte, 
+        billingData.tipoDte as 'boleta' | 'factura' | 'nota_credito', 
         selectedClient?.id
       )
       
@@ -133,9 +137,11 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
     // Guardar PDF (simulado)
     savePdfUrl();
     
-    // Limpiar y cerrar
+    // Limpiar carrito
     clearCart();
-    onClose();
+    
+    // Cerrar y navegar al dashboard
+    handleClose();
   }
   
   const savePdfUrl = async (): Promise<void> => {
@@ -160,8 +166,10 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
   const handleSendEmail = () => {
     // Simulate sending email
     toast.success('Documento enviado por correo')
+    // Limpiar carrito
     clearCart() 
-    onClose()
+    // Cerrar y navegar al dashboard
+    handleClose()
   }
 
   const totalConDescuento = total * (1 - (billingData.descuentoGlobal / 100))

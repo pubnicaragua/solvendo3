@@ -416,8 +416,11 @@ export const ReportsPage: React.FC = () => {
               </div>
               <div className="text-[10px] text-gray-500">
                  {new Date().toLocaleTimeString('es-CL')}
-          <div className="text-center py-2 text-gray-500">
-             Última actualización: {lastUpdate}
+              </div>
+              <div className="text-center py-2 text-gray-500">
+                Última actualización: {lastUpdate}
+              </div>
+            </div>
           </div>
         </div>
       </div>

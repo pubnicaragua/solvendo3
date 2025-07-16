@@ -50,20 +50,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const validateUser = async (rut: string, password: string): Promise<{ success: boolean; user?: Usuario; error?: string }> => {
     try {
       console.log('Validating user with RUT:', rut)
-      
-      // En un entorno real, aquí se haría una consulta a Supabase
-      // const { data, error } = await supabase
-      //   .from('usuarios')
-      //   .select('*')
-      //   .eq('rut', rut)
-      //   .single();
-      //
-      // if (error) throw error;
-      // if (!data) return { success: false, error: 'Usuario no encontrado' };
-      //
-      // // Aquí se validaría la contraseña con bcrypt o similar
-      // const isValidPassword = await validatePassword(password, data.password_hash);
-      // if (!isValidPassword) return { success: false, error: 'Contraseña incorrecta' };
+
+      // Usar la función RPC para validar el usuario
+      const { data, error } = await supabase
+        .rpc('validate_user_by_rut', {
+          p_rut: rut,
+          p_password: password
+        });
+
+      if (error) throw error;
+      if (!data || data.length === 0) return { success: false, error: 'Credenciales incorrectas' };
 
       // Validación simplificada para demo
       if (rut === '78.168.951-3' && password === '123456') {
@@ -90,20 +86,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (rut: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       setLoading(true)
-      
+
       // Validar credenciales
       const validationResult = await validateUser(rut, password);
       if (!validationResult.success) {
         return { success: false, error: validationResult.error || 'Credenciales incorrectas' };
       }
-      
-      // En un entorno real, aquí se haría una autenticación con Supabase Auth
-      // const { data, error } = await supabase.auth.signInWithPassword({
-      //   email: email, // Obtenido a partir del RUT
-      //   password: password
-      // });
-      //
-      // if (error) throw error;
+
+      // En un entorno real con Supabase Auth, se haría algo como:
+      /*
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: validationResult.user?.email || '',
+        password: password
+      });
+
+      if (authError) throw authError;
+      */
 
       // Datos de usuario de prueba para evitar errores
       const mockUser = validationResult.user || {

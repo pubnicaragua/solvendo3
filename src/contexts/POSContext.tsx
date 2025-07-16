@@ -686,7 +686,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
       // Monto teórico esperado en caja (solo efectivo)  
       const montoTeorico = currentAperturaCaja.monto_inicial + totalVentasEfectivo + totalIngresos - totalRetiros;  
-      const diferencia = montoFinal - montoTeorico;  
+      const diferencia_cierre = montoFinal - montoTeorico;  
   
       const { error: updateError } = await supabase  
           .from('aperturas_caja')  
@@ -694,7 +694,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               estado: 'cerrada',  
               fecha_cierre: new Date().toISOString(),  
               monto_final: montoFinal,  
-              diferencia,  
+              diferencia_cierre,  
               observaciones: observaciones || null  
           })  
           .eq('id', aperturaId);  

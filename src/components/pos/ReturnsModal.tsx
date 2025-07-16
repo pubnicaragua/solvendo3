@@ -79,13 +79,12 @@ export const ReturnsModal: React.FC<ReturnsModalProps> = ({
       }
       
       // Mostrar el modal de nota de crédito
-      setShowReceiptModal(true);
+      setShowCreditNote(true);
     } catch (error: any) {
       toast.error('Error al procesar la devolución: ' + error.message);
     } finally {
       setLoading(false);
     }
-    setShowCreditNote(true)
   }
 
   if (showCreditNote) {
