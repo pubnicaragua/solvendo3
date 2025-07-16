@@ -91,9 +91,6 @@ const Dashboard: React.FC = () => {
     }
     
     navigate('/facturacion')
-      toast.success('Borrador eliminado')
-      loadBorradores()
-    }
   }
 
   const handlePaymentComplete = () => setShowReceipt(true)
