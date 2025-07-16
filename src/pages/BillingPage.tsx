@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FileText, Truck, Plus, Calendar, CreditCard, DollarSign, Percent } from 'lucide-react'
 import { HeaderWithMenu } from '../components/common/HeaderWithMenu'
-import { usePOS } from '../contexts/POSContext'
+import { usePOS, CartItem } from '../contexts/POSContext'
 import { useAuth } from '../contexts/AuthContext'
 import { ClientModal } from '../components/pos/ClientModal'
 import { Cliente } from '../lib/supabase'
@@ -29,8 +29,9 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
   const [loading, setLoading] = useState(false)
   const [showPrintDialog, setShowPrintDialog] = useState(false)
   
-  const { user } = useAuth() 
+  const { user } = useAuth()
   const navigate = useNavigate()
+  const { carrito, total, clearCart, procesarVenta } = usePOS()
 
   const handleClose = () => {
     if (onClose) {
@@ -45,10 +46,13 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
     }).format(price)
   }
 
+  // Función para manejar la selección de cliente
   const handleClientSelect = (cliente: Cliente | null) => {
     setSelectedClient(cliente)
+    setShowClientModal(false)
   }
 
+  // Función para confirmar el pago
   const handleConfirmPayment = async () => {
     if (carrito.length === 0) {
       toast.error('No hay productos en el carrito')
@@ -63,20 +67,15 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
     setLoading(true)
     
     try {
-      // 1. Crear la venta
+      // Procesar la venta
       const result = await procesarVenta(
         billingData.metodoPago, 
-        billingData.tipoDte as 'boleta' | 'factura' | 'nota_credito', 
+        billingData.tipoDte as 'boleta' | 'factura' | 'nota_credito',
         selectedClient?.id
       )
       
       if (result.success) {
-        // 2. Registrar movimiento de caja si es efectivo
-        if (billingData.metodoPago === 'efectivo' && result.venta) {
-          await registrarMovimientoCaja(result.data?.id || '', result.data?.total || 0)
-        }
-        
-        // 3. Mostrar diálogo de impresión
+        // Mostrar diálogo de impresión
         setShowPrintDialog(true)
       } else {
         toast.error(result.error || 'Error al procesar la venta')
@@ -89,74 +88,20 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
     }
   }
   
-  const registrarMovimientoCaja = async (ventaId: string, monto: number) => {
-    if (!user) return;
-    
-    try {
-      // Obtener apertura de caja activa
-      const { data: apertura, error: aperturaError } = await supabase
-        .from('aperturas_caja')
-        .select('*')
-        .eq('usuario_id', user.id)
-        .eq('estado', 'abierta')
-        .single();
-        
-      if (aperturaError || !apertura) {
-        console.error('No hay caja abierta');
-        return;
-      }
-      
-      // Registrar movimiento
-      const { error } = await supabase
-        .from('movimientos_caja')
-        .insert({
-          apertura_caja_id: apertura.id,
-          usuario_id: user.id,
-          tipo: 'venta',
-          monto: monto,
-          observacion: `Venta ID: ${ventaId}`,
-          fecha: new Date().toISOString()
-        });
-        
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error registering cash movement:', error);
-    }
-  }
-
+  // Función para manejar la impresión
   const handlePrint = () => {
     // Imprimir
     window.print();
-    
-    // Guardar PDF (simulado)
-    savePdfUrl();
     
     // Limpiar carrito
     clearCart();
     
     // Cerrar y navegar al dashboard
     handleClose();
+    navigate('/');
   }
   
-  const savePdfUrl = async (): Promise<void> => {
-    // Simulación de generación de PDF
-    const pdfUrl = `https://example.com/pdf/${Date.now()}.pdf`;
-    
-    try {
-      // Actualizar documento tributario
-      const { error } = await supabase
-        .from('documentos_tributarios')
-        .update({ pdf_url: pdfUrl })
-        .eq('tipo_dte', billingData.tipoDte)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error saving PDF URL:', error);
-    }
-  }
-
+  // Función para enviar por email
   const handleSendEmail = () => {
     // Simulate sending email
     toast.success('Documento enviado por correo')
@@ -164,6 +109,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
     clearCart() 
     // Cerrar y navegar al dashboard
     handleClose()
+    navigate('/')
   }
 
   const totalConDescuento = total * (1 - (billingData.descuentoGlobal / 100))
@@ -176,7 +122,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
           <div className="text-center">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Boleta generada</h3>
             <p className="text-gray-600 mb-6">Enviar por correo electrónico (Opcional)</p>
-            
+
             <div className="flex mb-4">
               <input
                 type="email"
@@ -190,7 +136,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
                 Enviar
               </button>
             </div>
-            
+
             <button
               onClick={handlePrint}
               className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700"

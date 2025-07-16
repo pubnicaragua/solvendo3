@@ -31,6 +31,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
 const Dashboard: React.FC = () => {
   // toggleSidebar y user se obtienen de sus respectivos contextos y se pasan a HeaderWithMenu
   const { user }         = useAuth()
+  const navigate = useNavigate()
   const {
     productos, carrito, total,
     addToCart, updateQuantity, removeFromCart, clearCart,
@@ -47,7 +48,6 @@ const Dashboard: React.FC = () => {
   const [showDraftModal, setShowDraftModal] = useState(false)
   const [draftName, setDraftName]         = useState('')
   const [showReceipt, setShowReceipt]     = useState(false) 
-  const navigate = useNavigate()
 
   useEffect(() => {
     loadBorradores()
@@ -256,7 +256,7 @@ const Dashboard: React.FC = () => {
             {TABS.map(tab => (
               <button
                 key={tab.id}
-                onClick={()=>setActiveTab(tab.id)}
+                onClick={()=>setActiveTab(tab.id as TabId)}
                 className={`flex-1 flex flex-col items-center py-3 ${
                   activeTab===tab.id ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
                 }`}
