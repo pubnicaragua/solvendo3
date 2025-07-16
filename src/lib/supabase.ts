@@ -1,15 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Usar variables de entorno primero, fallback a valores hardcodeados  
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ujkdekqhoeyfjvtzdtaz.supabase.co'  
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqa2Rla3Fob2V5Zmp2dHpkdGF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxNjA5MTksImV4cCI6MjA2NDczNjkxOX0.bv4GEzEgDG9FyTM2gZR38HoHGAGNlwAKb_NoXZjpFyY' 
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ujkdekqhoeyfjvtzdtaz.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqa2Rla3Fob2V5Zmp2dHpkdGF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxNjA5MTksImV4cCI6MjA2NDczNjkxOX0.bv4GEzEgDG9FyTM2gZR38HoHGAGNlwAKb_NoXZjpFyY'
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Missing Supabase environment variables, using fallback values')
 }
 
-console.log('Supabase URL:', supabaseUrl)
-console.log('Supabase Key:', supabaseAnonKey.substring(0, 10) + '...')
+// Solo mostrar en desarrollo
+if (import.meta.env.DEV) {
+  console.log('Supabase URL:', supabaseUrl)
+  console.log('Supabase Key:', supabaseAnonKey.substring(0, 10) + '...')
+}
 
 export const supabase = createClient(
   supabaseUrl,

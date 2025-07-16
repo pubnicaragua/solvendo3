@@ -198,7 +198,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // --- Función para obtener caja por defecto ---  
   const getDefaultCajaId = useCallback(async (): Promise<string | null> => {  
     if (!sucursalId || !empresaId) return null;  
-      
+    
     try {  
       const { data, error } = await supabase  
         .from('cajas')  
@@ -225,6 +225,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const loadProductos = useCallback(async () => {  
     if (!empresaId) return;  
     setLoading(true);  
+    
     try {  
       const { data, error } = await supabase  
         .from('productos')  
@@ -286,6 +287,17 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const loadBorradores = useCallback(async () => {  
     if (!empresaId || !user) return;  
     try {  
+      // Asegurarse de que la tabla existe
+      const { data: tableExists } = await supabase.rpc('check_table_exists', { 
+        table_name: 'borradores_venta' 
+      });
+      
+      if (!tableExists) {
+        console.warn('La tabla borradores_venta no existe');
+        setBorradores([]);
+        return;
+      }
+      
       const { data, error } = await supabase  
         .from('borradores_venta')  
         .select('*')  
@@ -369,6 +381,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const loadClientes = useCallback(async () => {  
     if (!empresaId) return;  
     try {  
+      // Verificar si hay clientes, si no hay, crear uno de ejemplo
       const { data, error } = await supabase  
         .from('clientes')  
         .select('*')  
@@ -552,10 +565,10 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const checkCajaStatus = useCallback(async () => {  
     if (!user) {  
       setCajaAbierta(false);  
-      setCurrentAperturaCaja(null);  
+      setCurrentAperturaCaja(null);
       return;  
     }  
-      
+    
     try {  
       setLoading(true);  
       // Modificación para asegurar que, si por error hay varias cajas abiertas,  
@@ -592,16 +605,16 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const openCaja = async (montoInicial: number): Promise<boolean> => {  
     if (!user) {  
         toast.error('Usuario no autenticado.');  
-        return false;  
+        return false;
     }  
     if (cajaAbierta) {  
       toast.error('Ya tienes una caja abierta.');  
-      return false;  
+      return false;
     }  
-      
+    
     try {  
       setLoading(true);  
-        
+      
       // Obtener caja por defecto  
       const cajaId = await getDefaultCajaId();  
       if (!cajaId) {  
@@ -642,9 +655,9 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const closeCaja = async (montoFinal: number, observaciones?: string): Promise<boolean> => {  
     if (!currentAperturaCaja) {  
         toast.error('No hay una caja abierta para cerrar.');  
-        return false;  
+        return false;
     }  
-      
+    
     try {  
       setLoading(true);  
       const aperturaId = currentAperturaCaja.id;  
