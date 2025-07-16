@@ -114,12 +114,18 @@ export const CashClosePage: React.FC = () => {
   const handleCloseCash = async () => {
     setIsClosing(true);
     try {
+      // Asegurarse de que montoFinalInput sea un número válido
+      const montoFinal = parseFloat(montoFinalInput);
+      if (isNaN(montoFinal)) {
+        throw new Error('El monto final debe ser un número válido');
+      }
+      
       const { error } = await supabase
         .from('aperturas_caja')
         .update({
           estado: 'cerrada',
           fecha_cierre: new Date().toISOString(),
-          monto_final: parseFloat(montoFinalInput),
+          monto_final: montoFinal,
           diferencia_cierre: diferencia // Usar diferencia_cierre en lugar de diferencia
         })
         .eq('id', currentAperturaCaja?.id);
@@ -128,8 +134,22 @@ export const CashClosePage: React.FC = () => {
         throw error;
       }
       toast.success('✅ Caja cerrada exitosamente.');
-      // Opcional: recargar la página o redirigir para reflejar el cierre
-      // window.location.reload(); 
+      
+      // Actualizar el estado local para reflejar el cierre
+      if (currentAperturaCaja) {
+        setCurrentAperturaCaja({
+          ...currentAperturaCaja,
+          estado: 'cerrada',
+          fecha_cierre: new Date().toISOString(),
+          monto_final: montoFinal,
+          diferencia_cierre: diferencia
+        });
+      }
+      
+      // Navegar al dashboard después de un cierre exitoso
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
     } catch (error: any) {
       toast.error('Error al cerrar la caja: ' + error.message);
     } finally {

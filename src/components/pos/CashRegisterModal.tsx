@@ -7,12 +7,14 @@ import toast from 'react-hot-toast'
 interface CashRegisterModalProps {  
   isOpen: boolean  
   onClose: () => void  
+  onSuccess?: () => void
   type: 'open' | 'close'  
 }  
   
 export const CashRegisterModal: React.FC<CashRegisterModalProps> = ({  
   isOpen,  
   onClose,  
+  onSuccess,
   type  
 }) => {  
   const [amount, setAmount] = useState('')  
@@ -45,6 +47,9 @@ export const CashRegisterModal: React.FC<CashRegisterModalProps> = ({
       const success = await openCaja(parseFloat(amount), defaultCajaId)  
       if (success) {  
         toast.success('Caja aperturada correctamente')  
+        if (onSuccess) {
+          onSuccess();
+        }
         onClose()  
         // Navegar al dashboard principal después de abrir la caja  
         navigate('/')  

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Logo } from '../common/Logo'; // Asegúrate de que esta ruta sea correcta para tu componente Logo
+import { useAuth } from '../../contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -9,9 +11,35 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
     setShowPassword(prev => !prev);
+  };
+  
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error('Por favor ingrese email y contraseña');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const result = await login(email, password);
+      if (result.success) {
+        navigate('/');
+      } else {
+        toast.error(result.error || 'Error en el login');
+      }
+    } catch (error) {
+      toast.error('Error de conexión');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -89,12 +117,13 @@ export const LoginPage: React.FC = () => {
           </a>
         </div>
 
-        <Link
-          to="/loginform"
-          className="w-full bg-blue-600 text-white py-3.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-lg flex items-center justify-center"
+        <button
+          onClick={handleLogin}
+          disabled={loading}
+          className="w-full bg-blue-600 text-white py-3.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-lg flex items-center justify-center disabled:opacity-50"
         >
-          Ingresar
-        </Link>
+          {loading ? 'Ingresando...' : 'Ingresar'}
+        </button>
       </div>
     </div>
   );

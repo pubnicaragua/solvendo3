@@ -252,7 +252,13 @@ const Dashboard: React.FC = () => {
               )}
               {activeTab==='productos' && <ProductsPanel onAddToCart={addToCart} searchTerm={searchTerm} />}
               {activeTab==='clientes' && (
-                <ClientsPanel onClientSelected={selectClient} clientSearchTerm={clientSearchTerm} />
+                <ClientsPanel 
+                  onClientSelected={(cliente) => {
+                    selectClient(cliente);
+                    setClientSearchTerm(cliente.razon_social);
+                  }} 
+                  clientSearchTerm={clientSearchTerm} 
+                />
               )}
             </>
           ) : (
@@ -268,7 +274,7 @@ const Dashboard: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={()=>setActiveTab(tab.id)}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`flex-1 flex flex-col items-center py-3 ${
                     activeTab===tab.id ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >

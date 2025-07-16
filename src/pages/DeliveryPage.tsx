@@ -136,7 +136,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       return;
     }
     if (carrito.length === 0) {
-      alert('Debes agregar al menos un producto o documento al carrito para despachar.');
+      toast.error('Debes agregar al menos un producto o documento al carrito para despachar.');
       return;
     }
 
@@ -164,7 +164,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
       if (despachoError || !despacho) {
         console.error('Error al crear despacho:', despachoError);
-        alert('Error al crear despacho: ' + despachoError?.message);
+        toast.error('Error al crear despacho: ' + despachoError?.message);
         return;
       }
 
@@ -180,11 +180,11 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
       if (itemsError) {
         console.error('Error al insertar detalles del despacho:', itemsError);
-        alert('Error al insertar detalles del despacho: ' + itemsError.message);
+        toast.error('Error al insertar detalles del despacho: ' + itemsError.message);
         return;
       }
 
-      alert('Despacho creado exitosamente.');
+      toast.success('Despacho creado exitosamente.');
       clearCart();
       setSelectedClient(null);
       setDespachoData({
@@ -200,7 +200,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       onClose(); 
     } catch (error) {
       console.error('Error general en el despacho:', error);
-      alert('Ocurrió un error inesperado al despachar.');
+      toast.error('Ocurrió un error inesperado al despachar.');
     }
   };
 

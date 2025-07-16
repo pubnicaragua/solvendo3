@@ -24,9 +24,8 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [copies, setCopies] = useState(1)
   const [loading, setLoading] = useState(false)
 
-  // Datos de usuario de ejemplo para el Header
-  const userName = "Emilio Aguilera";
-  const userAvatarUrl = "https://i.pravatar.cc/40?img=68";
+  // Obtener datos del usuario del contexto de autenticación
+  const { user } = useAuth();
 
   useEffect(() => {
     loadDocs()
@@ -45,15 +44,6 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           .order('fecha', { ascending: false })
         data = rows || []
       }
-      if (!data.length) {
-        data = [{
-          id: '1',
-          folio: '9',
-          tipo_dte: 'boleta',
-          total: 204,
-          fecha: new Date().toISOString()
-        }]
-      }
       setDocs(data.map(d => ({
         id: d.id,
         folio: d.folio,
@@ -66,6 +56,10 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       setSelectedDoc(null)
       setSearchFolio('')
       setCopies(1)
+      
+      if (data.length === 0) {
+        toast.info('No hay documentos disponibles para la fecha seleccionada');
+      }
     } finally {
       setLoading(false)
     }
@@ -75,13 +69,24 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const found = docs.find(d =>
       d.folio.toLowerCase().includes(searchFolio.toLowerCase())
     )
-    if (found) setSelectedDoc(found)
+    if (found) {
+      setSelectedDoc(found);
+      toast.success('Documento encontrado');
+    } else {
+      toast.error('Documento no encontrado');
+    }
   }
 
   const formatPrice = (n: number) =>
     new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(n)
 
-  const handlePrint = () => window.print()
+  const handlePrint = () => {
+    toast.success(`Imprimiendo ${copies} ${copies === 1 ? 'copia' : 'copias'}`);
+    // Simular impresión
+    setTimeout(() => {
+      window.print();
+    }, 500);
+  }
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
@@ -89,8 +94,8 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         title="Reimprimir"
         icon={<Printer className="w-6 h-6 text-gray-600" />}
         showClock
-        userName={userName}
-        userAvatarUrl={userAvatarUrl}
+        userName={user?.nombre || 'Usuario'}
+        userAvatarUrl={user?.avatar_url || undefined}
       />
 
       <div className="flex-1 flex overflow-hidden">

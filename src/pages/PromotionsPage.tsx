@@ -49,6 +49,7 @@ export const PromotionsPage: React.FC<PromotionsPageProps> = ({ onClose }) => {
         .from('promociones')
         .select('*')
         .eq('empresa_id', empresaId)
+        .eq('activo', true)
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -64,6 +65,7 @@ export const PromotionsPage: React.FC<PromotionsPageProps> = ({ onClose }) => {
   const handleSave = async () => {
     if (!empresaId || !formData.nombre) return
 
+    setLoading(true)
     try {
       if (editingPromotion) {
         const { error } = await supabase
@@ -72,6 +74,7 @@ export const PromotionsPage: React.FC<PromotionsPageProps> = ({ onClose }) => {
           .eq('id', editingPromotion.id)
 
         if (error) throw error
+        toast.success('Promoción actualizada correctamente')
       } else {
         const { error } = await supabase
           .from('promociones')
@@ -81,6 +84,7 @@ export const PromotionsPage: React.FC<PromotionsPageProps> = ({ onClose }) => {
           }])
 
         if (error) throw error
+        toast.success('Promoción creada correctamente')
       }
 
       setShowModal(false)
@@ -95,10 +99,11 @@ export const PromotionsPage: React.FC<PromotionsPageProps> = ({ onClose }) => {
         activo: true
       })
       loadPromotions()
-      toast.success(editingPromotion ? 'Promoción actualizada correctamente' : 'Promoción creada correctamente')
     } catch (error) {
       console.error('Error saving promotion:', error)
       toast.error('Error al guardar promoción')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -119,10 +124,11 @@ export const PromotionsPage: React.FC<PromotionsPageProps> = ({ onClose }) => {
   const handleDelete = async (id: string) => {
     if (!confirm('¿Está seguro de eliminar esta promoción?')) return
     
+    setLoading(true)
     try {
       const { error } = await supabase
         .from('promociones')
-        .delete()
+        .update({ activo: false })
         .eq('id', id)
 
       if (error) throw error
@@ -131,6 +137,8 @@ export const PromotionsPage: React.FC<PromotionsPageProps> = ({ onClose }) => {
     } catch (error) {
       console.error('Error deleting promotion:', error)
       toast.error('Error al eliminar promoción')
+    } finally {
+      setLoading(false)
     }
   }
 

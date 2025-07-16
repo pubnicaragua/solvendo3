@@ -4,10 +4,11 @@ import { usePOS } from '../../contexts/POSContext'
 import toast from 'react-hot-toast'
 
 interface Props {
-  onClientSelected: () => void
+  onClientSelected: (cliente: any) => void
+  clientSearchTerm?: string
 }
 
-export default function ClientsPanel({ onClientSelected }: Props) {
+export default function ClientsPanel({ onClientSelected, clientSearchTerm = '' }: Props) {
   const {
     clientes, loadClientes,
     currentCliente, selectClient,
@@ -32,13 +33,20 @@ export default function ClientsPanel({ onClientSelected }: Props) {
 
   useEffect(() => { loadClientes() }, [loadClientes])
 
+  // Sincronizar el término de búsqueda externo con el estado local
+  useEffect(() => {
+    if (clientSearchTerm) {
+      setSearch(clientSearchTerm);
+    }
+  }, [clientSearchTerm]);
+
   const filtered = clientes.filter(c =>
     c.razon_social.toLowerCase().includes(search.toLowerCase())
   )
 
   const pick = (c:any) => {
     selectClient(c)
-    onClientSelected()
+    onClientSelected(c)
   }
 
   const save = async () => {

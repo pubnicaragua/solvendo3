@@ -126,8 +126,24 @@ export const ReturnsPage: React.FC = () => {
       toast.error('No hay ítems seleccionados para devolver o la venta no ha sido cargada.');
       return;
     }
+    
+    // Preparar los datos para el modal de devoluciones
+    const itemsToReturn = Object.entries(selectedItems).map(([id, qty]) => {
+      const item = ventaItems.find(i => i.id === +id);
+      return {
+        id: +id,
+        nombre: item?.nombre || 'Producto desconocido',
+        cantidad: qty,
+        precio: item?.precio || 0,
+        subtotal: (item?.precio || 0) * qty
+      };
+    });
+    
+    // Abrir el modal con los datos preparados
     setIsModalOpen(true);
-    // Podemos pasar datos al modal si es necesario, por ahora no lo hace directamente
+    
+    // En un entorno real, pasaríamos estos datos al modal
+    // setModalData({ itemsToReturn, total, folio });
   };
 
   const handleCancel = () => {

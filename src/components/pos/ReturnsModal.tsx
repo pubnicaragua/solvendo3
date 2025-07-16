@@ -1,25 +1,43 @@
 import React, { useState } from 'react'
 import { X } from 'lucide-react'
+import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../contexts/AuthContext'
+import toast from 'react-hot-toast'
 
 interface ReturnsModalProps {
   isOpen: boolean
   onClose: () => void
+  ventaId?: string
+  itemsToReturn?: Array<{
+    id: number
+    nombre: string
+    cantidad: number
+    precio: number
+    subtotal: number
+  }>
+  total?: number
 }
 
 export const ReturnsModal: React.FC<ReturnsModalProps> = ({
   isOpen,
-  onClose
+  onClose,
+  ventaId,
+  itemsToReturn = [],
+  total = 0
 }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [searchFolio, setSearchFolio] = useState('')
   const [showReturnForm, setShowReturnForm] = useState(false)
   const [showCreditNote, setShowCreditNote] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [returnData, setReturnData] = useState({
     tipoDevolucion: 'Tipo de devolución',
     fecha: '18/05/2025',
     motivo: 'Escribir motivo...',
     numeroFolio: '342043593'
   })
+
+  const { user } = useAuth()
 
   if (!isOpen) return null
 
@@ -34,7 +52,39 @@ export const ReturnsModal: React.FC<ReturnsModalProps> = ({
     setShowReturnForm(true)
   }
 
-  const handleConfirmReturn = () => {
+  const handleConfirmReturn = async () => {
+    if (!ventaId || itemsToReturn.length === 0) {
+      toast.error('No hay ítems para devolver');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      // 1. Crear la devolución
+      const { data: devolucion, error: devolucionError } = await supabase
+        .from('devoluciones')
+        .insert({
+          venta_id: ventaId,
+          usuario_id: user?.id,
+          tipo: 'parcial',
+          motivo: returnData.motivo,
+          monto_devuelto: total,
+          fecha: new Date().toISOString()
+        })
+        .select()
+        .single();
+        
+      if (devolucionError || !devolucion) {
+        throw new Error(devolucionError?.message || 'Error al crear la devolución');
+      }
+      
+      // Mostrar el modal de nota de crédito
+      setShowReceiptModal(true);
+    } catch (error: any) {
+      toast.error('Error al procesar la devolución: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
     setShowCreditNote(true)
   }
 

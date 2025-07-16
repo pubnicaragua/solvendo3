@@ -91,6 +91,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true)
       
+      // Validar credenciales
+      const validationResult = await validateUser(rut, password);
+      if (!validationResult.success) {
+        return { success: false, error: validationResult.error || 'Credenciales incorrectas' };
+      }
+      
       // En un entorno real, aquí se haría una autenticación con Supabase Auth
       // const { data, error } = await supabase.auth.signInWithPassword({
       //   email: email, // Obtenido a partir del RUT
@@ -99,13 +105,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       //
       // if (error) throw error;
 
-      // Validación simple para demo - solo acepta estas credenciales
-      if (rut !== '78.168.951-3' || password !== '123456') {
-        return { success: false, error: 'Credenciales incorrectas' };
-      }
-
       // Datos de usuario de prueba para evitar errores
-      const mockUser = {
+      const mockUser = validationResult.user || {
         id: 'c2eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
         email: 'emilio@demo.cl',
         nombre: 'Emilio',

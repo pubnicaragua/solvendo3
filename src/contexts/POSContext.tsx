@@ -716,7 +716,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // --- Promociones ---  
   const loadPromociones = useCallback(async () => {  
     if (!empresaId) return;
-    
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('promociones')
@@ -734,6 +734,8 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     } catch (error) {
       console.error('Error en loadPromociones:', error);
       setPromociones([]);
+    } finally {
+      setLoading(false);
     }
   }, [empresaId]);  
   

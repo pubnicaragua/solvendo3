@@ -71,6 +71,7 @@ export const ReportsPage: React.FC = () => {
   const [loadingChart, setLoadingChart] = useState(false);
   const [kpiError, setKpiError] = useState<string | null>(null);
   const [chartError, setChartError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<string>(new Date().toLocaleString('es-CL'));
 
   // Filter sidebar state
   const [fInicio, setFInicio] = useState(
@@ -119,7 +120,7 @@ export const ReportsPage: React.FC = () => {
     try {
       const { data: ventas, error } = await supabase
         .from('ventas')
-        .select('total')
+        .select('id, total')
         .eq('empresa_id', empresaId)
         .gte('fecha', fInicio)
         .lte('fecha', fFin);
@@ -127,16 +128,31 @@ export const ReportsPage: React.FC = () => {
       if (error) {
         throw error;
       }
+      
+      // Obtener detalles de venta para contar unidades vendidas
+      const { data: ventaItems, error: itemsError } = await supabase
+        .from('venta_items')
+        .select('cantidad')
+        .in('venta_id', ventas?.map(v => v.id) || []);
+        
+      if (itemsError) {
+        console.error('Error loading venta items:', itemsError);
+      }
 
       const total = ventas?.reduce((s, v) => s + (v.total || 0), 0) || 0;
       const count = ventas?.length || 0;
+      const unidades = ventaItems?.reduce((s, i) => s + (i.cantidad || 0), 0) || 0;
+      const margen = total * 0.3; // Asumimos un margen del 30% para demo
+      const ticketPromedio = count ? total / count : 0;
+      
+      setLastUpdate(new Date().toLocaleString('es-CL'));
 
       setData({
         ventasTotales: total,
-        margen: total * 0.3,
-        unidadesVendidas: count * 2,
+        margen: margen,
+        unidadesVendidas: unidades,
         numeroVentas: count,
-        ticketPromedio: count ? total / count : 0
+        ticketPromedio: ticketPromedio
       });
     } catch (error: unknown) { // Corrección de tipado: unknown
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido al cargar KPIs.';
@@ -400,8 +416,8 @@ export const ReportsPage: React.FC = () => {
               </div>
               <div className="text-[10px] text-gray-500">
                  {new Date().toLocaleTimeString('es-CL')}
-              </div>
-            </div>
+          <div className="text-center py-2 text-gray-500">
+             Última actualización: {lastUpdate}
           </div>
         </div>
       </div>

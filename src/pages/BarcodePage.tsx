@@ -1,6 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Scan, Search, Plus, Edit, Trash2, X } from 'lucide-react'
 import { HeaderWithMenu } from '../components/common/HeaderWithMenu'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
+import toast from 'react-hot-toast'
 
 interface BarcodePageProps {
   onClose: () => void
@@ -15,11 +18,13 @@ interface BarcodeProduct {
 }
 
 export const BarcodePage: React.FC<BarcodePageProps> = ({ onClose }) => {
+  const { empresaId, user } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
   const [scanMode, setScanMode] = useState(false)
   const [scannedCode, setScannedCode] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState<BarcodeProduct | null>(null)
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     codigo: '',
     nombre: '',
@@ -27,23 +32,44 @@ export const BarcodePage: React.FC<BarcodePageProps> = ({ onClose }) => {
     barcode: ''
   })
 
-  // Mock data
-  const [products, setProducts] = useState<BarcodeProduct[]>([
-    {
-      id: '1',
-      codigo: 'PROD001',
-      nombre: 'Ejemplo producto 1',
-      precio: 34.5,
-      barcode: '7891234567890'
-    },
-    {
-      id: '2',
-      codigo: 'PROD002',
-      nombre: 'Ejemplo producto 2',
-      precio: 68.5,
-      barcode: '7891234567891'
+  // Estado real para los productos
+  const [products, setProducts] = useState<BarcodeProduct[]>([])
+
+  // Cargar productos al montar el componente
+  useEffect(() => {
+    if (empresaId) {
+      loadProducts();
     }
-  ])
+  }, [empresaId]);
+
+  const loadProducts = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('productos')
+        .select('id, codigo, nombre, precio, codigo_barras')
+        .eq('empresa_id', empresaId)
+        .order('nombre', { ascending: true });
+
+      if (error) throw error;
+
+      // Mapear los datos a nuestro formato BarcodeProduct
+      const formattedProducts = (data || []).map(p => ({
+        id: p.id,
+        codigo: p.codigo,
+        nombre: p.nombre,
+        precio: p.precio,
+        barcode: p.codigo_barras || ''
+      }));
+
+      setProducts(formattedProducts);
+    } catch (error) {
+      console.error('Error loading products:', error);
+      toast.error('Error al cargar productos');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-CL', {
@@ -55,42 +81,79 @@ export const BarcodePage: React.FC<BarcodePageProps> = ({ onClose }) => {
   const handleScan = () => {
     setScanMode(true)
     // Simulate barcode scanning
-    setTimeout(() => {
-      const mockBarcode = '7891234567892'
-      setScannedCode(mockBarcode)
+    try {
+      // En un entorno real, aquí se conectaría con un escáner de códigos de barras
+      // Para simular, usamos un timeout
+      setTimeout(() => {
+        const mockBarcode = '7891234567892'
+        setScannedCode(mockBarcode)
+        setScanMode(false)
+        
+        // Check if product exists
+        const existingProduct = products.find(p => p.barcode === mockBarcode)
+        if (existingProduct) {
+          toast.success(`Producto encontrado: ${existingProduct.nombre}`)
+        } else {
+          setFormData(prev => ({ ...prev, barcode: mockBarcode }))
+          setShowModal(true)
+        }
+      }, 2000)
+    } catch (error) {
       setScanMode(false)
-      
-      // Check if product exists
-      const existingProduct = products.find(p => p.barcode === mockBarcode)
-      if (existingProduct) {
-        alert(`Producto encontrado: ${existingProduct.nombre}`)
-      } else {
-        setFormData(prev => ({ ...prev, barcode: mockBarcode }))
-        setShowModal(true)
-      }
-    }, 2000)
+      toast.error('Error al escanear código de barras')
+    }
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.codigo || !formData.nombre || !formData.barcode) return
 
-    const newProduct: BarcodeProduct = {
-      id: Date.now().toString(),
-      codigo: formData.codigo,
-      nombre: formData.nombre,
-      precio: formData.precio,
-      barcode: formData.barcode
-    }
+    setLoading(true)
+    try {
+      if (editingProduct) {
+        // Actualizar producto existente
+        const { error } = await supabase
+          .from('productos')
+          .update({
+            codigo: formData.codigo,
+            nombre: formData.nombre,
+            precio: formData.precio,
+            codigo_barras: formData.barcode
+          })
+          .eq('id', editingProduct.id)
 
-    if (editingProduct) {
-      setProducts(prev => prev.map(p => p.id === editingProduct.id ? { ...newProduct, id: editingProduct.id } : p))
-    } else {
-      setProducts(prev => [...prev, newProduct])
-    }
+        if (error) throw error
+        toast.success('Producto actualizado correctamente')
+      } else {
+        // Crear nuevo producto
+        const { error } = await supabase
+          .from('productos')
+          .insert({
+            empresa_id: empresaId,
+            codigo: formData.codigo,
+            nombre: formData.nombre,
+            precio: formData.precio,
+            codigo_barras: formData.barcode,
+            stock: 0,
+            activo: true
+          })
 
-    setShowModal(false)
-    setEditingProduct(null)
-    setFormData({ codigo: '', nombre: '', precio: 0, barcode: '' })
+        if (error) throw error
+        toast.success('Producto creado correctamente')
+      }
+
+      // Recargar productos
+      await loadProducts()
+
+      // Limpiar formulario y cerrar modal
+      setShowModal(false)
+      setEditingProduct(null)
+      setFormData({ codigo: '', nombre: '', precio: 0, barcode: '' })
+    } catch (error) {
+      console.error('Error saving product:', error)
+      toast.error('Error al guardar producto')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleEdit = (product: BarcodeProduct) => {
@@ -104,9 +167,27 @@ export const BarcodePage: React.FC<BarcodePageProps> = ({ onClose }) => {
     setShowModal(true)
   }
 
-  const handleDelete = (id: string) => {
-    if (confirm('¿Está seguro de eliminar este producto?')) {
-      setProducts(prev => prev.filter(p => p.id !== id))
+  const handleDelete = async (id: string) => {
+    if (!confirm('¿Está seguro de eliminar este producto?')) {
+      return
+    }
+    
+    setLoading(true)
+    try {
+      const { error } = await supabase
+        .from('productos')
+        .update({ activo: false })
+        .eq('id', id)
+
+      if (error) throw error
+      
+      toast.success('Producto eliminado correctamente')
+      await loadProducts()
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      toast.error('Error al eliminar producto')
+    } finally {
+      setLoading(false)
     }
   }
 

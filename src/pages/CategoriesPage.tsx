@@ -42,12 +42,14 @@ export const CategoriesPage: React.FC<CategoriesPageProps> = ({ onClose }) => {
         .from('categorias')
         .select('*')
         .eq('empresa_id', empresaId)
+        .eq('activo', true)
         .order('created_at', { ascending: false })
 
       if (error) throw error
       setCategories(data || [])
     } catch (error) {
       console.error('Error loading categories:', error)
+      toast.error('Error al cargar categorías')
     } finally {
       setLoading(false)
     }
@@ -56,6 +58,7 @@ export const CategoriesPage: React.FC<CategoriesPageProps> = ({ onClose }) => {
   const handleSave = async () => {
     if (!empresaId || !formData.nombre.trim()) return
 
+    setLoading(true)
     try {
       if (editingCategory) {
         const { error } = await supabase
@@ -64,6 +67,7 @@ export const CategoriesPage: React.FC<CategoriesPageProps> = ({ onClose }) => {
           .eq('id', editingCategory.id)
 
         if (error) throw error
+        toast.success('Categoría actualizada correctamente')
       } else {
         const { error } = await supabase
           .from('categorias')
@@ -73,6 +77,7 @@ export const CategoriesPage: React.FC<CategoriesPageProps> = ({ onClose }) => {
           }])
 
         if (error) throw error
+        toast.success('Categoría creada correctamente')
       }
 
       setShowModal(false)
@@ -81,6 +86,9 @@ export const CategoriesPage: React.FC<CategoriesPageProps> = ({ onClose }) => {
       loadCategories()
     } catch (error) {
       console.error('Error saving category:', error)
+      toast.error('Error al guardar categoría')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -97,16 +105,21 @@ export const CategoriesPage: React.FC<CategoriesPageProps> = ({ onClose }) => {
   const handleDelete = async (id: string) => {
     if (!confirm('¿Está seguro de eliminar esta categoría?')) return
 
+    setLoading(true)
     try {
       const { error } = await supabase
         .from('categorias')
-        .delete()
+        .update({ activo: false })
         .eq('id', id)
 
       if (error) throw error
+      toast.success('Categoría eliminada correctamente')
       loadCategories()
     } catch (error) {
       console.error('Error deleting category:', error)
+      toast.error('Error al eliminar categoría')
+    } finally {
+      setLoading(false)
     }
   }
 
