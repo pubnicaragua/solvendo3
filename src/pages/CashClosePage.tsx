@@ -5,7 +5,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { HeaderWithMenu } from '../components/common/HeaderWithMenu';
 import { DollarSign, Calendar, Clock, AlertCircle, ClipboardList, PlayCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
 
 // Componente para mostrar una línea de resumen
 const SummaryLine = ({ label, value, colorClass = 'text-gray-900', icon: Icon }: { label: string; value: string; colorClass?: string; icon?: React.ElementType; }) => (
@@ -20,8 +19,8 @@ const SummaryLine = ({ label, value, colorClass = 'text-gray-900', icon: Icon }:
 
 export const CashClosePage: React.FC = () => {
   const { currentAperturaCaja, openCaja, loading: contextLoading } = usePOS();
-  const { user } = useAuth(); // Asegúrate de que `user` contenga el nombre y la URL del avatar.
   const navigate = useNavigate();
+  const { user } = useAuth(); // Asegúrate de que `user` contenga el nombre y la URL del avatar.
 
   const [isClosing, setIsClosing] = useState(false);
   const [ventas, setVentas] = useState<Venta[]>([]);
@@ -128,7 +127,7 @@ export const CashClosePage: React.FC = () => {
       
       // Usar la función closeCaja del contexto POS
       const { closeCaja } = usePOS();
-      const success = await closeCaja(montoFinal, '');
+      const success = await closeCaja(montoFinal, 'Cierre de caja manual');
       
       if (!success) {
         throw new Error('Error al cerrar la caja');
@@ -147,15 +146,15 @@ export const CashClosePage: React.FC = () => {
 
   const handleOpenCash = async () => {
     if (montoInicialApertura === '' || isNaN(parseFloat(montoInicialApertura))) {
-      toast.error('Debes ingresar un monto inicial válido.');
+      toast.error('Debes ingresar un monto inicial válido');
       return;
     }
     if (!cajaIdApertura) {
-      toast.error('Debes especificar un ID de caja.');
+      toast.error('Debes especificar un ID de caja');
       return;
     }
 
-    const success = await openCaja(parseFloat(montoInicialApertura), cajaIdApertura);
+    const success = await openCaja(parseFloat(montoInicialApertura));
     if (success) {
       toast.success('Caja abierta exitosamente. Puedes comenzar a trabajar.');
     }
@@ -211,7 +210,7 @@ export const CashClosePage: React.FC = () => {
                 <button
                   onClick={handleOpenCash}
                   disabled={!montoInicialApertura || !cajaIdApertura || isNaN(parseFloat(montoInicialApertura))}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+                  className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-base shadow-sm"
                 >
                   <PlayCircle className="w-5 h-5 mr-2"/> Abrir Caja
                 </button>

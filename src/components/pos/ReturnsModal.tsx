@@ -8,14 +8,14 @@ import toast from 'react-hot-toast'
 interface ReturnsModalProps {
   isOpen: boolean
   onClose: () => void
-  ventaId?: string
+  ventaId?: string,
   itemsToReturn?: Array<{
     id: number
     nombre: string
     cantidad: number
     precio: number
     subtotal: number
-  }>
+  }>,
   total?: number
 }
 

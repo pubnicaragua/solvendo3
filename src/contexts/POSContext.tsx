@@ -485,7 +485,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // --- Venta ---  
   const procesarVenta = async (  
     metodoPago: string,  
-    tipoDte: 'boleta' | 'factura' | 'nota_credito',  
+    tipoDte: 'boleta' | 'factura' | 'nota_credito',
     clienteId?: string  
   ): Promise<ApiResult<Venta>> => {  
     if (!cajaAbierta || !currentAperturaCaja) {  
@@ -666,15 +666,15 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const montoTeorico = currentAperturaCaja.monto_inicial + totalVentasEfectivo + totalIngresos - totalRetiros;  
       const diferencia_cierre = montoFinal - montoTeorico;  
   
-      const { error: updateError } = await supabase  
-        .from('aperturas_caja')  
+      const { error: updateError } = await supabase
+        .from('aperturas_caja')
         .update({  
           estado: 'cerrada',  
           fecha_cierre: new Date().toISOString(),  
           monto_final: montoFinal,  
           diferencia_cierre,  
           observaciones: observaciones || null  
-        })  
+        })
         .eq('id', aperturaId);  
       if (updateError) throw updateError;  
         
