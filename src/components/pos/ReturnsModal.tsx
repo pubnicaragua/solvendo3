@@ -25,9 +25,6 @@ export const ReturnsModal: React.FC<ReturnsModalProps> = ({
   ventaId,
   itemsToReturn = [],
   total = 0
-  ventaId,
-  itemsToReturn = [],
-  total = 0
 }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [searchFolio, setSearchFolio] = useState('')
