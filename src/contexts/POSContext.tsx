@@ -508,51 +508,40 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }  
       
     try {  
-      // Generación de folio: Considera un sistema más robusto para producción  
-      const folio = `${Date.now()}`;   
-      const ventaData = {  
-        empresa_id: empresaId,  
-        sucursal_id: sucursalId,  
-        caja_id: currentAperturaCaja.caja_id,  
-        apertura_caja_id: currentAperturaCaja.id,  
-        cliente_id: clienteId || null,  
-        usuario_id: user.id,  
-        folio,  
-        tipo_dte: tipoDte,  
-        metodo_pago: metodoPago,  
-        subtotal: total,  
-        descuento: 0,   
-        impuestos: 0,   
-        total,  
-        estado: 'completada' as const,  
-        fecha: new Date().toISOString()  
-      };  
+      // Usar la función RPC register_sale para procesar la venta completa
+      const { data: ventaId, error } = await supabase.rpc('register_sale', {
+        p_empresa_id: empresaId,
+        p_sucursal_id: sucursalId,
+        p_caja_id: currentAperturaCaja.caja_id,
+        p_apertura_caja_id: currentAperturaCaja.id,
+        p_cliente_id: clienteId || null,
+        p_usuario_id: user.id,
+        p_tipo_dte: tipoDte,
+        p_metodo_pago: metodoPago,
+        p_items: JSON.stringify(carrito),
+        p_total: total
+      });
+
+      if (error || !ventaId) {
+        console.error("Error al crear la venta:", error);
+        toast.error('Error al registrar la venta.');
+        return { success: false, error: error?.message };
+      }
+
+      // Obtener los detalles de la venta recién creada
+      const { data: venta, error: ventaError } = await supabase
+        .from('ventas')
+        .select('*')
+        .eq('id', ventaId)
+        .single();
+
+      if (ventaError || !venta) {
+        console.error("Error al obtener detalles de la venta:", ventaError);
+        toast.error('Error al obtener detalles de la venta.');
+        return { success: false, error: ventaError?.message };
+      }
   
-      const { data: venta, error: err1 } = await supabase.from('ventas').insert([ventaData]).select().single();  
-  
-      if (err1 || !venta) {  
-        console.error("Error al crear la venta:", err1);  
-        toast.error('Error al registrar la venta.');  
-        return { success: false, error: err1?.message };  
-      }  
-  
-      const items: VentaItemInsert[] = carrito.map(i => ({  
-        venta_id: venta.id,  
-        producto_id: i.id,  
-        cantidad: i.quantity,  
-        precio_unitario: i.precio,  
-        subtotal: i.quantity * i.precio  
-      }));  
-      const { error: err2 } = await supabase.from('venta_items').insert(items);  
-        
-      if (err2) {  
-        console.error("Error al insertar items de venta:", err2);  
-        await supabase.from('ventas').delete().eq('id', venta.id);  
-        toast.error('Error al registrar los productos de la venta. Venta anulada.');  
-        return { success: false, error: err2.message };  
-      }  
-  
-      toast.success(`Venta #${folio} procesada.`);  
+      toast.success(`Venta #${venta.folio} procesada.`);  
       clearCart();  
       return { success: true, data: venta as Venta };  
     } catch (error: any) {  

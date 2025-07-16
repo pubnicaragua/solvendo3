@@ -29,18 +29,12 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
   const [loading, setLoading] = useState(false)
   const [showPrintDialog, setShowPrintDialog] = useState(false)
   
-  const { carrito, total, procesarVenta, clearCart } = usePOS()
   const { user } = useAuth() 
-  const navigate = useNavigate()
   const navigate = useNavigate()
 
   const handleClose = () => {
     if (onClose) {
       onClose()
-    } else {
-      navigate('/')
-    } else {
-      navigate('/')
     }
   }
 
