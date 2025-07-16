@@ -6,9 +6,9 @@ import { usePOS } from '../../contexts/POSContext'
 import toast from 'react-hot-toast'
 
 interface PromotionModalProps {
-  isOpen: boolean
-  onClose: () => void
-  productId?: string
+  isOpen: boolean;
+  onClose: () => void;
+  productId?: string;
 }
 
 export const PromotionModal: React.FC<PromotionModalProps> = ({
@@ -19,7 +19,7 @@ export const PromotionModal: React.FC<PromotionModalProps> = ({
   const [selectedPromotion, setSelectedPromotion] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const { empresaId } = useAuth()
-  const { promociones, loadPromociones, aplicarPromocion } = usePOS()
+  const { promociones, loadPromociones, aplicarPromocion, productos } = usePOS()
   const [product, setProduct] = useState<any>(null)
 
   useEffect(() => {
@@ -34,18 +34,24 @@ export const PromotionModal: React.FC<PromotionModalProps> = ({
   const loadProductDetails = async () => {
     if (!productId) return
 
-    try {
-      const { data, error } = await supabase
-        .from('productos')
-        .select('*')
-        .eq('id', productId)
-        .single()
+    // Buscar el producto en la lista de productos cargados
+    const foundProduct = productos.find(p => p.id === productId);
+    if (foundProduct) {
+      setProduct(foundProduct);
+    } else {
+      try {
+        const { data, error } = await supabase
+          .from('productos')
+          .select('*')
+          .eq('id', productId)
+          .single()
 
-      if (error) throw error
-      setProduct(data)
-    } catch (error) {
-      console.error('Error loading product details:', error)
-      toast.error('Error al cargar detalles del producto')
+        if (error) throw error
+        setProduct(data)
+      } catch (error) {
+        console.error('Error loading product details:', error)
+        toast.error('Error al cargar detalles del producto')
+      }
     }
   }
 
@@ -58,25 +64,9 @@ export const PromotionModal: React.FC<PromotionModalProps> = ({
     setLoading(true)
     
     try {
-      // Verificar si la promoción existe
-      const { data: promocion, error: promocionError } = await supabase
-        .from('promociones')
-        .select('*')
-        .eq('id', selectedPromotion)
-        .single()
-        
-      if (promocionError || !promocion) {
-        throw new Error('Promoción no encontrada')
-      }
-      
-      // Aplicar la promoción al producto
       const success = await aplicarPromocion(productId, selectedPromotion)
-      
       if (success) {
-        toast.success('Promoción aplicada correctamente')
-        onClose()
-      } else {
-        toast.error('Error al aplicar promoción')
+        onClose();
       }
     } catch (error) {
       console.error('Error applying promotion:', error)
@@ -122,9 +112,13 @@ export const PromotionModal: React.FC<PromotionModalProps> = ({
               <option value="">Seleccione una promoción</option>
               {promociones.map((promo) => (
                 <option key={promo.id} value={promo.id}>
-                  {promo.nombre} - {promo.tipo === 'descuento_porcentaje' ? `${promo.valor}%` : 
-                                    promo.tipo === 'descuento_monto' ? `$${promo.valor}` : 
-                                    promo.tipo}
+                  {promo.nombre} - {
+                    promo.tipo === 'descuento_porcentaje' ? `${promo.valor}%` : 
+                    promo.tipo === 'descuento_monto' ? `$${promo.valor}` : 
+                    promo.tipo === '2x1' ? '2x1' :
+                    promo.tipo === '3x2' ? '3x2' :
+                    promo.tipo
+                  }
                 </option>
               ))}
             </select>

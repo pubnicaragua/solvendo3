@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import {
   Search, Star, FileText, Gift, User,
-  Plus, Minus, X as XIcon
+  Plus, Minus, X as XIcon, Percent
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { usePOS } from '../contexts/POSContext'
@@ -23,6 +23,7 @@ type TabId = 'destacado' | 'borradores' | 'productos' | 'clientes'
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'destacado',  label: 'Destacado',  icon: <Star className="w-5 h-5" /> },
   { id: 'borradores', label: 'Borradores', icon: <FileText className="w-5 h-5" /> },
+  { id: 'promociones', label: 'Promociones', icon: <Percent className="w-5 h-5" /> },
   { id: 'productos',  label: 'Productos',  icon: <Gift className="w-5 h-5" /> },
   { id: 'clientes',   label: 'Clientes',   icon: <User className="w-5 h-5" /> },
 ]
@@ -33,7 +34,8 @@ const Dashboard: React.FC = () => {
   const {
     productos, carrito, total,
     addToCart, updateQuantity, removeFromCart, clearCart,
-    borradores, loadBorradores, saveDraft, loadDraft, deleteDraft,
+    borradores, loadBorradores, saveDraft, loadDraft, deleteDraft, 
+    promociones, loadPromociones, aplicarPromocion,
     currentCliente, selectClient
   } = usePOS()
 
@@ -45,10 +47,12 @@ const Dashboard: React.FC = () => {
   const [showDraftModal, setShowDraftModal] = useState(false)
   const [draftName, setDraftName]         = useState('')
   const [inPaymentFlow, setInPaymentFlow]   = useState(false)
-  const [showReceipt, setShowReceipt]     = useState(false)
+  const [showReceipt, setShowReceipt]     = useState(false) 
+  const navigate = useNavigate()
 
   useEffect(() => {
     loadBorradores()
+    loadPromociones()
   },[loadBorradores])
 
   const fmt = (n:number) =>
@@ -74,7 +78,20 @@ const Dashboard: React.FC = () => {
     }
   }
 
-  const startPayment = () => setInPaymentFlow(true)
+  const startPayment = () => {
+    if (carrito.length === 0) {
+      toast.error('El carrito está vacío')
+      return
+    }
+    
+    if (!currentCliente) {
+      toast.error('Debe seleccionar un cliente')
+      return
+    }
+    
+    navigate('/facturacion')
+  }
+  
   const handlePaymentComplete = () => setShowReceipt(true)
   const handleReceiptClose = () => {
     setShowReceipt(false)
@@ -112,7 +129,7 @@ const Dashboard: React.FC = () => {
           <div className="flex-1 overflow-y-auto mb-6 space-y-4">
             {filteredProducts.map(p => {
               const item = carrito.find(i=>i.id===p.id)
-              const qty  = item?.quantity||0
+              const qty  = item?.quantity || 0
               return (
                 <div key={p.id} className="flex justify-between items-center py-4 border-b last:border-b-0">
                   <div className="flex-1"><h4 className="font-medium">{p.nombre}</h4></div>
@@ -191,7 +208,7 @@ const Dashboard: React.FC = () => {
         <aside className="flex-1 p-6 bg-gray-50 border-l flex flex-col overflow-y-auto">
           {!inPaymentFlow ? (
             <>
-              {activeTab==='destacado'  && <ProductHighlights />}
+              {activeTab==='destacado' && <ProductHighlights />}
               {activeTab==='borradores' && (
                 <DraftsPanel
                   borradores={borradores}
@@ -199,8 +216,42 @@ const Dashboard: React.FC = () => {
                   onDelete={handleDeleteDraft}
                 />
               )}
-              {activeTab==='productos'  && <ProductsPanel />}
-              {activeTab==='clientes'   && (
+              {activeTab==='promociones' && (
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Percent className="w-5 h-5 text-blue-600" />
+                    <h3 className="text-blue-600 font-semibold text-lg">Promociones</h3>
+                  </div>
+                  
+                  {promociones.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">No hay promociones disponibles</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {promociones.map(promo => (
+                        <div key={promo.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                          <h4 className="font-medium text-gray-900">{promo.nombre}</h4>
+                          <p className="text-sm text-gray-600 mt-1">{promo.descripcion}</p>
+                          <div className="flex justify-between items-center mt-2">
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                              {promo.tipo === 'descuento_porcentaje' ? `${promo.valor}% descuento` : 
+                               promo.tipo === 'descuento_monto' ? `$${promo.valor} descuento` : 
+                               promo.tipo}
+                            </span>
+                            <button 
+                              onClick={() => toast.info('Seleccione un producto primero')}
+                              className="text-sm text-blue-600 hover:text-blue-800"
+                            >
+                              Aplicar
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              {activeTab==='productos' && <ProductsPanel onAddToCart={addToCart} searchTerm={searchTerm} />}
+              {activeTab==='clientes' && (
                 <ClientsPanel onClientSelected={selectClient} clientSearchTerm={clientSearchTerm} />
               )}
             </>
@@ -217,7 +268,7 @@ const Dashboard: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={()=>setActiveTab(tab.id)}
-                  className={`flex flex-col items-center justify-center space-y-1 px-4 py-2 ${
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed"
                     activeTab===tab.id ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >

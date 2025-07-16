@@ -107,7 +107,7 @@ export const CashClosePage: React.FC = () => {
   const diferencia = useMemo(() => {
     const montoFinalNum = parseFloat(montoFinalInput); 
     if (isNaN(montoFinalNum)) return 0;
-    return montoFinalNum - montoEsperado; // Monto Real - Monto Esperado para diferencia positiva si sobra
+    return montoFinalNum - montoEsperado;
   }, [montoFinalInput, montoEsperado]);
 
 
@@ -119,15 +119,15 @@ export const CashClosePage: React.FC = () => {
         .update({
           estado: 'cerrada',
           fecha_cierre: new Date().toISOString(),
-          monto_final: parseFloat(montoFinalInput), // Guardar el monto real ingresado
-          diferencia_cierre: diferencia // Guardar la diferencia calculada
+          monto_final: parseFloat(montoFinalInput),
+          diferencia_cierre: diferencia // Usar diferencia_cierre en lugar de diferencia
         })
         .eq('id', currentAperturaCaja?.id);
 
       if (error) {
         throw error;
       }
-      toast.success('Caja cerrada exitosamente.');
+      toast.success('✅ Caja cerrada exitosamente.');
       // Opcional: recargar la página o redirigir para reflejar el cierre
       // window.location.reload(); 
     } catch (error: any) {
@@ -220,6 +220,8 @@ export const CashClosePage: React.FC = () => {
 
   // Nombre de la caja (ejemplo, podrías tener una tabla de cajas con nombres)
   const cajaNombre = 'Pedro Infantas';
+  // Reemplazar con datos dinámicos del usuario
+  const cajaNombreReal = user?.nombre ? `${user.nombre} ${user?.apellidos || ''}` : 'Usuario';
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] flex flex-col font-sans">
@@ -262,7 +264,7 @@ export const CashClosePage: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between mt-4">
                     <span className="flex items-center text-[#505050]">Caja de</span>
-                    <span className="font-medium text-[#505050]">{cajaNombre}</span>
+                    <span className="font-medium text-[#505050]">{cajaNombreReal}</span>
                 </div>
               </div>
 

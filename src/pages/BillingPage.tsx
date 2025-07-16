@@ -9,7 +9,7 @@ import toast from 'react-hot-toast'
 import { supabase } from '../lib/supabase'
 
 interface BillingPageProps {
-  onClose: () => void
+  onClose?: () => void
 }
 
 export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
@@ -29,7 +29,16 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
   const [showPrintDialog, setShowPrintDialog] = useState(false)
   
   const { carrito, total, procesarVenta, clearCart } = usePOS()
-  const { user } = useAuth()
+  const { user } = useAuth() 
+  const navigate = useNavigate()
+
+  const handleClose = () => {
+    if (onClose) {
+      onClose()
+    } else {
+      navigate('/')
+    }
+  }
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-CL', {
@@ -66,7 +75,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
       if (result.success) {
         // 2. Registrar movimiento de caja si es efectivo
         if (billingData.metodoPago === 'efectivo' && result.venta) {
-          await registrarMovimientoCaja(result.venta.id, result.venta.total)
+          await registrarMovimientoCaja(result.data?.id || '', result.data?.total || 0)
         }
         
         // 3. Mostrar diálogo de impresión
@@ -121,7 +130,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
     // Imprimir
     window.print();
     
-    // Guardar PDF
+    // Guardar PDF (simulado)
     savePdfUrl();
     
     // Limpiar y cerrar
@@ -129,7 +138,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
     onClose();
   }
   
-  const savePdfUrl = async () => {
+  const savePdfUrl = async (): Promise<void> => {
     // Simulación de generación de PDF
     const pdfUrl = `https://example.com/pdf/${Date.now()}.pdf`;
     
@@ -151,7 +160,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
   const handleSendEmail = () => {
     // Simulate sending email
     toast.success('Documento enviado por correo')
-    clearCart()
+    clearCart() 
     onClose()
   }
 
@@ -195,7 +204,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <HeaderWithMenu title="Facturación" icon={<FileText className="w-6 h-6 text-gray-600" />} />
+      <HeaderWithMenu title="Facturación" icon={<FileText className="w-6 h-6 text-gray-600" />} userName={user?.nombre || 'Usuario'} />
 
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-4xl mx-auto">
@@ -418,7 +427,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
               {/* Action Button */}
               <button
                 onClick={handleConfirmPayment}
-                disabled={loading || carrito.length === 0 || (billingData.tipoDte === 'factura' && !selectedClient)}
+                disabled={loading || carrito.length === 0 || (billingData.tipoDte === 'factura' && !selectedClient)} 
                 className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? 'Procesando...' : 'Confirmar pago'}
@@ -431,7 +440,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
       {/* Client Modal */}
       <ClientModal
         isOpen={showClientModal}
-        onClose={() => setShowClientModal(false)}
+        onClose={() => setShowClientModal(false)} 
         onClientSelect={handleClientSelect}
       />
     </div>

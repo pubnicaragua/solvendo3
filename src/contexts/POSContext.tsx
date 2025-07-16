@@ -82,6 +82,7 @@ export interface MovimientoCaja {
   
 export interface CartItem extends Producto {  
   quantity: number;  
+  promocion_aplicada?: string;
 }  
   
 export interface DraftSale {  
@@ -714,15 +715,141 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   // --- Promociones ---  
   const loadPromociones = useCallback(async () => {  
-    setPromociones([  
-      { id: 'p1', nombre: '10% OFF', tipo: 'descuento_porcentaje', valor: 10 },  
-      { id: 'p2', nombre: '2x1', tipo: '2x1', valor: null }  
-    ]);  
-  }, []);  
+    if (!empresaId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('promociones')
+        .select('*')
+        .eq('empresa_id', empresaId)
+        .eq('activo', true)
+        .order('nombre', { ascending: true });
+
+      if (error) {
+        console.error('Error loading promociones', error);
+        setPromociones([]);
+      } else {
+        setPromociones(data || []);
+      }
+    } catch (error) {
+      console.error('Error en loadPromociones:', error);
+      setPromociones([]);
+    }
+  }, [empresaId]);  
   
-  const aplicarPromocion = async (productoId: string, promocionId: string): Promise<boolean> => {  
-    toast.success('Promoción aplicada (simulado)');  
-    return true;  
+  const aplicarPromocion = async (productoId: string, promocionId: string): Promise<boolean> => {
+    try {
+      // Buscar el producto en el carrito
+      const productoIndex = carrito.findIndex(item => item.id === productoId);
+      if (productoIndex === -1) {
+        // Buscar el producto en la lista de productos
+        const producto = productos.find(p => p.id === productoId);
+        if (!producto) {
+          toast.error('Producto no encontrado');
+          return false;
+        }
+        // Añadir el producto al carrito
+        addToCart(producto);
+      }
+      
+      // Buscar la promoción
+      const promocion = promociones.find(p => p.id === promocionId);
+      if (!promocion) {
+        toast.error('Promoción no encontrada');
+        return false;
+      }
+      
+      // Aplicar la promoción según su tipo
+      const newCarrito = [...carrito];
+      const itemIndex = newCarrito.findIndex(item => item.id === productoId);
+      
+      if (itemIndex !== -1) {
+        const item = newCarrito[itemIndex];
+        
+        switch (promocion.tipo) {
+          case 'descuento_porcentaje':
+            // Aplicar descuento porcentual al precio
+            const descuentoPorcentaje = promocion.valor || 0;
+            const nuevoPrecio = item.precio * (1 - descuentoPorcentaje / 100);
+            newCarrito[itemIndex] = {
+              ...item,
+              precio: nuevoPrecio,
+              promocion_aplicada: `${promocion.nombre} (${descuentoPorcentaje}%)`
+            };
+            break;
+            
+          case 'descuento_monto':
+            // Aplicar descuento de monto fijo
+            const descuentoMonto = promocion.valor || 0;
+            const precioConDescuento = Math.max(0, item.precio - descuentoMonto);
+            newCarrito[itemIndex] = {
+              ...item,
+              precio: precioConDescuento,
+              promocion_aplicada: `${promocion.nombre} ($${descuentoMonto})`
+            };
+            break;
+            
+          case '2x1':
+            // Aplicar promoción 2x1
+            if (item.quantity === 1) {
+              newCarrito[itemIndex] = {
+                ...item,
+                quantity: 2,
+                promocion_aplicada: promocion.nombre
+              };
+            } else {
+              // Si ya hay más de 1, añadir uno gratis
+              newCarrito[itemIndex] = {
+                ...item,
+                quantity: item.quantity + 1,
+                promocion_aplicada: promocion.nombre
+              };
+            }
+            break;
+            
+          case '3x2':
+            // Aplicar promoción 3x2
+            if (item.quantity === 2) {
+              newCarrito[itemIndex] = {
+                ...item,
+                quantity: 3,
+                promocion_aplicada: promocion.nombre
+              };
+            } else if (item.quantity >= 3) {
+              // Si ya hay 3 o más, añadir uno gratis por cada 2
+              const extraItems = Math.floor(item.quantity / 2);
+              newCarrito[itemIndex] = {
+                ...item,
+                quantity: item.quantity + extraItems,
+                promocion_aplicada: promocion.nombre
+              };
+            } else {
+              // Si hay menos de 2, simplemente incrementar
+              newCarrito[itemIndex] = {
+                ...item,
+                quantity: item.quantity + 1,
+                promocion_aplicada: promocion.nombre
+              };
+            }
+            break;
+            
+          default:
+            toast.error('Tipo de promoción no soportado');
+            return false;
+        }
+        
+        setCarrito(newCarrito);
+        toast.success(`Promoción "${promocion.nombre}" aplicada correctamente`);
+        return true;
+      }
+      
+      toast.error('No se pudo aplicar la promoción');
+      return false;
+    } catch (error) {
+      console.error('Error al aplicar promoción:', error);
+      toast.error('Error al aplicar promoción');
+      return false;
+    }
   };  
   
   // --- Inicialización ---  

@@ -1,10 +1,10 @@
 // src/components/pos/ProductsPanel.tsx  
 import React, { useState } from 'react'  
 import { Gift, Search, Plus } from 'lucide-react'  
-import { usePOS } from '../../contexts/POSContext'  
+import { Producto, usePOS } from '../../contexts/POSContext'  
   
 interface ProductsPanelProps {  
-  onAddToCart: (producto: any) => void  
+  onAddToCart: (producto: Producto) => void  
   searchTerm: string  
 }  
   
@@ -15,7 +15,8 @@ const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm }
   const formatPrice = (price: number) => {  
     return new Intl.NumberFormat('es-CL', {  
       style: 'currency',  
-      currency: 'CLP'  
+      currency: 'CLP',
+      minimumFractionDigits: 0
     }).format(price)  
   }  
   
@@ -58,6 +59,10 @@ const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm }
       <div className="space-y-3">  
         {loading ? (  
           <div className="text-center py-8 text-gray-500">Cargando productos...</div>  
+        ) : filteredProducts.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            {searchTerm ? 'No se encontraron productos con ese término' : 'No hay productos disponibles'}
+          </div>
         ) : filteredProducts.map(product => (  
           <div   
             key={product.id}   
@@ -75,10 +80,6 @@ const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm }
             </button>  
           </div>  
         ))}  
-          
-        {!loading && filteredProducts.length === 0 && (  
-          <p className="text-center text-gray-500 py-8">No se encontraron productos</p>  
-        )}  
       </div>  
     </div>  
   )  
