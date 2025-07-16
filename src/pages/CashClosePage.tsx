@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { HeaderWithMenu } from '../components/common/HeaderWithMenu';
 import { DollarSign, Calendar, Clock, AlertCircle, ClipboardList, PlayCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 // Componente para mostrar una línea de resumen
 const SummaryLine = ({ label, value, colorClass = 'text-gray-900', icon: Icon }: { label: string; value: string; colorClass?: string; icon?: React.ElementType; }) => (
@@ -20,6 +21,7 @@ const SummaryLine = ({ label, value, colorClass = 'text-gray-900', icon: Icon }:
 export const CashClosePage: React.FC = () => {
   const { currentAperturaCaja, openCaja, loading: contextLoading } = usePOS();
   const { user } = useAuth(); // Asegúrate de que `user` contenga el nombre y la URL del avatar.
+  const navigate = useNavigate();
 
   const [isClosing, setIsClosing] = useState(false);
   const [ventas, setVentas] = useState<Venta[]>([]);
@@ -30,6 +32,7 @@ export const CashClosePage: React.FC = () => {
   // Estados para la apertura de caja
   const [montoInicialApertura, setMontoInicialApertura] = useState('');
   const [cajaIdApertura, setCajaIdApertura] = useState('caja_principal_001'); // Valor por defecto simulado
+  const [filterType, setFilterType] = useState('all');
 
   // Formateador de moneda: símbolo de dólar *detrás*
   const formatPrice = (price: number) =>
@@ -123,6 +126,8 @@ export const CashClosePage: React.FC = () => {
         throw new Error('El monto final debe ser un número válido');
       }
       
+      // Usar la función closeCaja del contexto POS
+      const { closeCaja } = usePOS();
       const success = await closeCaja(montoFinal, '');
       
       if (!success) {
@@ -132,9 +137,7 @@ export const CashClosePage: React.FC = () => {
       toast.success('✅ Caja cerrada exitosamente.');
       
       // Navegar al dashboard después de un cierre exitoso
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 2000);
+      navigate('/');
     } catch (error: any) {
       toast.error('Error al cerrar la caja: ' + error.message);
     } finally {

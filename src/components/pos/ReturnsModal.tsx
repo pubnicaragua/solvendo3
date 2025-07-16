@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 
 interface ReturnsModalProps {
@@ -24,6 +25,9 @@ export const ReturnsModal: React.FC<ReturnsModalProps> = ({
   ventaId,
   itemsToReturn = [],
   total = 0
+  ventaId,
+  itemsToReturn = [],
+  total = 0
 }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [searchFolio, setSearchFolio] = useState('')
@@ -38,6 +42,7 @@ export const ReturnsModal: React.FC<ReturnsModalProps> = ({
   })
 
   const { user } = useAuth()
+  const navigate = useNavigate()
 
   if (!isOpen) return null
 
@@ -78,6 +83,21 @@ export const ReturnsModal: React.FC<ReturnsModalProps> = ({
         throw new Error(devolucionError?.message || 'Error al crear la devolución');
       }
       
+      // 2. Crear los ítems de devolución
+      const devolucionItems = itemsToReturn.map(item => ({
+        devolucion_id: devolucion.id,
+        venta_item_id: item.id,
+        cantidad_devuelta: item.cantidad
+      }));
+      
+      const { error: itemsError } = await supabase
+        .from('devolucion_items')
+        .insert(devolucionItems);
+        
+      if (itemsError) {
+        throw new Error(itemsError.message || 'Error al crear los ítems de devolución');
+      }
+      
       // Mostrar el modal de nota de crédito
       setShowCreditNote(true);
     } catch (error: any) {
@@ -107,6 +127,11 @@ export const ReturnsModal: React.FC<ReturnsModalProps> = ({
               <button 
                 onClick={() => { setShowCreditNote(false); onClose(); }}
                 className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                onClick={() => { 
+                  setShowCreditNote(false); 
+                  onClose(); 
+                  navigate('/');
+                }}
               >
                 Imprimir
               </button>

@@ -11,6 +11,7 @@ import {
 import { HeaderWithMenu } from '../components/common/HeaderWithMenu';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
+import { useAuth } from '../contexts/AuthContext';
 import { ReturnsModal } from '../components/pos/ReturnsModal'; // Importamos el ReturnsModal
 
 interface VentaItem {
@@ -24,6 +25,7 @@ interface VentaItem {
 export const ReturnsPage: React.FC = () => {
   const [folio, setFolio] = useState('');
   const [folioInput, setFolioInput] = useState('');
+  const { empresaId } = useAuth();
   const [ventaItems, setVentaItems] = useState<VentaItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<Record<number, number>>({});
   const [loading, setLoading] = useState(false);
@@ -57,8 +59,9 @@ export const ReturnsPage: React.FC = () => {
     try {
       const { data: venta, error: errV } = await supabase
         .from('ventas')
-        .select('id,folio')
+        .select('id,folio,empresa_id')
         .eq('folio', folioInput)
+        .eq('empresa_id', empresaId)
         .single();
 
       if (errV || !venta) {
@@ -74,7 +77,8 @@ export const ReturnsPage: React.FC = () => {
       const { data: lines, error: linesError } = await supabase
         .from('ventas_items')
         .select('id,cantidad,precio,producto:productos(nombre)')
-        .eq('venta_id', venta.id);
+        .eq('venta_id', venta.id)
+        .order('id', { ascending: true });
 
       if (linesError) {
         throw linesError;
@@ -354,6 +358,18 @@ export const ReturnsPage: React.FC = () => {
       <ReturnsModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)} // Cierra el modal
+        ventaId={folio ? venta?.id : undefined}
+        itemsToReturn={Object.entries(selectedItems).map(([id, qty]) => {
+          const item = ventaItems.find(i => i.id === +id);
+          return {
+            id: +id,
+            nombre: item?.nombre || 'Producto desconocido',
+            cantidad: qty,
+            precio: item?.precio || 0,
+            subtotal: (item?.precio || 0) * qty
+          };
+        })}
+        total={total}
       />
     </div>
   );
