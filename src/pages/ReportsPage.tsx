@@ -289,8 +289,8 @@ export const ReportsPage: React.FC = () => {
                 </div>
               </div>
             ))
-          </div>
-        )}
+          )}
+        </div>
 
         {/* CONTENEDOR PRINCIPAL: Gráfico y Panel de Acciones Lateral */}
         <div className="flex flex-col lg:flex-row gap-6 relative">
