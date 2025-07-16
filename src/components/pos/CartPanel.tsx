@@ -1,9 +1,13 @@
 import React from 'react'
-import { X, Plus, Minus } from 'lucide-react'
+import { X, Plus, Minus, Percent, FileText } from 'lucide-react'
 import { usePOS } from '../../contexts/POSContext'
 import { useNavigate } from 'react-router-dom'
 
-export const CartPanel: React.FC = () => {
+interface CartPanelProps {
+  onPromotionClick?: (productId: string) => void;
+}
+
+export const CartPanel: React.FC<CartPanelProps> = ({ onPromotionClick }) => {
   const { carrito, updateQuantity, removeFromCart, clearCart, total } = usePOS()
   const navigate = useNavigate()
 
@@ -17,6 +21,11 @@ export const CartPanel: React.FC = () => {
           <div key={item.id} className="flex items-center justify-between">
             <div className="flex-1">
               <h4 className="font-medium">{item.nombre}</h4>
+              {item.promocion_aplicada && (
+                <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                  {item.promocion_aplicada}
+                </span>
+              )}
               <div className="mt-1 inline-flex items-center bg-gray-100 rounded">
                 <button
                   onClick={() => updateQuantity(item.id, item.quantity - 1)}
@@ -36,11 +45,19 @@ export const CartPanel: React.FC = () => {
             <div className="text-right">
               <span className="font-medium">{fmt(item.precio * item.quantity)}</span>
               <button
-                onClick={() => removeFromCart(item.id)}
-                className="block mt-1 text-red-500 hover:text-red-700"
+                onClick={() => removeFromCart(item.id)} 
+                className="block mt-1 text-red-500 hover:text-red-700 mr-2"
               >
                 <X className="w-4 h-4" />
               </button>
+              {onPromotionClick && (
+                <button
+                  onClick={() => onPromotionClick(item.id)}
+                  className="block mt-1 text-blue-500 hover:text-blue-700"
+                >
+                  <Percent className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
         ))}
@@ -65,19 +82,11 @@ export const CartPanel: React.FC = () => {
         </button>
 
         <button
-          onClick={() => navigate('/borradores')}
+          onClick={() => navigate('/facturacion')}
           className="w-full flex items-center justify-center gap-2 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-          Guardar Borrador
+          <FileText className="w-4 h-4" />
+          Facturar
         </button>
 
         <div className="flex justify-between items-center text-lg font-semibold">
@@ -88,7 +97,7 @@ export const CartPanel: React.FC = () => {
         <button
           onClick={() => navigate('/pagar')}
           disabled={carrito.length === 0}
-          className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
+          className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Pagar
         </button>
