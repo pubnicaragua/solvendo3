@@ -21,11 +21,11 @@ import { HeaderWithMenu } from '../components/common/HeaderWithMenu'
 
 type TabId = 'destacado' | 'borradores' | 'productos' | 'clientes'
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
-  { id: 'destacado',  label: 'Destacado',  icon: <Star className="w-5 h-5" /> },
-  { id: 'borradores', label: 'Borradores', icon: <FileText className="w-5 h-5" /> },
-  { id: 'promociones', label: 'Promociones', icon: <Percent className="w-5 h-5" /> },
-  { id: 'productos',  label: 'Productos',  icon: <Gift className="w-5 h-5" /> },
-  { id: 'clientes',   label: 'Clientes',   icon: <User className="w-5 h-5" /> },
+  { id: 'destacado' as TabId,  label: 'Destacado',  icon: <Star className="w-5 h-5" /> },
+  { id: 'borradores' as TabId, label: 'Borradores', icon: <FileText className="w-5 h-5" /> },
+  { id: 'promociones' as TabId, label: 'Promociones', icon: <Percent className="w-5 h-5" /> },
+  { id: 'productos' as TabId,  label: 'Productos',  icon: <Gift className="w-5 h-5" /> },
+  { id: 'clientes' as TabId,   label: 'Clientes',   icon: <User className="w-5 h-5" /> },
 ]
 
 const Dashboard: React.FC = () => {
@@ -255,10 +255,10 @@ const Dashboard: React.FC = () => {
           <nav className="flex justify-around items-center h-16 bg-white border-t mt-auto">
             {TABS.map(tab => (
               <button
-                key={tab.id}
-                onClick={()=>setActiveTab(tab.id as TabId)}
+                key={tab.id as string}
+                onClick={() => setActiveTab(tab.id as TabId)}
                 className={`flex-1 flex flex-col items-center py-3 ${
-                  activeTab===tab.id ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                  activeTab === tab.id ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 {tab.icon}

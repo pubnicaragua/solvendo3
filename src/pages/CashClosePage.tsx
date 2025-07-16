@@ -25,7 +25,7 @@ export const CashClosePage: React.FC = () => {
   const [ventas, setVentas] = useState<Venta[]>([]);
   const [movimientos, setMovimientos] = useState<MovimientoCaja[]>([]);
   const [montoFinalInput, setMontoFinalInput] = useState('0'); 
-  const [filterType, setFilterType] = useState('all'); // Estado para el filtro de documentos
+  const { empresaId } = useAuth()
 
   // Estados para la apertura de caja
   const [montoInicialApertura, setMontoInicialApertura] = useState('');
@@ -114,37 +114,22 @@ export const CashClosePage: React.FC = () => {
   const handleCloseCash = async () => {
     setIsClosing(true);
     try {
-      // Asegurarse de que montoFinalInput sea un número válido
+      if (!currentAperturaCaja) {
+        throw new Error('No hay una caja abierta para cerrar');
+      }
+      
       const montoFinal = parseFloat(montoFinalInput);
       if (isNaN(montoFinal)) {
         throw new Error('El monto final debe ser un número válido');
       }
       
-      const { error } = await supabase
-        .from('aperturas_caja')
-        .update({
-          estado: 'cerrada',
-          fecha_cierre: new Date().toISOString(),
-          monto_final: montoFinal,
-          diferencia_cierre: diferencia // Usar diferencia_cierre en lugar de diferencia
-        })
-        .eq('id', currentAperturaCaja?.id);
-
-      if (error) {
-        throw error;
-      }
-      toast.success('✅ Caja cerrada exitosamente.');
+      const success = await closeCaja(montoFinal, '');
       
-      // Actualizar el estado local para reflejar el cierre
-      if (currentAperturaCaja) {
-        setCurrentAperturaCaja({
-          ...currentAperturaCaja,
-          estado: 'cerrada',
-          fecha_cierre: new Date().toISOString(),
-          monto_final: montoFinal,
-          diferencia_cierre: diferencia
-        });
+      if (!success) {
+        throw new Error('Error al cerrar la caja');
       }
+      
+      toast.success('✅ Caja cerrada exitosamente.');
       
       // Navegar al dashboard después de un cierre exitoso
       setTimeout(() => {

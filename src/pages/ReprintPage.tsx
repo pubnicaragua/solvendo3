@@ -3,6 +3,7 @@ import { Printer, Search, FileText } from 'lucide-react'
 import { HeaderWithMenu } from '../components/common/HeaderWithMenu'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import toast from 'react-hot-toast'
 
 interface Document {
   id: string
@@ -25,7 +26,7 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [loading, setLoading] = useState(false)
 
   // Obtener datos del usuario del contexto de autenticación
-  const { user } = useAuth();
+  const { user, empresaId } = useAuth();
 
   useEffect(() => {
     loadDocs()
@@ -34,16 +35,23 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const loadDocs = async () => {
     setLoading(true)
     try {
-      let data: any[] = []
-      if (empresaId) {
-        const { data: rows } = await supabase
-          .from('ventas')
-          .select('id,folio,tipo_dte,total,fecha')
-          .eq('empresa_id', empresaId)
-          .eq('fecha::date', fecha)
-          .order('fecha', { ascending: false })
-        data = rows || []
+      if (!empresaId) {
+        toast.error('No se pudo determinar la empresa');
+        return;
       }
+      
+      const { data: rows, error } = await supabase
+        .from('ventas')
+        .select('id,folio,tipo_dte,total,fecha')
+        .eq('empresa_id', empresaId)
+        .eq('fecha::date', fecha)
+        .order('fecha', { ascending: false });
+        
+      if (error) {
+        throw error;
+      }
+      
+      const data = rows || [];
       setDocs(data.map(d => ({
         id: d.id,
         folio: d.folio,
@@ -56,10 +64,9 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       setSelectedDoc(null)
       setSearchFolio('')
       setCopies(1)
-      
-      if (data.length === 0) {
-        toast.info('No hay documentos disponibles para la fecha seleccionada');
-      }
+    } catch (error) {
+      console.error('Error al cargar documentos:', error);
+      toast.error('Error al cargar documentos');
     } finally {
       setLoading(false)
     }
@@ -81,10 +88,20 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(n)
 
   const handlePrint = () => {
+    if (!selectedDoc) {
+      toast.error('Debe seleccionar un documento para imprimir');
+      return;
+    }
+    
     toast.success(`Imprimiendo ${copies} ${copies === 1 ? 'copia' : 'copias'}`);
     // Simular impresión
     setTimeout(() => {
-      window.print();
+      try {
+        window.print();
+      } catch (error) {
+        console.error('Error al imprimir:', error);
+        toast.error('Error al imprimir');
+      }
     }, 500);
   }
 

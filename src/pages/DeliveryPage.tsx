@@ -197,7 +197,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         region: '',
         numDocumento: ''
       });
-      onClose(); 
+      onClose();
     } catch (error) {
       console.error('Error general en el despacho:', error);
       toast.error('Ocurrió un error inesperado al despachar.');

@@ -678,15 +678,15 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const diferencia_cierre = montoFinal - montoTeorico;  
   
       const { error: updateError } = await supabase  
-          .from('aperturas_caja')  
-          .update({  
-              estado: 'cerrada',  
-              fecha_cierre: new Date().toISOString(),  
-              monto_final: montoFinal,  
-              diferencia_cierre,  
-              observaciones: observaciones || null  
-          })  
-          .eq('id', aperturaId);  
+        .from('aperturas_caja')  
+        .update({  
+          estado: 'cerrada',  
+          fecha_cierre: new Date().toISOString(),  
+          monto_final: montoFinal,  
+          diferencia_cierre,  
+          observaciones: observaciones || null  
+        })  
+        .eq('id', aperturaId);  
       if (updateError) throw updateError;  
         
       toast.success('✅ ¡Caja cerrada exitosamente!');  

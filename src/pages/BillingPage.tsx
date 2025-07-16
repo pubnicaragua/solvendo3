@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FileText, Truck, Plus, Calendar, CreditCard, DollarSign, Percent } from 'lucide-react'
 import { HeaderWithMenu } from '../components/common/HeaderWithMenu'
-import { usePOS, CartItem } from '../contexts/POSContext'
+import { usePOS } from '../contexts/POSContext'
 import { useAuth } from '../contexts/AuthContext'
 import { ClientModal } from '../components/pos/ClientModal'
 import { Cliente } from '../lib/supabase'
@@ -31,7 +31,14 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
   
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { carrito, total, clearCart, procesarVenta } = usePOS()
+  const { carrito, total, clearCart, procesarVenta, currentCliente, selectClient } = usePOS()
+
+  // Si hay un cliente seleccionado en el contexto, usarlo
+  useEffect(() => {
+    if (currentCliente) {
+      setSelectedClient(currentCliente);
+    }
+  }, [currentCliente]);
 
   const handleClose = () => {
     if (onClose) {
@@ -49,6 +56,9 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
   // Función para manejar la selección de cliente
   const handleClientSelect = (cliente: Cliente | null) => {
     setSelectedClient(cliente)
+    if (cliente) {
+      selectClient(cliente);
+    }
     setShowClientModal(false)
   }
 
@@ -68,11 +78,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
     
     try {
       // Procesar la venta
-      const result = await procesarVenta(
-        billingData.metodoPago, 
-        billingData.tipoDte as 'boleta' | 'factura' | 'nota_credito',
-        selectedClient?.id
-      )
+      const result = await procesarVenta(billingData.metodoPago, billingData.tipoDte as 'boleta' | 'factura' | 'nota_credito', selectedClient?.id);
       
       if (result.success) {
         // Mostrar diálogo de impresión
@@ -91,14 +97,21 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
   // Función para manejar la impresión
   const handlePrint = () => {
     // Imprimir
-    window.print();
+    try {
+      window.print();
+    } catch (error) {
+      console.error('Error al imprimir:', error);
+    }
     
     // Limpiar carrito
     clearCart();
     
     // Cerrar y navegar al dashboard
-    handleClose();
-    navigate('/');
+    if (onClose) {
+      onClose();
+    } else {
+      navigate('/');
+    }
   }
   
   // Función para enviar por email
@@ -106,10 +119,13 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
     // Simulate sending email
     toast.success('Documento enviado por correo')
     // Limpiar carrito
-    clearCart() 
+    clearCart();
     // Cerrar y navegar al dashboard
-    handleClose()
-    navigate('/')
+    if (onClose) {
+      onClose();
+    } else {
+      navigate('/');
+    }
   }
 
   const totalConDescuento = total * (1 - (billingData.descuentoGlobal / 100))
