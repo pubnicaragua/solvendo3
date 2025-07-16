@@ -8,6 +8,7 @@ import { ClientModal } from '../components/pos/ClientModal'
 import { Cliente } from '../lib/supabase'
 import toast from 'react-hot-toast'
 import { supabase } from '../lib/supabase'
+import { useEffect } from 'react'
 
 interface BillingPageProps {
   onClose?: () => void

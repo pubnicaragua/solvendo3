@@ -34,6 +34,9 @@ export const ReturnsPage: React.FC = () => {
   const [clienteSearch, setClienteSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false); // Nuevo estado para controlar la visibilidad del modal
 
+  // Estado para almacenar la venta seleccionada
+  const [venta, setVenta] = useState<any>(null);
+
   // Datos de usuario de ejemplo para el Header
   const userName = "Emilio Aguilera";
   // Cambia esta URL si quieres una imagen específica para el avatar

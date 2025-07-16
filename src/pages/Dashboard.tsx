@@ -60,20 +60,27 @@ const Dashboard: React.FC = () => {
   const handleSaveDraft = async () => {
     if (!draftName.trim() || carrito.length===0) return
     setShowDraftModal(false)
-    if (await saveDraft(draftName)) {
+    const success = await saveDraft(draftName)
+    if (success) {
       toast.success('Borrador guardado')
       setDraftName('')
       loadBorradores()
     }
   }
   const handleLoadDraft = async (id:string) => {
-    await loadDraft(id)
+    const success = await loadDraft(id)
+    if (success) {
+      toast.success('Borrador cargado')
+    }
     setActiveTab('destacado')
   }
   const handleDeleteDraft = async (id:string) => {
-    if (confirm('¿Eliminar borrador?') && await deleteDraft(id)) {
-      toast.success('Borrador eliminado')
-      loadBorradores()
+    if (confirm('¿Eliminar borrador?')) {
+      const success = await deleteDraft(id)
+      if (success) {
+        toast.success('Borrador eliminado')
+        loadBorradores()
+      }
     }
   }
 
@@ -84,8 +91,11 @@ const Dashboard: React.FC = () => {
     }
     
     navigate('/facturacion')
+      toast.success('Borrador eliminado')
+      loadBorradores()
+    }
   }
-  
+
   const handlePaymentComplete = () => setShowReceipt(true)
   const handleReceiptClose = () => {
     setShowReceipt(false)

@@ -288,17 +288,6 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const loadBorradores = useCallback(async () => {  
     if (!empresaId || !user) return;  
     try {  
-      // Asegurarse de que la tabla existe
-      const { data: tableExists } = await supabase.rpc('check_table_exists', { 
-        table_name: 'borradores_venta' 
-      });
-      
-      if (!tableExists) {
-        console.warn('La tabla borradores_venta no existe');
-        setBorradores([]);
-        return;
-      }
-      
       const { data, error } = await supabase  
         .from('borradores_venta')  
         .select('*')  
