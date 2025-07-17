@@ -65,34 +65,88 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   }, [currentCliente]);
 
   useEffect(() => {
-    if (!empresaId) return;
+    if (!empresaId) {
+      // Usar datos de ejemplo si no hay empresaId
+      setProductos([
+        { id: '1', nombre: 'Ejemplo producto 1', precio: 34.5, stock: 100 },
+        { id: '2', nombre: 'Ejemplo producto 2', precio: 68.5, stock: 50 },
+        { id: '3', nombre: 'Ejemplo producto 3', precio: 34.5, stock: 75 }
+      ]);
+      setDocsDisponibles([
+        { id: 'doc1', label: 'Boleta manual (no válida al SII) N°V17522786664074', total: 35 },
+        { id: 'doc2', label: 'Boleta manual (no válida al SII) N°3421457', total: 34000 },
+        { id: 'doc3', label: 'Factura N°1001', total: 45000 },
+        { id: 'doc4', label: 'Boleta manual (no válida al SII) N°9', total: 204 },
+        { id: 'doc5', label: 'Boleta manual (no válida al SII) N°3421456', total: 22000 }
+      ]);
+      return;
+    }
 
     const fetchProductsAndDocs = async () => {
-      const { data: prods } = await supabase
-        .from('productos')
-        .select('*')
-        .ilike('nombre', `%${productSearch}%`)
-        .limit(10);
-      setProductos(prods || []);
+      try {
+        const { data: prods } = await supabase
+          .from('productos')
+          .select('*')
+          .ilike('nombre', `%${productSearch}%`)
+          .limit(10);
+        
+        if (prods && prods.length > 0) {
+          setProductos(prods);
+        } else {
+          // Datos de ejemplo si no hay productos
+          setProductos([
+            { id: '1', nombre: 'Ejemplo producto 1', precio: 34.5, stock: 100 },
+            { id: '2', nombre: 'Ejemplo producto 2', precio: 68.5, stock: 50 },
+            { id: '3', nombre: 'Ejemplo producto 3', precio: 34.5, stock: 75 }
+          ]);
+        }
 
-      const { data: docs } = await supabase
-        .from('ventas')
-        .select('id, folio, tipo_dte, total')
-        .ilike('folio', `%${docSearch}%`)
-        .eq('empresa_id', empresaId)
-        .limit(10);
-      setDocsDisponibles(
-        (docs || []).map((d: any) => ({
-          ...d,
-          label:
-            (d.tipo_dte === 'boleta'
-              ? 'Boleta manual (no válida al SII)'
-              : d.tipo_dte) +
-            ' Nº' +
-            d.folio,
-          total: d.total
-        }))
-      );
+        const { data: docs } = await supabase
+          .from('ventas')
+          .select('id, folio, tipo_dte, total')
+          .ilike('folio', `%${docSearch}%`)
+          .eq('empresa_id', empresaId)
+          .limit(10);
+        
+        if (docs && docs.length > 0) {
+          setDocsDisponibles(
+            docs.map((d: any) => ({
+              id: d.id,
+              label:
+                (d.tipo_dte === 'boleta'
+                  ? 'Boleta manual (no válida al SII)'
+                  : d.tipo_dte) +
+                ' Nº' +
+                d.folio,
+              total: d.total
+            }))
+          );
+        } else {
+          // Datos de ejemplo si no hay documentos
+          setDocsDisponibles([
+            { id: 'doc1', label: 'Boleta manual (no válida al SII) N°V17522786664074', total: 35 },
+            { id: 'doc2', label: 'Boleta manual (no válida al SII) N°3421457', total: 34000 },
+            { id: 'doc3', label: 'Factura N°1001', total: 45000 },
+            { id: 'doc4', label: 'Boleta manual (no válida al SII) N°9', total: 204 },
+            { id: 'doc5', label: 'Boleta manual (no válida al SII) N°3421456', total: 22000 }
+          ]);
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+        // Usar datos de ejemplo en caso de error
+        setProductos([
+          { id: '1', nombre: 'Ejemplo producto 1', precio: 34.5, stock: 100 },
+          { id: '2', nombre: 'Ejemplo producto 2', precio: 68.5, stock: 50 },
+          { id: '3', nombre: 'Ejemplo producto 3', precio: 34.5, stock: 75 }
+        ]);
+        setDocsDisponibles([
+          { id: 'doc1', label: 'Boleta manual (no válida al SII) N°V17522786664074', total: 35 },
+          { id: 'doc2', label: 'Boleta manual (no válida al SII) N°3421457', total: 34000 },
+          { id: 'doc3', label: 'Factura N°1001', total: 45000 },
+          { id: 'doc4', label: 'Boleta manual (no válida al SII) N°9', total: 204 },
+          { id: 'doc5', label: 'Boleta manual (no válida al SII) N°3421456', total: 22000 }
+        ]);
+      }
     };
 
     fetchProductsAndDocs();

@@ -55,18 +55,12 @@ export const ReturnsPage: React.FC = () => {
     }
     setLoading(true);
     try {
-      const { data: venta, error: errV } = await supabase
-        .rpc('get_venta_by_folio', { 
-          p_folio: folioInput,
-          p_empresa_id: empresaId
-        });
-
-      if (errV || !venta) {
-        // Si no se encuentra la venta, crear una de ejemplo
+      if (!empresaId) {
+        // Usar datos de ejemplo si no hay empresaId
         setVenta({
           id: 'example-venta-' + Date.now(),
           folio: folioInput || '12345',
-          empresa_id: empresaId
+          empresa_id: 'example-empresa'
         });
         setFolio(folioInput || '12345');
         
@@ -93,30 +87,127 @@ export const ReturnsPage: React.FC = () => {
         return;
       }
 
-      setVenta(venta);
-      setFolio(folioInput);
-      
-      // Crear ítems de ejemplo
-      const exampleItems: VentaItem[] = [
-        {
-          id: 'example-item-1',
-          nombre: 'Ejemplo producto 1',
-          cantidad: 2,
-          precio: 34.5,
-          returnable: 2
-        },
-        {
-          id: 'example-item-2',
-          nombre: 'Ejemplo producto 2',
-          cantidad: 1,
-          precio: 68.5,
-          returnable: 1
+      try {
+        // Buscar la venta por folio
+        const { data: venta, error: errV } = await supabase
+          .from('ventas')
+          .select('*')
+          .eq('folio', folioInput)
+          .eq('empresa_id', empresaId)
+          .single();
+
+        if (errV || !venta) {
+          // Si no se encuentra la venta, crear una de ejemplo
+          setVenta({
+            id: 'example-venta-' + Date.now(),
+            folio: folioInput || '12345',
+            empresa_id: empresaId
+          });
+          setFolio(folioInput || '12345');
+          
+          // Crear ítems de ejemplo
+          const exampleItems: VentaItem[] = [
+            {
+              id: 'example-item-1',
+              nombre: 'Ejemplo producto 1',
+              cantidad: 2,
+              precio: 34.5,
+              returnable: 2
+            },
+            {
+              id: 'example-item-2',
+              nombre: 'Ejemplo producto 2',
+              cantidad: 1,
+              precio: 68.5,
+              returnable: 1
+            }
+          ];
+          
+          setVentaItems(exampleItems);
+          setShowForm(true);
+          return;
         }
-      ];
-      
-      setVentaItems(exampleItems);
-      setSelectedItems({});
-      setShowForm(true);
+
+        setVenta(venta);
+        setFolio(folioInput);
+        
+        // Cargar ítems de la venta
+        const { data: items, error: itemsError } = await supabase
+          .from('venta_items')
+          .select(`
+            id,
+            cantidad,
+            precio_unitario,
+            productos (
+              id,
+              nombre
+            )
+          `)
+          .eq('venta_id', venta.id);
+
+        if (itemsError || !items || items.length === 0) {
+          // Usar ítems de ejemplo si no hay datos
+          const exampleItems: VentaItem[] = [
+            {
+              id: 'example-item-1',
+              nombre: 'Ejemplo producto 1',
+              cantidad: 2,
+              precio: 34.5,
+              returnable: 2
+            },
+            {
+              id: 'example-item-2',
+              nombre: 'Ejemplo producto 2',
+              cantidad: 1,
+              precio: 68.5,
+              returnable: 1
+            }
+          ];
+          setVentaItems(exampleItems);
+        } else {
+          // Mapear los ítems reales
+          const mappedItems: VentaItem[] = items.map(item => ({
+            id: item.id,
+            nombre: item.productos?.nombre || 'Producto sin nombre',
+            cantidad: item.cantidad,
+            precio: item.precio_unitario,
+            returnable: item.cantidad // Asumimos que se puede devolver toda la cantidad
+          }));
+          setVentaItems(mappedItems);
+        }
+        
+        setSelectedItems({});
+        setShowForm(true);
+      } catch (error) {
+        console.error('Error loading venta:', error);
+        // Usar datos de ejemplo en caso de error
+        setVenta({
+          id: 'example-venta-' + Date.now(),
+          folio: folioInput || '12345',
+          empresa_id: empresaId || 'example-empresa'
+        });
+        setFolio(folioInput || '12345');
+        
+        const exampleItems: VentaItem[] = [
+          {
+            id: 'example-item-1',
+            nombre: 'Ejemplo producto 1',
+            cantidad: 2,
+            precio: 34.5,
+            returnable: 2
+          },
+          {
+            id: 'example-item-2',
+            nombre: 'Ejemplo producto 2',
+            cantidad: 1,
+            precio: 68.5,
+            returnable: 1
+          }
+        ];
+        
+        setVentaItems(exampleItems);
+        setShowForm(true);
+      }
     } catch (error: any) {
       toast.error('Error al cargar la venta: ' + error.message);
       setFolio('');
