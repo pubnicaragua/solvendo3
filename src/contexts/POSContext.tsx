@@ -310,19 +310,20 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const saveDraft = async (nombre: string): Promise<boolean> => {  
     if (!empresaId || !user || carrito.length === 0) return false;  
     try {  
-      const { error } = await supabase  
+      const { error } = await supabase
         .from('borradores_venta')  
-        .insert([{ 
-          empresa_id: empresaId, 
-          usuario_id: user.id, 
-          nombre, 
-          items: carrito, 
+        .insert({
+          empresa_id: empresaId,
+          usuario_id: user.id,
+          nombre,
+          items: carrito,
           total,
           fecha: new Date().toISOString()
-        }]);  
+        });
   
       if (error) {   
-        toast.error('Error al guardar borrador');   
+        console.error('Error al guardar borrador:', error);
+        toast.error('Error al guardar borrador: ' + error.message);   
         return false;   
       }  
       toast.success('Borrador guardado');  
@@ -337,14 +338,15 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   const loadDraft = async (draftId: string): Promise<boolean> => {  
     try {  
-      const { data, error } = await supabase  
+      const { data, error } = await supabase
         .from('borradores_venta')  
         .select('*')  
         .eq('id', draftId)  
         .single();  
   
       if (error || !data) {   
-        toast.error('Error al cargar borrador');   
+        console.error('Error al cargar borrador:', error);
+        toast.error('Error al cargar borrador: ' + error?.message);   
         return false;   
       }  
       setCarrito(data.items as CartItem[]);  
@@ -359,9 +361,14 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   const deleteDraft = async (draftId: string): Promise<boolean> => {  
     try {  
-      const { error } = await supabase.from('borradores_venta').delete().eq('id', draftId);  
+      const { error } = await supabase
+        .from('borradores_venta')
+        .delete()
+        .eq('id', draftId);
+        
       if (error) {   
-        toast.error('Error al eliminar borrador');   
+        console.error('Error al eliminar borrador:', error);
+        toast.error('Error al eliminar borrador: ' + error.message);   
         return false;   
       }  
       toast.success('Borrador eliminado');  
@@ -376,20 +383,67 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   // --- Clientes ---  
   const loadClientes = useCallback(async () => {  
-    if (!empresaId) return;  
+    if (!empresaId) return;
     try {  
-      // Verificar si hay clientes, si no hay, crear uno de ejemplo
-      const { data, error } = await supabase  
+      // Insertar cliente de ejemplo si no existe ninguno
+      await supabase
+        .from('clientes')
+        .insert({
+          id: 'g1eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+          empresa_id: empresaId,
+          razon_social: 'Cliente Demo',
+          rut: '11.111.111-1',
+          direccion: 'Calle Demo 456',
+          comuna: 'Santiago',
+          ciudad: 'Santiago',
+          giro: 'Persona Natural',
+          telefono: '+56 9 8765 4321',
+          email: 'cliente@demo.cl',
+          contacto: 'Cliente Demo',
+          activo: true
+        })
+        .onConflict('id')
+        .ignore();
+      
+      // Cargar clientes
+      const { data, error } = await supabase
         .from('clientes')  
         .select('*')  
         .eq('empresa_id', empresaId)  
         .order('razon_social', { ascending: true });  
   
       if (error) {  
-        console.error('Error loading clients', error);  
+        console.error('Error loading clients', error);
         setClientes([]);  
       } else {  
-        setClientes(data || []);  
+        if (data && data.length > 0) {
+          setClientes(data);
+          // Si no hay cliente seleccionado, seleccionar el primero
+          if (!currentCliente && data.length > 0) {
+            setCurrentCliente(data[0]);
+          }
+        } else {
+          // Si no hay clientes, crear uno de ejemplo
+          const exampleClient = {
+            id: 'example-client',
+            empresa_id: empresaId,
+            razon_social: 'Cliente Ejemplo',
+            rut: '11.111.111-1',
+            direccion: 'Calle Ejemplo 123',
+            comuna: 'Santiago',
+            ciudad: 'Santiago',
+            region: 'Metropolitana',
+            giro: 'Comercio',
+            telefono: '+56 9 1234 5678',
+            email: 'ejemplo@cliente.cl',
+            contacto: 'Contacto Ejemplo',
+            activo: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          setClientes([exampleClient]);
+          setCurrentCliente(exampleClient);
+        }
       }  
     } catch (error) {  
       console.error('Error en loadClientes:', error);  
@@ -399,12 +453,12 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   const selectClient = (cliente: Cliente | null) => {  
     setCurrentCliente(cliente);  
-    if(cliente) {  
+    if (cliente) {  
         toast.success(`Cliente ${cliente.razon_social} seleccionado`);  
     } else {  
         toast.info('Cliente deseleccionado');  
     }  
-  };  
+  };
   
   const crearCliente = async (clienteData: Partial<Cliente>): Promise<ApiResult<Cliente>> => {  
     if (!empresaId) return { success: false, error: 'Empresa no definida' };  

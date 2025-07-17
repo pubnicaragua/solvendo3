@@ -15,6 +15,17 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   onSendEmail
 }) => {
   if (!isOpen) return null
+  
+  // Datos de ejemplo para la factura
+  const receiptData = {
+    folio: '123456',
+    fecha: new Date().toLocaleDateString(),
+    items: [
+      { nombre: 'Producto de ejemplo', precio: 10000, cantidad: 1, subtotal: 10000 },
+      { nombre: 'Otro producto', precio: 5000, cantidad: 1, subtotal: 5000 }
+    ],
+    total: 15000
+  };
 
   // Función para imprimir toda la factura
   const handlePrint = () => {
@@ -27,43 +38,90 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
       
       // Contenido de la factura
       const content = `
-        <html>
-          <head>
-            <title>Factura</title>
-            <style>
-              body { font-family: Arial, sans-serif; }
-              .receipt { max-width: 300px; margin: 0 auto; padding: 20px; }
-              .header { text-align: center; margin-bottom: 20px; }
-              .item { display: flex; justify-content: space-between; margin-bottom: 5px; }
-              .total { font-weight: bold; border-top: 1px solid #000; padding-top: 10px; margin-top: 10px; }
-            </style>
-          </head>
-          <body>
-            <div class="receipt">
-              <div class="header">
-                <h2>BOLETA ELECTRÓNICA</h2>
-                <p>Folio: 123456</p>
-                <p>Fecha: ${new Date().toLocaleDateString()}</p>
-              </div>
-              <div class="items">
-                <div class="item">
-                  <span>Producto de ejemplo</span>
-                  <span>$10.000</span>
-                </div>
-                <div class="item">
-                  <span>Otro producto</span>
-                  <span>$5.000</span>
-                </div>
-              </div>
-              <div class="total">
-                <div class="item">
-                  <span>Total:</span>
-                  <span>$15.000</span>
-                </div>
-              </div>
-            </div>
-          </body>
-        </html>
+<html>
+  <head>
+    <title>Factura</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+      .receipt { max-width: 800px; margin: 0 auto; padding: 20px; }
+      .header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 20px; }
+      .company { font-size: 24px; font-weight: bold; margin-bottom: 5px; }
+      .info { margin-bottom: 5px; }
+      .document-type { font-size: 18px; font-weight: bold; margin: 10px 0; }
+      .customer { margin: 20px 0; padding: 10px; border: 1px solid #eee; background-color: #f9f9f9; }
+      .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+      .items-table th { background-color: #f2f2f2; padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+      .items-table td { padding: 10px; border-bottom: 1px solid #eee; }
+      .totals { margin-top: 20px; text-align: right; }
+      .total-line { display: flex; justify-content: flex-end; margin-bottom: 5px; }
+      .total-line span:first-child { margin-right: 20px; font-weight: normal; }
+      .total-line span:last-child { min-width: 100px; text-align: right; }
+      .grand-total { font-size: 18px; font-weight: bold; border-top: 2px solid #000; padding-top: 10px; margin-top: 10px; }
+      .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; }
+    </style>
+  </head>
+  <body>
+    <div class="receipt">
+      <div class="header">
+        <div class="company">Solvendo POS</div>
+        <div class="info">Sistema de Punto de Venta</div>
+        <div class="info">RUT: 76.123.456-7</div>
+        <div class="info">Dirección: Av. Principal 123, Santiago</div>
+        <div class="info">Teléfono: +56 2 2345 6789</div>
+      </div>
+      
+      <div class="document-type">BOLETA ELECTRÓNICA</div>
+      <div class="info">Folio: ${receiptData.folio}</div>
+      <div class="info">Fecha: ${receiptData.fecha}</div>
+      
+      <div class="customer">
+        <div><strong>Cliente:</strong> Consumidor Final</div>
+        <div><strong>RUT:</strong> 11.111.111-1</div>
+      </div>
+      
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>Descripción</th>
+            <th>Cantidad</th>
+            <th>Precio Unit.</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${receiptData.items.map(item => `
+            <tr>
+              <td>${item.nombre}</td>
+              <td>${item.cantidad}</td>
+              <td>$${item.precio.toLocaleString('es-CL')}</td>
+              <td>$${item.subtotal.toLocaleString('es-CL')}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      
+      <div class="totals">
+        <div class="total-line">
+          <span>Subtotal:</span>
+          <span>$${receiptData.total.toLocaleString('es-CL')}</span>
+        </div>
+        <div class="total-line">
+          <span>IVA (19%):</span>
+          <span>$0</span>
+        </div>
+        <div class="total-line grand-total">
+          <span>TOTAL:</span>
+          <span>$${receiptData.total.toLocaleString('es-CL')}</span>
+        </div>
+      </div>
+      
+      <div class="footer">
+        <p>Gracias por su compra</p>
+        <p>Este documento no tiene valor tributario</p>
+      </div>
+    </div>
+  </body>
+</html>
       `;
       
       // Escribir el contenido en el iframe
@@ -77,7 +135,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
       
       // Llamar a la función onPrint que viene como prop
       if (onPrint) {
-        onPrint();
+        setTimeout(() => {
+          onPrint();
+        }, 500);
       }
     } catch (error) {
       console.error('Error al imprimir:', error);
@@ -104,7 +164,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
           <div className="flex mb-4">
             <input
               type="email"
-              placeholder="Email"
+              placeholder="cliente@ejemplo.com"
               className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button

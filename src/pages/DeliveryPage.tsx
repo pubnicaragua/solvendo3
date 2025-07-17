@@ -23,7 +23,9 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     addToCart,
     removeFromCart,
     updateQuantity,
-    clearCart
+    clearCart,
+    currentCliente,
+    selectClient
   } = usePOS();
 
   const [productSearch, setProductSearch] = useState('');
@@ -36,7 +38,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const [clientError, setClientError] = useState(false);
 
   const [despachoData, setDespachoData] = useState({
-    fecha: new Date().toISOString().split('T')[0],
+    fecha: new Date().toISOString().split('T')[0], 
     tipo: 'Guía de despacho manual',
     destinatario: '',
     direccion: '',
@@ -45,6 +47,22 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     region: '',
     numDocumento: ''
   });
+
+  // Sincronizar con el cliente seleccionado en el contexto
+  useEffect(() => {
+    if (currentCliente) {
+      setSelectedClient(currentCliente);
+      setDespachoData((p) => ({
+        ...p,
+        destinatario: currentCliente.razon_social,
+        direccion: currentCliente.direccion || '',
+        comuna: currentCliente.comuna || '',
+        ciudad: currentCliente.ciudad || '',
+        region: currentCliente.region || '',
+        numDocumento: currentCliente.rut
+      }));
+    }
+  }, [currentCliente]);
 
   useEffect(() => {
     if (!empresaId) return;
@@ -98,6 +116,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
   const handleClientSelect = (c: Cliente) => {
     setSelectedClient(c);
+    selectClient(c)
     setDespachoData((p) => ({
       ...p,
       destinatario: c.razon_social,
