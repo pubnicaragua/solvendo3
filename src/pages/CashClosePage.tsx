@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase'; // Ajusta la ruta si es necesario
 import { usePOS, Venta, MovimientoCaja } from '../contexts/POSContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -19,7 +20,7 @@ const SummaryLine = ({ label, value, colorClass = 'text-gray-900', icon: Icon }:
 
 export const CashClosePage: React.FC = () => {
   const { currentAperturaCaja, openCaja, loading: contextLoading } = usePOS();
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Ahora está correctamente importado
   const { user } = useAuth(); // Asegúrate de que `user` contenga el nombre y la URL del avatar.
 
   const [isClosing, setIsClosing] = useState(false);
@@ -116,7 +117,7 @@ export const CashClosePage: React.FC = () => {
   const handleCloseCash = async () => {
     setIsClosing(true);
     try {
-      if (!currentAperturaCaja) {
+      if (!currentAperturaCaja || !currentAperturaCaja.id) {
         throw new Error('No hay una caja abierta para cerrar');
       }
       
@@ -125,8 +126,7 @@ export const CashClosePage: React.FC = () => {
         throw new Error('El monto final debe ser un número válido');
       }
       
-      // Usar la función closeCaja del contexto POS
-      const { closeCaja } = usePOS();
+      // Usar la función closeCaja del contexto POS que ya está disponible
       const success = await closeCaja(montoFinal, 'Cierre de caja manual');
       
       if (!success) {
@@ -136,7 +136,7 @@ export const CashClosePage: React.FC = () => {
       toast.success('✅ Caja cerrada exitosamente.');
       
       // Navegar al dashboard después de un cierre exitoso
-      navigate('/');
+      setTimeout(() => navigate('/'), 1500);
     } catch (error: any) {
       toast.error('Error al cerrar la caja: ' + error.message);
     } finally {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   Search, Star, FileText, Gift, User,
   Plus, Minus, X as XIcon, Percent
@@ -31,7 +32,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
 const Dashboard: React.FC = () => {
   // toggleSidebar y user se obtienen de sus respectivos contextos y se pasan a HeaderWithMenu
   const { user }         = useAuth()
-  const navigate = useNavigate()
+  const navigate = useNavigate() // Ahora está correctamente importado
   const {
     productos, carrito, total,
     addToCart, updateQuantity, removeFromCart, clearCart,

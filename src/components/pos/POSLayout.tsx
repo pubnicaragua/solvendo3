@@ -49,7 +49,6 @@ export const POSLayout: React.FC<POSLayoutProps> = ({ children }) => {
   
       {/* Cash Register Modal */}  
       <CashRegisterModal  
-        isOpen={showCashModal}  
         onClose={handleCashModalClose}  
         type={cashModalType}  
       />  

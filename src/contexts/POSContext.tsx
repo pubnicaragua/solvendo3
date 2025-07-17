@@ -497,37 +497,67 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }  
       
     try {  
-      // Usar la función RPC register_sale para procesar la venta completa
-      const { data: ventaId, error } = await supabase.rpc('register_sale', {
-        p_empresa_id: empresaId,
-        p_sucursal_id: sucursalId,
-        p_caja_id: currentAperturaCaja.caja_id,
-        p_apertura_caja_id: currentAperturaCaja.id,
-        p_cliente_id: clienteId || null,
-        p_usuario_id: user.id,
-        p_tipo_dte: tipoDte,
-        p_metodo_pago: metodoPago,
-        p_items: JSON.stringify(carrito),
-        p_total: total
-      });
+      // Insertar la venta directamente
+      const { data: venta, error } = await supabase
+        .from('ventas')
+        .insert({
+          empresa_id: empresaId,
+          sucursal_id: sucursalId,
+          caja_id: currentAperturaCaja.caja_id,
+          apertura_caja_id: currentAperturaCaja.id,
+          cliente_id: clienteId || null,
+          usuario_id: user.id,
+          folio: `V${Date.now()}`,
+          tipo_dte: tipoDte,
+          metodo_pago: metodoPago,
+          subtotal: total,
+          total: total,
+          estado: 'completada'
+        })
+        .select()
+        .single();
 
-      if (error || !ventaId) {
+      if (error || !venta) {
         console.error("Error al crear la venta:", error);
         toast.error('Error al registrar la venta.');
         return { success: false, error: error?.message };
       }
 
-      // Obtener los detalles de la venta recién creada
-      const { data: venta, error: ventaError } = await supabase
-        .from('ventas')
-        .select('*')
-        .eq('id', ventaId)
-        .single();
+      // Insertar los items de la venta
+      const ventaItems = carrito.map(item => ({
+        venta_id: venta.id,
+        producto_id: item.id,
+        cantidad: item.quantity,
+        precio_unitario: item.precio,
+        subtotal: item.precio * item.quantity
+      }));
 
-      if (ventaError || !venta) {
-        console.error("Error al obtener detalles de la venta:", ventaError);
-        toast.error('Error al obtener detalles de la venta.');
-        return { success: false, error: ventaError?.message };
+      const { error: itemsError } = await supabase
+        .from('venta_items')
+        .insert(ventaItems);
+
+      if (itemsError) {
+        console.error("Error al insertar items de venta:", itemsError);
+        toast.error('Error al registrar los productos de la venta.');
+        return { success: false, error: itemsError?.message };
+      }
+
+      // Si el método de pago es efectivo, registrar el movimiento de caja
+      if (metodoPago.toLowerCase() === 'efectivo') {
+        const { error: movError } = await supabase
+          .from('movimientos_caja')
+          .insert({
+            apertura_caja_id: currentAperturaCaja.id,
+            usuario_id: user.id,
+            tipo: 'venta',
+            monto: total,
+            observacion: `Venta ${venta.folio}`
+          });
+
+        if (movError) {
+          console.error("Error al registrar movimiento de caja:", movError);
+          // No fallamos la venta por esto, solo registramos el error
+        }
       }
   
       toast.success(`Venta #${venta.folio} procesada.`);  
@@ -632,7 +662,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };  
   
   const closeCaja = async (montoFinal: number, observaciones?: string): Promise<boolean> => {  
-    if (!currentAperturaCaja) {  
+    if (!currentAperturaCaja || !currentAperturaCaja.id) {  
         toast.error('No hay una caja abierta para cerrar.');  
         return false;
     }  
