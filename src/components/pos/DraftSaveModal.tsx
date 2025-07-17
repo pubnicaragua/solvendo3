@@ -41,7 +41,10 @@ export const DraftSaveModal: React.FC<DraftSaveModalProps> = ({
 
     setLoading(true)
     try {
-      await onSave()
+      // Llamar a la función onSave que viene como prop
+      if (onSave) {
+        await onSave()
+      }
       onClose()
     } catch (err) {
       console.error(err)

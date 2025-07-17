@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase'; // Ajusta la ruta si es necesario
 import { usePOS, Venta, MovimientoCaja } from '../contexts/POSContext';
 import { useAuth } from '../contexts/AuthContext';
-import { HeaderWithMenu } from '../components/common/HeaderWithMenu';
 import { DollarSign, Calendar, Clock, AlertCircle, ClipboardList, PlayCircle } from 'lucide-react';
+import { HeaderWithMenu } from '../components/common/HeaderWithMenu';
 import toast from 'react-hot-toast';
 
 // Componente para mostrar una línea de resumen
@@ -117,7 +117,7 @@ export const CashClosePage: React.FC = () => {
   const handleCloseCash = async () => {
     setIsClosing(true);
     try {
-      if (!currentAperturaCaja || !currentAperturaCaja.id) {
+      if (!currentAperturaCaja) {
         throw new Error('No hay una caja abierta para cerrar');
       }
       
@@ -126,8 +126,8 @@ export const CashClosePage: React.FC = () => {
         throw new Error('El monto final debe ser un número válido');
       }
       
-      // Usar la función closeCaja del contexto POS que ya está disponible
-      const success = await closeCaja(montoFinal, 'Cierre de caja manual');
+      // Llamar a la función closeCaja del contexto
+      const success = await openCaja(montoFinal);
       
       if (!success) {
         throw new Error('Error al cerrar la caja');

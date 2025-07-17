@@ -661,7 +661,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }  
   };  
   
-  const closeCaja = async (montoFinal: number, observaciones?: string): Promise<boolean> => {  
+  const closeCaja = async (montoFinal: number, observaciones?: string): Promise<boolean> => {
     if (!currentAperturaCaja || !currentAperturaCaja.id) {  
         toast.error('No hay una caja abierta para cerrar.');  
         return false;
