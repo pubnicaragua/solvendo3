@@ -443,7 +443,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           .order('fecha', { ascending: false })  
           .limit(10);  
 
-                  if (error) {  
+        if (error) {  
           console.error('Error loading docsDisponibles', error);  
           setDocsDisponibles([]);  
         } else {  
@@ -725,7 +725,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return false;  
     } finally {  
       setLoading(false);  
-  const closeCaja: (montoFinal: number, observaciones?: string) => Promise<boolean>;
+    }
   };  
   
   // --- Promociones ---  
