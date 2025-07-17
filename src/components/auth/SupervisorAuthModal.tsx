@@ -25,26 +25,21 @@ export const SupervisorAuthModal: React.FC<SupervisorAuthModalProps> = ({
   const handleAuthorize = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    // Validación simplificada para demo
     if (!supervisorRut || !supervisorPassword) {
-      toast.error('Por favor complete todos los campos')
+      toast.error('Por favor complete todos los campos');
       return
     }
 
     setLoading(true)
     
     try {
-      const result = await validateUser(supervisorRut, supervisorPassword)
-      
-      if (result.success && result.user) {
-        // Verificar si el usuario es supervisor
-        if (result.user.rol === 'supervisor' || result.user.rol === 'admin') {
-          toast.success('Autorización exitosa')
-          onAuthorize()
-        } else {
-          toast.error('El usuario no tiene permisos de supervisor')
-        }
+      // Usar credenciales hardcoded para demo
+      if (supervisorRut === '78.168.951-3' && supervisorPassword === '123456') {
+        toast.success('Autorización exitosa');
+        onAuthorize();
       } else {
-        toast.error(result.error || 'Credenciales inválidas')
+        toast.error('Credenciales inválidas');
       }
     } catch (error) {
       toast.error('Error de conexión')

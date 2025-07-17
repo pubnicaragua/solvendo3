@@ -15,7 +15,7 @@ export const LoginForm: React.FC = () => {
   const handleSupervisorAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!supervisorRut || !supervisorPassword) {
-      setError('Por favor ingresa RUT y contraseña')
+      toast.error('Por favor ingresa RUT y contraseña')
       return
     }
 
@@ -23,10 +23,18 @@ export const LoginForm: React.FC = () => {
     setError('')
 
     try {
-      const loginResult = await login(supervisorRut.trim(), supervisorPassword.trim())
-      if (!loginResult.success) {
-        setError(loginResult.error || 'Error en el login')
-        toast.error('Error en el login')
+      // Validación simplificada para demo
+      if (supervisorRut === '78.168.951-3' && supervisorPassword === '123456') {
+        const result = await login(supervisorRut, supervisorPassword);
+        if (result.success) {
+          toast.success('Inicio de sesión exitoso');
+        } else {
+          setError(result.error || 'Error en el login');
+          toast.error('Error en el login');
+        }
+      } else {
+        setError('Credenciales incorrectas');
+        toast.error('Credenciales incorrectas');
       }
     } catch (error) {
       setError('Error de conexión')

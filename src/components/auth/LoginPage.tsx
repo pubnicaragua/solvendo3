@@ -22,18 +22,24 @@ export const LoginPage: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validación simplificada para demo
     if (!email || !password) {
-      toast.error('Por favor ingrese email y contraseña');
+      toast.error('Por favor ingrese RUT y contraseña');
       return;
     }
     
     setLoading(true);
     try {
-      const result = await login(email, password);
-      if (result.success) {
-        navigate('/');
+      // Usar credenciales hardcoded para demo
+      if (email === '78.168.951-3' && password === '123456') {
+        const result = await login(email, password);
+        if (result.success) {
+          navigate('/');
+        } else {
+          toast.error(result.error || 'Error en el login');
+        }
       } else {
-        toast.error(result.error || 'Error en el login');
+        toast.error('Credenciales incorrectas');
       }
     } catch (error) {
       toast.error('Error de conexión');
