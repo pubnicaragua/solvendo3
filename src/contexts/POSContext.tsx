@@ -312,7 +312,14 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     try {  
       const { error } = await supabase  
         .from('borradores_venta')  
-        .insert([{ empresa_id: empresaId, usuario_id: user.id, nombre, fecha: new Date().toISOString(), items: carrito, total }]);  
+        .insert([{ 
+          empresa_id: empresaId, 
+          usuario_id: user.id, 
+          nombre, 
+          items: carrito, 
+          total,
+          fecha: new Date().toISOString()
+        }]);  
   
       if (error) {   
         toast.error('Error al guardar borrador');   
@@ -718,7 +725,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return false;  
     } finally {  
       setLoading(false);  
-    }  
+  const closeCaja: (montoFinal: number, observaciones?: string) => Promise<boolean>;
   };  
   
   // --- Promociones ---  

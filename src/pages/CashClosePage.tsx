@@ -127,7 +127,7 @@ export const CashClosePage: React.FC = () => {
       }
       
       // Llamar a la función closeCaja del contexto
-      const success = await openCaja(montoFinal);
+      const success = await closeCaja(montoFinal);
       
       if (!success) {
         throw new Error('Error al cerrar la caja');
