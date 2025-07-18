@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, Rea
 import { supabase } from '../lib/supabase';  
 import { useAuth } from './AuthContext';  
 import toast from 'react-hot-toast';  
+import { SIIService } from '../lib/siiService';
   
 // ===================================================================================  
 // INTERFACES Y TIPOS COMPLETOS  
@@ -144,6 +145,10 @@ export interface POSContextType {
     tipoDte: 'boleta' | 'factura' | 'nota_credito',  
     clienteId?: string  
   ) => Promise<ApiResult<Venta>>;  
+  
+  // SII Integration
+  generarDTE: (ventaId: string) => Promise<boolean>;
+  enviarDTEAlSII: (documentoId: string) => Promise<boolean>;
   
   // Caja  
   cajaAbierta: boolean;  
@@ -923,6 +928,51 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };  
   
+  // --- SII Integration ---
+  const generarDTE = async (ventaId: string): Promise<boolean> => {
+    if (!empresaId) return false;
+    
+    try {
+      const siiService = SIIService.getInstance();
+      await siiService.loadConfig(empresaId);
+      
+      const xml = await siiService.generarDTE({
+        ventaId,
+        tipoDocumento: 39, // Boleta por defecto
+        items: [],
+        montoNeto: 0,
+        montoIva: 0,
+        montoTotal: 0
+      });
+      
+      toast.success('DTE generado correctamente');
+      return true;
+    } catch (error) {
+      console.error('Error generando DTE:', error);
+      toast.error('Error al generar DTE');
+      return false;
+    }
+  };
+  
+  const enviarDTEAlSII = async (documentoId: string): Promise<boolean> => {
+    try {
+      const siiService = SIIService.getInstance();
+      const success = await siiService.enviarDTE(documentoId);
+      
+      if (success) {
+        toast.success('DTE enviado al SII correctamente');
+      } else {
+        toast.error('Error al enviar DTE al SII');
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('Error enviando DTE al SII:', error);
+      toast.error('Error al enviar DTE al SII');
+      return false;
+    }
+  };
+  
   // --- Inicialización ---  
   useEffect(() => {  
     if (!user || !empresaId) return;  
@@ -946,6 +996,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     cajaAbierta, currentAperturaCaja, checkCajaStatus, openCaja, closeCaja, getDefaultCajaId,  
     promociones, loadPromociones, aplicarPromocion,  
     docsDisponibles, loadDocsDisponibles, selectDoc,  
+    generarDTE, enviarDTEAlSII,
   };  
   
   return <POSContext.Provider value={value}>{children}</POSContext.Provider>;  

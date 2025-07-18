@@ -70,10 +70,6 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
       return
     }
 
-    if (billingData.tipoDte === 'factura' && !selectedClient) {
-      toast.error('Debe seleccionar un cliente para generar una factura')
-      return
-    }
 
     setLoading(true)
     
@@ -82,6 +78,11 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
       const result = await procesarVenta(billingData.metodoPago, billingData.tipoDte as 'boleta' | 'factura' | 'nota_credito', selectedClient?.id);
       
       if (result.success) {
+        // Generar DTE automáticamente
+        if (result.data?.id) {
+          await generarDTE(result.data.id);
+        }
+        
         // Mostrar diálogo de impresión
         setShowPrintDialog(true)
       } else {

@@ -30,23 +30,12 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   // Función para imprimir toda la factura
   const handlePrint = () => {
     try {
-      // Crear una nueva ventana para la impresión
-      const printWindow = window.open('', '_blank', 'width=800,height=600');
-      if (!printWindow) {
-        toast.error('Error al abrir ventana de impresión');
-        return;
-      }
-
-      // Contenido completo de la factura
-      const content = `
+      // Crear contenido de la factura para impresión
+      const printContent = `
 <html>
   <head>
     <title>Factura</title>
     <style>
-      @media print {
-        body { margin: 0; padding: 0; }
-        .no-print { display: none !important; }
-      }
       body { 
         font-family: 'Courier New', monospace; 
         margin: 0; 
@@ -129,16 +118,6 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
         border-top: 1px dashed #000;
         padding-top: 10px;
       }
-      .print-button {
-        margin: 20px auto;
-        display: block;
-        padding: 10px 20px;
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-      }
     </style>
   </head>
   <body>
@@ -202,27 +181,39 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
       </div>
     </div>
   </body>
+    <script>
+      window.onload = function() {
+        window.print();
+        window.onafterprint = function() {
+          window.close();
+        };
+      };
+    </script>
 </html>
-      `;
+      `
       
-      // Escribir el contenido en la nueva ventana
-      printWindow.document.write(content);
-      printWindow.document.close();
+      // Crear nueva ventana para impresión
+      const printWindow = window.open('', '_blank', 'width=800,height=600')
+      if (!printWindow) {
+        toast.error('Error al abrir ventana de impresión')
+        return
+      }
       
-      // Enfocar la ventana para la impresión
-      printWindow.focus();
+      // Escribir contenido y configurar impresión automática
+      printWindow.document.write(printContent)
+      printWindow.document.close()
       
-      // Llamar a la función onPrint que viene como prop
+      // Llamar onPrint después de un breve delay
       if (onPrint) {
         setTimeout(() => {
-          onPrint();
-        }, 500);
+          onPrint()
+        }, 1000)
       }
     } catch (error) {
-      console.error('Error al imprimir:', error);
-      toast.error('Error al imprimir');
+      console.error('Error al imprimir:', error)
+      toast.error('Error al imprimir')
     }
-  };
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
