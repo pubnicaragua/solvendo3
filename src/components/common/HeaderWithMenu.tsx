@@ -1,6 +1,6 @@
 // src/components/common/HeaderWithMenu.tsx
 import React from 'react';
-import { Menu as MenuIcon, Clock, LogOut } from 'lucide-react';
+import { Menu as MenuIcon, Clock, LogOut, X } from 'lucide-react';
 import { useSidebar } from '../../contexts/SidebarContext';
 import { Logo } from './Logo';
 import { useAuth } from '../../contexts/AuthContext';
@@ -11,6 +11,7 @@ interface HeaderWithMenuProps {
   userName?: string;
   userAvatarUrl?: string;
   showClock?: boolean;
+  icon?: React.ReactNode;
 }
 
 export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({ title, userName, userAvatarUrl, showClock = true }) => {

@@ -6,7 +6,8 @@ import {
   TrendingUp,
   Printer,
   BarChart3,
-  Truck
+  Truck,
+  Home
 } from 'lucide-react'
 
 interface SidebarContextValue {
@@ -18,6 +19,7 @@ interface SidebarContextValue {
 }
 
 type SidebarItem =
+  | { id: 'inicio';    label: 'Inicio';                 icon: React.ReactNode }
   | { id: 'cierre';    label: 'Cierre de caja';         icon: React.ReactNode }
   | { id: 'devolucion';label: 'Devolución';             icon: React.ReactNode }
   | { id: 'movimiento';label: 'Movimiento de efectivo'; icon: React.ReactNode }
@@ -35,6 +37,7 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const closeSidebar = () => setIsOpen(false); // Definir la función closeSidebar
 
   const items: SidebarItem[] = [
+    { id: 'inicio',     label: 'Inicio',                  icon: <Home className="w-5 h-5" /> },
     { id: 'cierre',     label: 'Cierre de caja',          icon: <DollarSign className="w-5 h-5" /> },
     { id: 'devolucion', label: 'Devolución',              icon: <RotateCcw className="w-5 h-5" /> },
     { id: 'movimiento', label: 'Movimiento de efectivo',  icon: <TrendingUp className="w-5 h-5" /> },
@@ -45,6 +48,9 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const handleSidebarAction = (action: SidebarItem['id']) => {
     switch (action) {
+      case 'inicio':
+        navigate('/')
+        break
       case 'cierre':
         navigate('/cierre')
         break

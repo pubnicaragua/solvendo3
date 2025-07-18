@@ -196,7 +196,7 @@ const Dashboard: React.FC = () => {
               </button>
               <button
                 onClick={startPayment}
-                disabled={carrito.length===0 || !currentCliente}
+                disabled={carrito.length===0}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded font-semibold text-base disabled:opacity-50"
               >
                 Pagar {fmt(total)}

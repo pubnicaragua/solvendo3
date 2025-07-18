@@ -392,7 +392,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
               {/* Action Button */}
               <button
                 onClick={handleConfirmPayment}
-                disabled={loading || carrito.length === 0 || (billingData.tipoDte === 'factura' && !selectedClient)} 
+                disabled={loading || carrito.length === 0} 
                 className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? 'Procesando...' : 'Confirmar pago'}

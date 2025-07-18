@@ -30,34 +30,115 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   // Función para imprimir toda la factura
   const handlePrint = () => {
     try {
-      // Crear un iframe oculto para imprimir solo el contenido de la factura
-      const printFrame = document.createElement('iframe');
-      printFrame.style.position = 'absolute';
-      printFrame.style.top = '-9999px';
-      document.body.appendChild(printFrame);
-      
-      // Contenido de la factura
+      // Crear una nueva ventana para la impresión
+      const printWindow = window.open('', '_blank', 'width=800,height=600');
+      if (!printWindow) {
+        toast.error('Error al abrir ventana de impresión');
+        return;
+      }
+
+      // Contenido completo de la factura
       const content = `
 <html>
   <head>
     <title>Factura</title>
     <style>
-      body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-      .receipt { max-width: 800px; margin: 0 auto; padding: 20px; }
-      .header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 20px; }
-      .company { font-size: 24px; font-weight: bold; margin-bottom: 5px; }
-      .info { margin-bottom: 5px; }
-      .document-type { font-size: 18px; font-weight: bold; margin: 10px 0; }
-      .customer { margin: 20px 0; padding: 10px; border: 1px solid #eee; background-color: #f9f9f9; }
-      .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-      .items-table th { background-color: #f2f2f2; padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-      .items-table td { padding: 10px; border-bottom: 1px solid #eee; }
-      .totals { margin-top: 20px; text-align: right; }
-      .total-line { display: flex; justify-content: flex-end; margin-bottom: 5px; }
-      .total-line span:first-child { margin-right: 20px; font-weight: normal; }
-      .total-line span:last-child { min-width: 100px; text-align: right; }
-      .grand-total { font-size: 18px; font-weight: bold; border-top: 2px solid #000; padding-top: 10px; margin-top: 10px; }
-      .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; }
+      @media print {
+        body { margin: 0; padding: 0; }
+        .no-print { display: none !important; }
+      }
+      body { 
+        font-family: 'Courier New', monospace; 
+        margin: 0; 
+        padding: 20px; 
+        font-size: 12px;
+        line-height: 1.4;
+      }
+      .receipt { 
+        max-width: 300px; 
+        margin: 0 auto; 
+        padding: 0;
+      }
+      .header { 
+        text-align: center; 
+        margin-bottom: 15px; 
+        border-bottom: 1px dashed #000; 
+        padding-bottom: 15px; 
+      }
+      .company { 
+        font-size: 16px; 
+        font-weight: bold; 
+        margin-bottom: 5px; 
+      }
+      .info { 
+        margin-bottom: 3px; 
+        font-size: 10px;
+      }
+      .document-type { 
+        font-size: 14px; 
+        font-weight: bold; 
+        margin: 10px 0; 
+        text-align: center;
+      }
+      .customer { 
+        margin: 15px 0; 
+        padding: 8px; 
+        border: 1px dashed #000; 
+        font-size: 10px;
+      }
+      .items-table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        margin: 15px 0; 
+        font-size: 10px;
+      }
+      .items-table th { 
+        background-color: transparent; 
+        padding: 5px 2px; 
+        text-align: left; 
+        border-bottom: 1px dashed #000; 
+        font-weight: bold;
+      }
+      .items-table td { 
+        padding: 3px 2px; 
+        border-bottom: 1px dotted #ccc; 
+        vertical-align: top;
+      }
+      .totals { 
+        margin-top: 15px; 
+        border-top: 1px dashed #000;
+        padding-top: 10px;
+      }
+      .total-line { 
+        display: flex; 
+        justify-content: space-between; 
+        margin-bottom: 3px; 
+        font-size: 11px;
+      }
+      .grand-total { 
+        font-size: 14px; 
+        font-weight: bold; 
+        border-top: 1px solid #000; 
+        padding-top: 8px; 
+        margin-top: 8px; 
+      }
+      .footer { 
+        margin-top: 20px; 
+        text-align: center; 
+        font-size: 9px; 
+        border-top: 1px dashed #000;
+        padding-top: 10px;
+      }
+      .print-button {
+        margin: 20px auto;
+        display: block;
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
@@ -124,14 +205,12 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 </html>
       `;
       
-      // Escribir el contenido en el iframe
-      printFrame.contentDocument.open();
-      printFrame.contentDocument.write(content);
-      printFrame.contentDocument.close();
+      // Escribir el contenido en la nueva ventana
+      printWindow.document.write(content);
+      printWindow.document.close();
       
-      // Imprimir y eliminar el iframe
-      printFrame.contentWindow.print();
-      document.body.removeChild(printFrame);
+      // Enfocar la ventana para la impresión
+      printWindow.focus();
       
       // Llamar a la función onPrint que viene como prop
       if (onPrint) {
