@@ -203,7 +203,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   // Función para validar que los números no sean negativos
   const validatePositiveNumber = (value: number): number => {
-    return Math.max(0, value || 0);
+    return Math.max(0, Number(value) || 0);
   };
 
   // Función para formatear precios de manera consistente

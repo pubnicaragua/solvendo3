@@ -1,6 +1,6 @@
 // src/components/pos/ProductsPanel.tsx  
 import React, { useState } from 'react'  
-import { Gift, Search, Plus } from 'lucide-react'  
+import { Gift, Search, Plus, DollarSign, Info } from 'lucide-react'  
 import { Producto, usePOS } from '../../contexts/POSContext'  
   
 interface ProductsPanelProps {  
@@ -10,7 +10,9 @@ interface ProductsPanelProps {
   
 const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm }) => {  
   const { productos, loading } = usePOS()  
-  const [selectedFilter, setSelectedFilter] = useState('all')  
+  const [selectedFilter, setSelectedFilter] = useState('all')
+  const [showPrice, setShowPrice] = useState<Record<string, boolean>>({})
+  const [showInfo, setShowInfo] = useState<Record<string, boolean>>({})
   
   const formatPrice = (price: number) => {  
     return new Intl.NumberFormat('es-CL', {  
@@ -24,20 +26,34 @@ const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm }
   const filteredProducts = productos.filter(p => {  
     const matchesSearch = searchTerm ?   
       p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||  
-      p.codigo.toLowerCase().includes(searchTerm.toLowerCase()) : true  
+      (p.codigo && p.codigo.toLowerCase().includes(searchTerm.toLowerCase())) : true  
     
     const matchesFilter = selectedFilter === 'all' ? true :
       selectedFilter === 'con_sku' ? p.codigo && p.codigo.trim() !== '' :
       selectedFilter === 'sin_sku' ? !p.codigo || p.codigo.trim() === '' : true
     
     return matchesSearch && matchesFilter  
-  })  
+  })
+
+  const togglePrice = (productId: string) => {
+    setShowPrice(prev => ({
+      ...prev,
+      [productId]: !prev[productId]
+    }))
+  }
+
+  const toggleInfo = (productId: string) => {
+    setShowInfo(prev => ({
+      ...prev,
+      [productId]: !prev[productId]
+    }))
+  }
   
   return (  
     <div>  
       <div className="flex items-center space-x-2 mb-4">  
         <Gift className="w-5 h-5 text-blue-600"/>  
-        <h3 className="text-blue-600 font-semibold">Productos</h3>  
+        <h3 className="text-blue-600 font-semibold">Productos / Servicios</h3>  
       </div>  
         
       <div className="mb-4">  
@@ -46,19 +62,10 @@ const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm }
           onChange={(e) => setSelectedFilter(e.target.value)}  
           className="w-full px-3 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"  
         >  
-          <option value="all">Todos los productos</option>  
+          <option value="all">Productos totales</option>  
           <option value="con_sku">Con SKU</option>  
           <option value="sin_sku">Sin SKU</option>  
         </select>  
-      </div>  
-  
-      <div className="relative mb-4">  
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"/>  
-        <input  
-          type="text"  
-          placeholder="Buscar productos..."  
-          className="w-full pl-10 pr-4 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"  
-        />  
       </div>  
         
       <div className="space-y-3">  
@@ -69,23 +76,84 @@ const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm }
             {searchTerm ? 'No se encontraron productos con ese término' : 'No hay productos disponibles'}
           </div>
         ) : filteredProducts.map(product => (  
-          <div   
-            key={product.id}   
-            className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 flex justify-between items-center hover:shadow-md transition-shadow"  
-          >  
-            <div className="flex-1">  
-              <h4 className="font-medium text-gray-900">{product.nombre}</h4>  
-              <p className="text-sm text-gray-600">{formatPrice(product.precio)}</p>  
-            </div>  
-            <button  
-              onClick={() => onAddToCart(product)}  
-              className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"  
-            >  
-              <Plus className="w-4 h-4" />  
-            </button>  
-          </div>  
-        ))}  
-      </div>  
+          <div key={product.id} className="space-y-2">
+            {/* Product row */}
+            <div className="flex items-center justify-between py-2 border-b border-gray-200">
+              <div className="flex-1">
+                <span className="font-medium text-gray-900">{product.nombre}</span>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                {/* Add button */}
+                <button
+                  onClick={() => onAddToCart(product)}
+                  className="p-1.5 bg-gray-200 hover:bg-gray-300 rounded-full transition-colors"
+                  title="Agregar producto"
+                >
+                  <Plus className="w-4 h-4 text-gray-600" />
+                </button>
+                
+                {/* Price button */}
+                <button
+                  onClick={() => togglePrice(product.id)}
+                  className={`p-1.5 rounded-full transition-colors ${
+                    showPrice[product.id] 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+                  }`}
+                  title="Mostrar precio"
+                >
+                  <DollarSign className="w-4 h-4" />
+                </button>
+                
+                {/* Info button */}
+                <button
+                  onClick={() => toggleInfo(product.id)}
+                  className={`p-1.5 rounded-full transition-colors ${
+                    showInfo[product.id] 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+                  }`}
+                  title="Mostrar información"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Price display */}
+            {showPrice[product.id] && (
+              <div className="pl-4 text-sm text-blue-600 font-medium">
+                Precio: {formatPrice(product.precio || 0)}
+              </div>
+            )}
+            
+            {/* Info display */}
+            {showInfo[product.id] && (
+              <div className="pl-4 space-y-1 text-sm text-gray-600">
+                <div className="flex justify-between">
+                  <span>Stock:</span>
+                  <span>{Math.max(0, product.stock || 0)} unidades</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>SKU:</span>
+                  <span>{product.codigo || 'Sin SKU'}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Search bar at bottom */}
+      <div className="relative mt-6">  
+        <input
+          type="text"
+          placeholder="Buscar productos..."
+          className="w-full pl-4 pr-10 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"/>
+      </div>
     </div>  
   )  
 }  

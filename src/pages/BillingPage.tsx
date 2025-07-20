@@ -133,8 +133,8 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
   }
 
   const totalConDescuento = validatePositiveNumber(total * (1 - (validatePositiveNumber(billingData.descuentoGlobal) / 100)))
-  const vuelto = billingData.metodoPago === 'efectivo' && billingData.montoRecibido > 0 
-    ? validatePositiveNumber(billingData.montoRecibido - totalConDescuento) 
+  const vuelto = billingData.metodoPago === 'efectivo' && validatePositiveNumber(billingData.montoRecibido) > totalConDescuento
+    ? validatePositiveNumber(validatePositiveNumber(billingData.montoRecibido) - totalConDescuento) 
     : 0
 
   if (showPrintDialog) {

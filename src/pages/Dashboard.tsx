@@ -187,7 +187,7 @@ const Dashboard: React.FC = () => {
           <div className="border-t pt-4 flex flex-col">
             <div className="grid grid-cols-2 gap-4 items-center mb-4">
                 <span className="text-gray-600 text-sm">
-                    N° Líneas {carrito.length} / Tot. ítems {Math.max(0, carrito.reduce((s,i)=>s+(i.quantity||0),0))}
+                    N° Líneas {carrito.length} / Tot. ítems {Math.max(0, carrito.reduce((s,i)=>s+Math.max(0, i.quantity||0),0))}
                 </span>
                 <select className="px-2 py-1.5 border rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 w-fit ml-auto">
                     <option>Boleta manual</option>

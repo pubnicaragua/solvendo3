@@ -76,7 +76,7 @@ export const LoginPage: React.FC = () => {
             htmlFor="email"
             className={`
               absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none transition-all duration-300 ease-in-out
-              ${(emailFocused || email) ? 'top-0.5 text-xs text-blue-600 bg-gray-50 px-1 -translate-y-1/2 peer-focus:text-blue-600' : 'text-base'}
+              ${(emailFocused || email) ? 'top-0.5 text-xs text-blue-600 bg-white px-1 -translate-y-1/2 peer-focus:text-blue-600' : 'text-base'}
             `}
           >
             Correo
@@ -98,7 +98,7 @@ export const LoginPage: React.FC = () => {
             htmlFor="password"
             className={`
               absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none transition-all duration-300 ease-in-out
-              ${(passwordFocused || password) ? 'top-0.5 text-xs text-blue-600 bg-gray-50 px-1 -translate-y-1/2 peer-focus:text-blue-600' : 'text-base'}
+              ${(passwordFocused || password) ? 'top-0.5 text-xs text-blue-600 bg-white px-1 -translate-y-1/2 peer-focus:text-blue-600' : 'text-base'}
             `}
           >
             Contraseña

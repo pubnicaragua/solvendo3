@@ -37,8 +37,8 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const closeSidebar = () => setIsOpen(false); // Definir la función closeSidebar
 
   const items: SidebarItem[] = [
-    { id: 'inicio',     label: 'Inicio',                  icon: <Home className="w-5 h-5" /> },
     { id: 'cierre',     label: 'Cierre de caja',          icon: <DollarSign className="w-5 h-5" /> },
+    { id: 'inicio',     label: 'Inicio',                  icon: <Home className="w-5 h-5" /> },
     { id: 'devolucion', label: 'Devolución',              icon: <RotateCcw className="w-5 h-5" /> },
     { id: 'movimiento', label: 'Movimiento de efectivo',  icon: <TrendingUp className="w-5 h-5" /> },
     { id: 'reimprimir', label: 'Reimprimir',              icon: <Printer className="w-5 h-5" /> },

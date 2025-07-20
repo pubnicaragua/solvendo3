@@ -113,9 +113,9 @@ export const CashClosePage: React.FC = () => {
 
   // Cálculo de la diferencia entre el monto final ingresado y el monto esperado
   const diferencia = useMemo(() => {
-    const montoFinalNum = parseFloat(montoFinalInput); 
-    if (isNaN(montoFinalNum) || montoFinalNum < 0) return 0;
-    return Math.max(0, montoFinalNum) - Math.max(0, montoEsperado);
+    const montoFinalNum = Math.max(0, parseFloat(montoFinalInput) || 0); 
+    const montoEsperadoSafe = Math.max(0, montoEsperado || 0);
+    return montoFinalNum - montoEsperadoSafe;
   }, [montoFinalInput, montoEsperado]);
 
 
