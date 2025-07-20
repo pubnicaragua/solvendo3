@@ -84,7 +84,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
 
         <div className="p-6 overflow-y-auto flex-grow">
           {/* Tipo de Cliente */}
-          <div className="mb-6">
+          <div className="mb-4">
             <h4 className="text-sm font-medium text-gray-700 mb-3">Tipo de Cliente</h4>
             <div className="flex gap-4">
               <label className="flex items-center gap-2">
@@ -133,7 +133,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
           </div>
 
           {/* Campos del formulario */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="space-y-3 mb-6">
             {/* Cliente Extranjero */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Cliente Extranjero</label>
@@ -161,7 +161,152 @@ export const ClientModal: React.FC<ClientModalProps> = ({
             {/* Campos condicionales */}
             {clientType === 'empresa' ? (
               <>
-                <div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Razón Social *</label>
+                    <input
+                      type="text"
+                      value={newClient.razon_social}
+                      onChange={(e) => setNewClient(prev => ({ ...prev, razon_social: e.target.value }))}
+                      placeholder="Razón Social o Nombre de Empresa"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Giro</label>
+                    <input
+                      type="text"
+                      value={newClient.giro}
+                      onChange={(e) => setNewClient(prev => ({ ...prev, giro: e.target.value }))}
+                      placeholder="Giro comercial"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombres *</label>
+                    <input
+                      type="text"
+                      value={newClient.nombres}
+                      onChange={(e) => setNewClient(prev => ({ ...prev, nombres: e.target.value }))}
+                      placeholder="Nombres de la persona"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Apellidos *</label>
+                    <input
+                      type="text"
+                      value={newClient.apellidos}
+                      onChange={(e) => setNewClient(prev => ({ ...prev, apellidos: e.target.value }))}
+                      placeholder="Apellidos de la persona"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Teléfono y Email */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                <input
+                  type="text"
+                  value={newClient.telefono}
+                  onChange={(e) => setNewClient(prev => ({ ...prev, telefono: e.target.value }))}
+                  placeholder="Ej: +56912345678"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={newClient.email}
+                  onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="Ej: correo@ejemplo.com"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Dirección */}
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                <input
+                  type="text"
+                  value={newClient.direccion}
+                  onChange={(e) => setNewClient(prev => ({ ...prev, direccion: e.target.value }))}
+                  placeholder="Calle, número, depto."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Comuna</label>
+                <input
+                  type="text"
+                  value={newClient.comuna}
+                  onChange={(e) => setNewClient(prev => ({ ...prev, comuna: e.target.value }))}
+                  placeholder="Comuna"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Ciudad</label>
+                <input
+                  type="text"
+                  value={newClient.ciudad}
+                  onChange={(e) => setNewClient(prev => ({ ...prev, ciudad: e.target.value }))}
+                  placeholder="Ciudad"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+            
+            {/* Contacto y Más atributos */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Persona de Contacto</label>
+                <input
+                  type="text"
+                  value={newClient.contacto}
+                  onChange={(e) => setNewClient(prev => ({ ...prev, contacto: e.target.value }))}
+                  placeholder="Nombre del contacto principal"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Más atributos</label>
+                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                  <option>Seleccionar</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-gray-200 flex gap-3 justify-end flex-shrink-0 mt-6">
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="w-full sm:w-auto px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleCreateClient}
+            disabled={loading || (clientType === 'empresa' && (!newClient.razon_social || !newClient.rut)) || (clientType === 'persona' && (!newClient.nombres || !newClient.apellidos || !newClient.rut))}
+            className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {loading ? 'Guardando...' : 'Guardar cliente'}
+          </button>
+        </div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Razón Social *</label>
                   <input
                     type="text"

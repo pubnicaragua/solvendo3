@@ -55,6 +55,13 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({ title, userName,
         </div>
         <Logo size="md" />
         <div className="flex items-center gap-4">
+          {/* Notification for low stock */}
+          <div className="relative">
+            <div className="bg-red-100 border border-red-200 rounded-lg px-3 py-1 text-xs text-red-800">
+              <span className="font-medium">⚠️ Productos bajo de stock</span>
+            </div>
+          </div>
+          
           {showClock && (
             <div className="flex items-center px-3 py-1 bg-gray-100 rounded-lg">
               <Clock className="w-4 h-4 text-gray-500" />

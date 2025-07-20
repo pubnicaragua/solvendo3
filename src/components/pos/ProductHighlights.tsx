@@ -1,72 +1,120 @@
-import { useState } from 'react';
-import { X, Info } from 'lucide-react';
+import React, { useState } from 'react';
+import { Star, DollarSign, Plus, Info } from 'lucide-react';
 import { usePOS } from '../../contexts/POSContext';
 
 export default function ProductHighlights() {
-  const { productos = [], carrito, updateQuantity, removeFromCart } = usePOS();
-  const [showInfo, setShowInfo] = useState({});
+  const { productos = [], addToCart } = usePOS();
+  const [showInfo, setShowInfo] = useState<Record<string, boolean>>({});
+  const [showPrice, setShowPrice] = useState<Record<string, boolean>>({});
 
   const destacados = productos.filter(p => p.destacado);
 
   const formatPrice = (n: number) =>
     new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(n);
 
-  const toggleInfo = (productId) => {
-    setShowInfo(prevState => ({
-      ...prevState,
-      ...(prevState.hasOwnProperty(productId) ? { [productId]: !prevState?.[productId] } : { [productId]: true }),
+  const toggleInfo = (productId: string) => {
+    setShowInfo(prev => ({
+      ...prev,
+      [productId]: !prev[productId]
+    }));
+  };
+
+  const togglePrice = (productId: string) => {
+    setShowPrice(prev => ({
+      ...prev,
+      [productId]: !prev[productId]
     }));
   };
 
   if (!destacados.length) {
-    return <p className="text-gray-500">No hay productos destacados</p>;
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Star className="w-5 h-5 text-blue-600" />
+          <h3 className="text-blue-600 font-semibold text-lg">Productos destacados</h3>
+        </div>
+        <p className="text-gray-500 text-center py-8">No hay productos destacados</p>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-4">
-      <h3 className="text-blue-600 font-semibold text-lg">★ Productos destacados</h3>
-      {destacados.map(p => {
-        const item = carrito.find(i => i.id === p.id);
-        const qty = item?.quantity || 0;
-        const isInfoVisible = showInfo?.[p.id] || false;
-
-        return (
-          <div key={p.id} className="flex items-center justify-between py-2">
-            <div className="flex-1 space-y-1">
-              <span className="font-medium">{p.nombre}</span>
-              {isInfoVisible && (
-                <>
-                  <span className="text-xs text-gray-500">Stock: {p.stock} unidades</span>
-                  <span className="text-xs text-gray-500">SKU: {p.codigo}</span>
-                </>
-              )}
+      <div className="flex items-center space-x-2">
+        <Star className="w-5 h-5 text-blue-600" />
+        <h3 className="text-blue-600 font-semibold text-lg">Productos destacados</h3>
+      </div>
+      
+      <div className="space-y-3">
+        {destacados.map(product => (
+          <div key={product.id} className="space-y-2">
+            {/* Product row */}
+            <div className="flex items-center justify-between py-2 border-b border-gray-200">
+              <div className="flex-1">
+                <span className="font-medium text-gray-900">{product.nombre}</span>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                {/* Add button */}
+                <button
+                  onClick={() => addToCart(product)}
+                  className="p-1.5 bg-gray-200 hover:bg-gray-300 rounded-full transition-colors"
+                  title="Agregar producto"
+                >
+                  <Plus className="w-4 h-4 text-gray-600" />
+                </button>
+                
+                {/* Price button */}
+                <button
+                  onClick={() => togglePrice(product.id)}
+                  className={`p-1.5 rounded-full transition-colors ${
+                    showPrice[product.id] 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+                  }`}
+                  title="Mostrar precio"
+                >
+                  <DollarSign className="w-4 h-4" />
+                </button>
+                
+                {/* Info button */}
+                <button
+                  onClick={() => toggleInfo(product.id)}
+                  className={`p-1.5 rounded-full transition-colors ${
+                    showInfo[product.id] 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+                  }`}
+                  title="Mostrar información"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => updateQuantity(p.id, qty + 1)}
-                className="px-2 py-1 bg-gray-200 rounded"
-              >
-                +
-              </button>
-              <span className="font-semibold">{formatPrice(qty * p.precio)}</span>
-            </div>
-
-            {qty > 0 && (
-              <button
-                onClick={() => removeFromCart(p.id)}
-                className="ml-4 text-red-500"
-              >
-                <X className="w-4 h-4" />
-              </button>
+            
+            {/* Price display */}
+            {showPrice[product.id] && (
+              <div className="pl-4 text-sm text-blue-600 font-medium">
+                Precio: {formatPrice(product.precio)}
+              </div>
             )}
-
-            <button onClick={() => toggleInfo(p.id)} className="ml-4 text-gray-400 hover:text-gray-600">
-              <Info className="w-5 h-5" />
-            </button>
+            
+            {/* Info display */}
+            {showInfo[product.id] && (
+              <div className="pl-4 space-y-1 text-sm text-gray-600">
+                <div className="flex justify-between">
+                  <span>Stock:</span>
+                  <span>{product.stock || 0} unidades</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>SKU:</span>
+                  <span>{product.codigo || 'Sin SKU'}</span>
+                </div>
+              </div>
+            )}
           </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 }
