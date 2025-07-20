@@ -244,7 +244,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
               </div>
 
               {/* Client Selection - Only for Factura */}
-              {billingData.tipoDte === 'factura' && (
+              {(billingData.tipoDte === 'factura' || billingData.tipoDte === 'Factura electrónica') && (
                 <div className="mb-6">
                   <h4 className="text-sm font-medium text-gray-700 mb-3">Cliente</h4>
                   {selectedClient ? (

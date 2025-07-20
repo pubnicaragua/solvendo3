@@ -10,7 +10,7 @@ interface ProductsPanelProps {
   
 const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm }) => {  
   const { productos, loading } = usePOS()  
-  const [selectedCategory, setSelectedCategory] = useState('all')  
+  const [selectedFilter, setSelectedFilter] = useState('all')  
   
   const formatPrice = (price: number) => {  
     return new Intl.NumberFormat('es-CL', {  
@@ -24,7 +24,12 @@ const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm }
     const matchesSearch = searchTerm ?   
       p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||  
       p.codigo.toLowerCase().includes(searchTerm.toLowerCase()) : true  
-    return matchesSearch  
+    
+    const matchesFilter = selectedFilter === 'all' ? true :
+      selectedFilter === 'con_sku' ? p.codigo && p.codigo.trim() !== '' :
+      selectedFilter === 'sin_sku' ? !p.codigo || p.codigo.trim() === '' : true
+    
+    return matchesSearch && matchesFilter  
   })  
   
   return (  
@@ -36,14 +41,13 @@ const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm }
         
       <div className="mb-4">  
         <select   
-          value={selectedCategory}  
-          onChange={(e) => setSelectedCategory(e.target.value)}  
+          value={selectedFilter}  
+          onChange={(e) => setSelectedFilter(e.target.value)}  
           className="w-full px-3 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"  
         >  
-          <option value="all">Todas las categorías</option>  
-          <option value="bebidas">Bebidas</option>  
-          <option value="snacks">Snacks</option>  
-          <option value="otros">Otros</option>  
+          <option value="all">Todos los productos</option>  
+          <option value="con_sku">Con SKU</option>  
+          <option value="sin_sku">Sin SKU</option>  
         </select>  
       </div>  
   

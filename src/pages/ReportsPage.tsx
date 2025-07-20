@@ -433,33 +433,30 @@ export const ReportsPage: React.FC = () => {
           </div>
 
           {/* Panel de Acciones Lateral (Fijo a la derecha) */}
-          <div className="hidden lg:flex flex-col items-center p-4 space-y-6 bg-white rounded-2xl shadow-sm h-fit">
+          <div className="hidden lg:flex flex-col items-center p-3 space-y-4 bg-white rounded-2xl shadow-sm h-fit w-20">
             <button
               onClick={() => toast.success('Reporte descargado')}
-              className="group flex flex-col items-center text-blue-600 hover:text-blue-800 transition-colors p-2 rounded-lg hover:bg-blue-50" // Botón azul
+              className="group flex flex-col items-center text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-lg hover:bg-blue-50"
               title="Descargar Reporte"
             >
-              <Download className="w-5 h-5" />
-              <span className="text-xs mt-1">Descargar</span>
+              <Download className="w-4 h-4" />
+              <span className="text-xs mt-1 text-center">Descargar</span>
             </button>
             <button
               onClick={() => setShowFilters(true)}
-              className="group flex flex-col items-center text-blue-600 hover:text-blue-800 transition-colors p-2 rounded-lg hover:bg-blue-50" // Botón azul
+              className="group flex flex-col items-center text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-lg hover:bg-blue-50"
               title="Filtrar"
             >
-              <Filter className="w-5 h-5" />
-              <span className="text-xs mt-1">Filtros</span>
+              <Filter className="w-4 h-4" />
+              <span className="text-xs mt-1 text-center">Filtros</span>
             </button>
-            <div className="text-center text-xs text-gray-500 mt-auto pt-4 border-t border-gray-100 w-full">
-              <Clock className="w-5 h-5 text-blue-600 mx-auto mb-1" /> {/* Icono de reloj azul */}
-              <div className="text-[10px] text-gray-500">
+            <div className="text-center text-xs text-gray-500 mt-auto pt-2 border-t border-gray-100 w-full">
+              <Clock className="w-4 h-4 text-blue-600 mx-auto mb-1" />
+              <div className="text-[9px] text-gray-500">
                 {new Date().toLocaleDateString('es-CL')}
               </div>
-              <div className="text-[10px] text-gray-500">
+              <div className="text-[9px] text-gray-500">
                  {new Date().toLocaleTimeString('es-CL')}
-              </div>
-              <div className="text-center py-2 text-gray-500">
-                Última actualización: {lastUpdate}
               </div>
             </div>
           </div>

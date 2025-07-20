@@ -29,9 +29,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
   // Función para imprimir toda la factura
   const handlePrint = () => {
-    try {
-      // Crear contenido de la factura para impresión
-      const printContent = `
+    // Crear contenido completo de la factura para impresión
+    const printContent = `
 <html>
   <head>
     <title>Factura</title>
@@ -42,9 +41,11 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
         padding: 20px; 
         font-size: 12px;
         line-height: 1.4;
+        width: 80mm;
+        max-width: 300px;
       }
       .receipt { 
-        max-width: 300px; 
+        width: 100%;
         margin: 0 auto; 
         padding: 0;
       }
@@ -118,6 +119,10 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
         border-top: 1px dashed #000;
         padding-top: 10px;
       }
+      @media print {
+        body { margin: 0; padding: 10px; }
+        .receipt { width: 100%; }
+      }
     </style>
   </head>
   <body>
@@ -125,18 +130,19 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
       <div class="header">
         <div class="company">Solvendo POS</div>
         <div class="info">Sistema de Punto de Venta</div>
-        <div class="info">RUT: 76.123.456-7</div>
+        <div class="info">RUT: 78.168.951-3</div>
         <div class="info">Dirección: Av. Principal 123, Santiago</div>
         <div class="info">Teléfono: +56 2 2345 6789</div>
       </div>
       
       <div class="document-type">BOLETA ELECTRÓNICA</div>
       <div class="info">Folio: ${receiptData.folio}</div>
-      <div class="info">Fecha: ${receiptData.fecha}</div>
+      <div class="info">Fecha: ${new Date().toLocaleDateString('es-CL')}</div>
+      <div class="info">Hora: ${new Date().toLocaleTimeString('es-CL')}</div>
       
       <div class="customer">
         <div><strong>Cliente:</strong> Consumidor Final</div>
-        <div><strong>RUT:</strong> 11.111.111-1</div>
+        <div><strong>RUT:</strong> 66.666.666-6</div>
       </div>
       
       <table class="items-table">
@@ -163,7 +169,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
       <div class="totals">
         <div class="total-line">
           <span>Subtotal:</span>
-          <span>$${receiptData.total.toLocaleString('es-CL')}</span>
+          <span>${formatPrice(receiptData.total)}</span>
         </div>
         <div class="total-line">
           <span>IVA (19%):</span>
@@ -171,47 +177,47 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
         </div>
         <div class="total-line grand-total">
           <span>TOTAL:</span>
-          <span>$${receiptData.total.toLocaleString('es-CL')}</span>
+          <span>${formatPrice(receiptData.total)}</span>
         </div>
       </div>
       
       <div class="footer">
         <p>Gracias por su compra</p>
-        <p>Este documento no tiene valor tributario</p>
+        <p>Documento Tributario Electrónico</p>
+        <p>Consulte en: www.sii.cl</p>
       </div>
     </div>
-  </body>
+    
     <script>
       window.onload = function() {
-        window.print();
-        window.onafterprint = function() {
-          window.close();
-        };
+        setTimeout(function() {
+          window.print();
+          window.onafterprint = function() {
+            window.close();
+          };
+        }, 500);
       };
     </script>
+  </body>
 </html>
-      `
+    `
       
-      // Crear nueva ventana para impresión
-      const printWindow = window.open('', '_blank', 'width=800,height=600')
-      if (!printWindow) {
-        toast.error('Error al abrir ventana de impresión')
-        return
-      }
+    // Crear nueva ventana para impresión
+    const printWindow = window.open('', '_blank', 'width=400,height=600,scrollbars=yes')
+    if (!printWindow) {
+      toast.error('Error al abrir ventana de impresión')
+      return
+    }
       
-      // Escribir contenido y configurar impresión automática
-      printWindow.document.write(printContent)
-      printWindow.document.close()
+    // Escribir contenido y configurar impresión automática
+    printWindow.document.write(printContent)
+    printWindow.document.close()
       
-      // Llamar onPrint después de un breve delay
-      if (onPrint) {
-        setTimeout(() => {
-          onPrint()
-        }, 1000)
-      }
-    } catch (error) {
-      console.error('Error al imprimir:', error)
-      toast.error('Error al imprimir')
+    // Llamar onPrint después de un breve delay
+    if (onPrint) {
+      setTimeout(() => {
+        onPrint()
+      }, 1500)
     }
   }
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Search, Star, FileText, Gift, User,
+  Search, Star, FileText, Gift, User, Filter,
   Plus, Minus, X as XIcon, Percent
 } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -43,11 +43,10 @@ const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab]         = useState<TabId>('destacado')
   const [searchTerm, setSearchTerm]       = useState('')
   const [clientSearchTerm, setClientSearchTerm] = useState('')
-  // currentTime ya no se necesita aquí si HeaderWithMenu lo gestiona
-  // const [currentTime, setCurrentTime]     = useState('')
   const [showDraftModal, setShowDraftModal] = useState(false)
   const [draftName, setDraftName]         = useState('')
   const [showReceipt, setShowReceipt]     = useState(false) 
+  const [showSearchResults, setShowSearchResults] = useState(false)
 
   useEffect(() => {
     loadBorradores()
@@ -103,6 +102,9 @@ const Dashboard: React.FC = () => {
   const filteredProducts = productos.filter(p =>
     p.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   )
+  
+  // Solo mostrar productos si hay término de búsqueda
+  const shouldShowProducts = searchTerm.length > 0
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -122,40 +124,60 @@ const Dashboard: React.FC = () => {
               type="text"
               placeholder="Buscar productos..."
               value={searchTerm}
-              onChange={e=>setSearchTerm(e.target.value)}
+              onChange={e => {
+                setSearchTerm(e.target.value)
+                setShowSearchResults(e.target.value.length > 0)
+              }}
               className="w-full pl-12 pr-4 py-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <div className="flex-1 overflow-y-auto mb-6 space-y-4">
-            {filteredProducts.map(p => {
-              const item = carrito.find(i=>i.id===p.id)
-              const qty  = item?.quantity || 0
-              return (
-                <div key={p.id} className="flex justify-between items-center py-4 border-b last:border-b-0">
-                  <div className="flex-1"><h4 className="font-medium">{p.nombre}</h4></div>
-                  <div className="flex items-center space-x-2">
-                    <button onClick={()=>qty>0&&updateQuantity(p.id,qty-1)}
-                      className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="w-8 text-center flex-shrink-0">{qty}</span>
-                    <button onClick={()=>addToCart(p)}
-                      className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="flex items-center space-x-4 ml-6">
-                    <span className="font-semibold">{fmt(qty*p.precio)}</span>
-                    {qty>0&&(
-                      <button onClick={()=>removeFromCart(p.id)} className="text-gray-600 p-1 rounded-full hover:bg-gray-100">
-                        <XIcon className="w-4 h-4" />
+          
+          {!shouldShowProducts ? (
+            <div className="flex-1 flex items-center justify-center text-gray-500">
+              <div className="text-center">
+                <Search className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                <p className="text-lg">Busca productos para agregarlos</p>
+                <p className="text-sm">Escribe el nombre o código del producto</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto mb-6 space-y-4">
+              {filteredProducts.map(p => {
+                const item = carrito.find(i=>i.id===p.id)
+                const qty  = item?.quantity || 0
+                return (
+                  <div key={p.id} className="flex justify-between items-center py-4 border-b last:border-b-0">
+                    <div className="flex-1"><h4 className="font-medium">{p.nombre}</h4></div>
+                    <div className="flex items-center space-x-2">
+                      <button onClick={()=>qty>0&&updateQuantity(p.id,qty-1)}
+                        className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
+                        <Minus className="w-4 h-4" />
                       </button>
-                    )}
+                      <span className="w-8 text-center flex-shrink-0">{qty}</span>
+                      <button onClick={()=>addToCart(p)}
+                        className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="flex items-center space-x-4 ml-6">
+                      <span className="font-semibold">{fmt(qty*p.precio)}</span>
+                      {qty>0&&(
+                        <button onClick={()=>removeFromCart(p.id)} className="text-gray-600 p-1 rounded-full hover:bg-gray-100">
+                          <XIcon className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
+                )
+              })}
+              {filteredProducts.length === 0 && (
+                <div className="text-center text-gray-500 py-8">
+                  No se encontraron productos
                 </div>
-              )
-            })}
-          </div>
+              )}
+            </div>
+          )}
+          
           <div className="border-t pt-4 flex flex-col">
             <div className="grid grid-cols-2 gap-4 items-center mb-4">
                 <span className="text-gray-600 text-sm">
