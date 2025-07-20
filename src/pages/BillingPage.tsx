@@ -34,6 +34,11 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
   const navigate = useNavigate()
   const { carrito, total, clearCart, procesarVenta, currentCliente, selectClient } = usePOS()
 
+  // Función para validar números positivos
+  const validatePositiveNumber = (value: number): number => {
+    return Math.max(0, value || 0);
+  };
+
   // Si hay un cliente seleccionado en el contexto, usarlo
   useEffect(() => {
     if (currentCliente) {
@@ -49,9 +54,11 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-CL', {
-      style: 'currency',
-      currency: 'CLP'
-    }).format(price)
+      style: 'currency', 
+      currency: 'CLP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(validatePositiveNumber(price))
   }
 
   // Función para manejar la selección de cliente
@@ -78,11 +85,6 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
       const result = await procesarVenta(billingData.metodoPago, billingData.tipoDte as 'boleta' | 'factura' | 'nota_credito', selectedClient?.id);
       
       if (result.success) {
-        // Generar DTE automáticamente
-        if (result.data?.id) {
-          await generarDTE(result.data.id);
-        }
-        
         // Mostrar diálogo de impresión
         setShowPrintDialog(true)
       } else {
@@ -130,8 +132,10 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
     }
   }
 
-  const totalConDescuento = total * (1 - (billingData.descuentoGlobal / 100))
-  const vuelto = billingData.montoRecibido > 0 ? Math.max(0, billingData.montoRecibido - totalConDescuento) : 0
+  const totalConDescuento = validatePositiveNumber(total * (1 - (validatePositiveNumber(billingData.descuentoGlobal) / 100)))
+  const vuelto = billingData.metodoPago === 'efectivo' && billingData.montoRecibido > 0 
+    ? validatePositiveNumber(billingData.montoRecibido - totalConDescuento) 
+    : 0
 
   if (showPrintDialog) {
     return (
@@ -282,7 +286,10 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
                   <input
                     type="number"
                     value={billingData.descuentoGlobal}
-                    onChange={(e) => setBillingData(prev => ({ ...prev, descuentoGlobal: Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)) }))}
+                    onChange={(e) => {
+                      const value = Math.min(100, Math.max(0, parseFloat(e.target.value) || 0));
+                      setBillingData(prev => ({ ...prev, descuentoGlobal: value }));
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                     min="0"
                     max="100"
@@ -327,9 +334,13 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
                   <input
                     type="number"
                     value={billingData.montoRecibido}
-                    onChange={(e) => setBillingData(prev => ({ ...prev, montoRecibido: parseFloat(e.target.value) || 0 }))}
+                    onChange={(e) => {
+                      const value = Math.max(0, parseFloat(e.target.value) || 0);
+                      setBillingData(prev => ({ ...prev, montoRecibido: value }));
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                     min="0"
+                    step="1"
                   />
                 </div>
               )}

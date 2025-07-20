@@ -54,7 +54,12 @@ const Dashboard: React.FC = () => {
   },[loadBorradores])
 
   const fmt = (n:number) =>
-    new Intl.NumberFormat('es-CL',{ style:'currency',currency:'CLP' }).format(n)
+    new Intl.NumberFormat('es-CL', { 
+      style: 'currency', 
+      currency: 'CLP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(Math.max(0, n || 0))
 
   const handleSaveDraft = async () => {
     if (!draftName.trim() || carrito.length===0) return
@@ -145,6 +150,7 @@ const Dashboard: React.FC = () => {
               {filteredProducts.map(p => {
                 const item = carrito.find(i=>i.id===p.id)
                 const qty  = item?.quantity || 0
+                const itemTotal = Math.max(0, qty * p.precio)
                 return (
                   <div key={p.id} className="flex justify-between items-center py-4 border-b last:border-b-0">
                     <div className="flex-1"><h4 className="font-medium">{p.nombre}</h4></div>
@@ -160,7 +166,7 @@ const Dashboard: React.FC = () => {
                       </button>
                     </div>
                     <div className="flex items-center space-x-4 ml-6">
-                      <span className="font-semibold">{fmt(qty*p.precio)}</span>
+                      <span className="font-semibold">{fmt(itemTotal)}</span>
                       {qty>0&&(
                         <button onClick={()=>removeFromCart(p.id)} className="text-gray-600 p-1 rounded-full hover:bg-gray-100">
                           <XIcon className="w-4 h-4" />
@@ -181,7 +187,7 @@ const Dashboard: React.FC = () => {
           <div className="border-t pt-4 flex flex-col">
             <div className="grid grid-cols-2 gap-4 items-center mb-4">
                 <span className="text-gray-600 text-sm">
-                    N° Líneas {carrito.length} / Tot. ítems {carrito.reduce((s,i)=>s+i.quantity,0)}
+                    N° Líneas {carrito.length} / Tot. ítems {Math.max(0, carrito.reduce((s,i)=>s+(i.quantity||0),0))}
                 </span>
                 <select className="px-2 py-1.5 border rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 w-fit ml-auto">
                     <option>Boleta manual</option>

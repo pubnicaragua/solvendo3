@@ -47,7 +47,12 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({ onClose })
   }
 
   const handleSubmit = async () => {
-    if (!user || Number(monto) <= 0) return
+    const montoNumber = Math.max(0, Number(monto) || 0);
+    if (!user || montoNumber <= 0) {
+      toast.error('El monto debe ser mayor a 0');
+      return;
+    }
+    
     setLoading(true)
     try {
       const { data: apertura } = await supabase
@@ -62,7 +67,7 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({ onClose })
         apertura_caja_id: apertura.id,
         usuario_id: user.id,
         tipo,
-        monto: Number(monto),
+        monto: montoNumber,
         observacion: obs || null,
         fecha
       })

@@ -201,6 +201,21 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [cajaAbierta, setCajaAbierta] = useState(false);  
   const [currentAperturaCaja, setCurrentAperturaCaja] = useState<AperturaCaja | null>(null);  
   
+  // Función para validar que los números no sean negativos
+  const validatePositiveNumber = (value: number): number => {
+    return Math.max(0, value || 0);
+  };
+
+  // Función para formatear precios de manera consistente
+  const formatPrice = (price: number): string => {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(validatePositiveNumber(price));
+  };
+
   // --- Función para obtener caja por defecto ---  
   const getDefaultCajaId = useCallback(async (): Promise<string | null> => {  
     if (!sucursalId || !empresaId) return null;  

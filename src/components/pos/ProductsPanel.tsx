@@ -15,9 +15,10 @@ const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm }
   const formatPrice = (price: number) => {  
     return new Intl.NumberFormat('es-CL', {  
       style: 'currency',  
-      currency: 'CLP',
-      minimumFractionDigits: 0
-    }).format(price)  
+      currency: 'CLP',  
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(Math.max(0, price || 0))  
   }  
   
   const filteredProducts = productos.filter(p => {  

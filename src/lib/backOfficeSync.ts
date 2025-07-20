@@ -31,7 +31,7 @@ export interface BackOfficePromotion {
 
 export class BackOfficeSync {
   private static instance: BackOfficeSync
-  private baseUrl = 'https://your-backend-url.com/api' // Cambiar por la URL real del Back Office
+  private baseUrl = process.env.VITE_BACKEND_URL || 'https://api.anroltec.cl/api'
 
   static getInstance(): BackOfficeSync {
     if (!BackOfficeSync.instance) {

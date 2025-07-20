@@ -36,7 +36,12 @@ export const CashClosePage: React.FC = () => {
 
   // Formateador de moneda: símbolo de dólar *detrás*
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(price).replace('$', '') + '$';
+    new Intl.NumberFormat('es-CL', { 
+      style: 'currency', 
+      currency: 'CLP', 
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(Math.max(0, price || 0)).replace('$', '') + '$';
 
   // Cargar datos de ventas y movimientos al montar la página
   useEffect(() => {
@@ -109,8 +114,8 @@ export const CashClosePage: React.FC = () => {
   // Cálculo de la diferencia entre el monto final ingresado y el monto esperado
   const diferencia = useMemo(() => {
     const montoFinalNum = parseFloat(montoFinalInput); 
-    if (isNaN(montoFinalNum)) return 0;
-    return montoFinalNum - montoEsperado;
+    if (isNaN(montoFinalNum) || montoFinalNum < 0) return 0;
+    return Math.max(0, montoFinalNum) - Math.max(0, montoEsperado);
   }, [montoFinalInput, montoEsperado]);
 
 

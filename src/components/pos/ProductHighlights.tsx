@@ -10,7 +10,12 @@ export default function ProductHighlights() {
   const destacados = productos.filter(p => p.destacado);
 
   const formatPrice = (n: number) =>
-    new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(n);
+    new Intl.NumberFormat('es-CL', { 
+      style: 'currency', 
+      currency: 'CLP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(Math.max(0, n || 0));
 
   const toggleInfo = (productId: string) => {
     setShowInfo(prev => ({
@@ -95,7 +100,7 @@ export default function ProductHighlights() {
             {/* Price display */}
             {showPrice[product.id] && (
               <div className="pl-4 text-sm text-blue-600 font-medium">
-                Precio: {formatPrice(product.precio)}
+                Precio: {formatPrice(product.precio || 0)}
               </div>
             )}
             
@@ -104,7 +109,7 @@ export default function ProductHighlights() {
               <div className="pl-4 space-y-1 text-sm text-gray-600">
                 <div className="flex justify-between">
                   <span>Stock:</span>
-                  <span>{product.stock || 0} unidades</span>
+                  <span>{Math.max(0, product.stock || 0)} unidades</span>
                 </div>
                 <div className="flex justify-between">
                   <span>SKU:</span>
