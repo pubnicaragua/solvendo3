@@ -1,5 +1,7 @@
 import React from 'react'
 import { X } from 'lucide-react'
+import { usePOS } from '../../contexts/POSContext'
+import { useAuth } from '../../contexts/AuthContext'
 
 interface ReceiptModalProps {
   isOpen: boolean
@@ -14,17 +16,25 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   onPrint,
   onSendEmail
 }) => {
+  const { carrito, total, currentCliente } = usePOS()
+  const { user } = useAuth()
+  
   if (!isOpen) return null
   
-  // Datos de ejemplo para la factura
+  // Datos reales de la venta
   const receiptData = {
-    folio: '123456',
-    fecha: new Date().toLocaleDateString(),
-    items: [
-      { nombre: 'Producto de ejemplo', precio: 10000, cantidad: 1, subtotal: 10000 },
-      { nombre: 'Otro producto', precio: 5000, cantidad: 1, subtotal: 5000 }
-    ],
-    total: 15000
+    folio: 'V' + Date.now(),
+    fecha: new Date().toLocaleDateString('es-CL'),
+    hora: new Date().toLocaleTimeString('es-CL'),
+    items: carrito.map(item => ({
+      nombre: item.nombre,
+      precio: item.precio,
+      cantidad: item.quantity,
+      subtotal: item.precio * item.quantity
+    })),
+    total: total,
+    cliente: currentCliente,
+    cajero: user?.nombre || 'Usuario'
   };
 
   // Función para imprimir toda la factura
@@ -128,21 +138,22 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   <body>
     <div class="receipt">
       <div class="header">
-        <div class="company">Solvendo POS</div>
-        <div class="info">Sistema de Punto de Venta</div>
+        <div class="company">ANROLTEC SPA</div>
+        <div class="info">Servicios de Tecnología</div>
         <div class="info">RUT: 78.168.951-3</div>
-        <div class="info">Dirección: Av. Principal 123, Santiago</div>
+        <div class="info">Av. Providencia 1234, Santiago</div>
         <div class="info">Teléfono: +56 2 2345 6789</div>
       </div>
       
       <div class="document-type">BOLETA ELECTRÓNICA</div>
       <div class="info">Folio: ${receiptData.folio}</div>
-      <div class="info">Fecha: ${new Date().toLocaleDateString('es-CL')}</div>
-      <div class="info">Hora: ${new Date().toLocaleTimeString('es-CL')}</div>
+      <div class="info">Fecha: ${receiptData.fecha}</div>
+      <div class="info">Hora: ${receiptData.hora}</div>
+      <div class="info">Cajero: ${receiptData.cajero}</div>
       
       <div class="customer">
-        <div><strong>Cliente:</strong> Consumidor Final</div>
-        <div><strong>RUT:</strong> 66.666.666-6</div>
+        <div><strong>Cliente:</strong> ${receiptData.cliente?.razon_social || 'Consumidor Final'}</div>
+        <div><strong>RUT:</strong> ${receiptData.cliente?.rut || '66.666.666-6'}</div>
       </div>
       
       <table class="items-table">
@@ -159,8 +170,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             <tr>
               <td>${item.nombre}</td>
               <td>${item.cantidad}</td>
-              <td>$${item.precio.toLocaleString('es-CL')}</td>
-              <td>$${item.subtotal.toLocaleString('es-CL')}</td>
+              <td>$${Math.round(item.precio).toLocaleString('es-CL')}</td>
+              <td>$${Math.round(item.subtotal).toLocaleString('es-CL')}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -169,7 +180,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
       <div class="totals">
         <div class="total-line">
           <span>Subtotal:</span>
-          <span>${formatPrice(receiptData.total)}</span>
+          <span>$${Math.round(receiptData.total).toLocaleString('es-CL')}</span>
         </div>
         <div class="total-line">
           <span>IVA (19%):</span>
@@ -177,7 +188,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
         </div>
         <div class="total-line grand-total">
           <span>TOTAL:</span>
-          <span>${formatPrice(receiptData.total)}</span>
+          <span>$${Math.round(receiptData.total).toLocaleString('es-CL')}</span>
         </div>
       </div>
       
@@ -185,39 +196,39 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
         <p>Gracias por su compra</p>
         <p>Documento Tributario Electrónico</p>
         <p>Consulte en: www.sii.cl</p>
+        <p>ANROLTEC SPA - Servicios de Tecnología</p>
       </div>
     </div>
-    
-    <script>
-      window.onload = function() {
-        setTimeout(function() {
-          window.print();
-          window.onafterprint = function() {
-            window.close();
-          };
-        }, 500);
-      };
-    </script>
   </body>
 </html>
     `
       
-    // Crear nueva ventana para impresión
-    const printWindow = window.open('', '_blank', 'width=400,height=600,scrollbars=yes')
-    if (!printWindow) {
-      toast.error('Error al abrir ventana de impresión')
-      return
+    // Crear elemento temporal para impresión
+    const printElement = document.createElement('div')
+    printElement.innerHTML = printContent
+    printElement.style.display = 'none'
+    document.body.appendChild(printElement)
+    
+    // Guardar contenido original
+    const originalContent = document.body.innerHTML
+    
+    // Reemplazar contenido temporalmente
+    document.body.innerHTML = printContent
+    
+    // Imprimir
+    window.print()
+    
+    // Restaurar contenido original
+    document.body.innerHTML = originalContent
+    
+    // Limpiar
+    if (document.body.contains(printElement)) {
+      document.body.removeChild(printElement)
     }
-      
-    // Escribir contenido y configurar impresión automática
-    printWindow.document.write(printContent)
-    printWindow.document.close()
-      
-    // Llamar onPrint después de un breve delay
+    
+    // Llamar callback
     if (onPrint) {
-      setTimeout(() => {
-        onPrint()
-      }, 1500)
+      onPrint()
     }
   }
 

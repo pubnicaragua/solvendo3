@@ -84,14 +84,16 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
     const fetchProductsAndDocs = async () => {
       try {
-        const { data: prods } = await supabase
-          .from('productos')
-          .select('*')
-          .ilike('nombre', `%${productSearch}%`)
-          .limit(10);
+        // Cargar productos desde el carrito actual
+        const cartProducts = carrito.map(item => ({
+          id: item.id,
+          nombre: item.nombre,
+          precio: item.precio,
+          stock: item.stock || 0
+        }));
         
-        if (prods && prods.length > 0) {
-          setProductos(prods);
+        if (cartProducts.length > 0) {
+          setProductos(cartProducts);
         } else {
           // Datos de ejemplo si no hay productos
           setProductos([
@@ -101,14 +103,15 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           ]);
         }
 
-        const { data: docs } = await supabase
+        // Cargar documentos disponibles
+        const { data: docs, error: docsError } = await supabase
           .from('ventas')
           .select('id, folio, tipo_dte, total')
           .ilike('folio', `%${docSearch}%`)
           .eq('empresa_id', empresaId)
           .limit(10);
         
-        if (docs && docs.length > 0) {
+        if (!docsError && docs && docs.length > 0) {
           setDocsDisponibles(
             docs.map((d: any) => ({
               id: d.id,
@@ -150,7 +153,6 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     };
 
     fetchProductsAndDocs();
-  }, [productSearch, docSearch, empresaId]);
 
   const formatPrice = (n: number) =>
     new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(n);

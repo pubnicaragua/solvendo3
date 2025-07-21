@@ -248,6 +248,19 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setLoading(true);  
     
     try {  
+      // Intentar cargar desde Back Office primero
+      try {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'https://api.anroltec.cl'}/api/productos?empresa_id=${empresaId}`);
+        if (response.ok) {
+          const backOfficeData = await response.json();
+          setProductos(backOfficeData || []);
+          return;
+        }
+      } catch (backOfficeError) {
+        console.log('Back Office no disponible, usando datos locales');
+      }
+
+      // Fallback a datos locales
       const { data, error } = await supabase  
         .from('productos')  
         .select('*')  
@@ -272,19 +285,25 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   // --- Carrito ---  
   const addToCart = (producto: Producto) => {  
-    setCarrito(prev => {  
-      const found = prev.find(i => i.id === producto.id);  
-      if (found) {  
-        return prev.map(i =>  
-          i.id === producto.id ? { ...i, quantity: validatePositiveNumber((i.quantity || 0) + 1) } : i  
-        );  
-      }  
-      return [...prev, { ...producto, quantity: 1, precio: validatePositiveNumber(producto.precio) }];  
-    });  
+    setCarrito(prev => {
+      const found = prev.find(i => i.id === producto.id);
+      if (found) {
+        return prev.map(i =>
+          i.id === producto.id 
+            ? { ...i, quantity: Math.max(1, (i.quantity || 0) + 1) } 
+            : i
+        );
+      }
+      return [...prev, { 
+        ...producto, 
+        quantity: 1, 
+        precio: Math.max(0, Number(producto.precio) || 0)
+      }];
+    });
   };  
   
   const updateQuantity = (productId: string, quantity: number) => {  
-    const validQuantity = validatePositiveNumber(Math.floor(quantity || 0));
+    const validQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
     if (validQuantity <= 0) {  
       removeFromCart(productId);  
     } else {  
@@ -406,7 +425,19 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const loadClientes = useCallback(async () => {  
     if (!empresaId) return;
     try {  
-      // Cargar clientes
+      // Intentar cargar desde Back Office primero
+      try {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'https://api.anroltec.cl'}/api/clientes?empresa_id=${empresaId}`);
+        if (response.ok) {
+          const backOfficeData = await response.json();
+          setClientes(backOfficeData || []);
+          return;
+        }
+      } catch (backOfficeError) {
+        console.log('Back Office no disponible, usando datos locales');
+      }
+
+      // Fallback a datos locales
       const { data, error } = await supabase
         .from('clientes')  
         .select('*')  
@@ -417,11 +448,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         console.error('Error loading clients', error);
         setClientes([]);  
       } else {  
-        if (data && data.length > 0) {
-          setClientes(data);
-        } else {
-          setClientes([]);
-        }
+        setClientes(data || []);
       }  
     } catch (error) {  
       console.error('Error en loadClientes:', error);  

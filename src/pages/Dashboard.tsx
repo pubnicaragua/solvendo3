@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   Search, Star, FileText, Gift, User, Filter,
   Plus, Minus, X as XIcon, Percent
@@ -13,6 +12,7 @@ import ProductsPanel     from '../components/pos/ProductsPanel'
 import ClientsPanel      from '../components/pos/ClientsPanel'
 import { ReceiptModal}       from '../components/pos/ReceiptModal'
 import { DraftSaveModal}     from '../components/pos/DraftSaveModal'
+import { PaymentModal }      from '../components/pos/PaymentModal'
 
 // Importamos el nuevo componente HeaderWithMenu
 import { HeaderWithMenu } from '../components/common/HeaderWithMenu' 
@@ -31,7 +31,6 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
 const Dashboard: React.FC = () => {
   // toggleSidebar y user se obtienen de sus respectivos contextos y se pasan a HeaderWithMenu
   const { user }         = useAuth()
-  const navigate = useNavigate() // Ahora está correctamente importado
   const {
     productos, carrito, total,
     addToCart, updateQuantity, removeFromCart, clearCart,
@@ -47,6 +46,7 @@ const Dashboard: React.FC = () => {
   const [draftName, setDraftName]         = useState('')
   const [showReceipt, setShowReceipt]     = useState(false) 
   const [showSearchResults, setShowSearchResults] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
 
   useEffect(() => {
     loadBorradores()
@@ -100,10 +100,13 @@ const Dashboard: React.FC = () => {
       return
     }
     
-    navigate('/facturacion')
+    setShowPaymentModal(true)
   }
 
-  const handlePaymentComplete = () => setShowReceipt(true)
+  const handlePaymentComplete = (metodoPago: string, tipoDte: string) => {
+    setShowPaymentModal(false)
+    setShowReceipt(true)
+  }
   const handleReceiptClose = () => {
     setShowReceipt(false)
     clearCart()

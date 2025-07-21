@@ -5,12 +5,13 @@ import { Producto, usePOS } from '../../contexts/POSContext'
   
 interface ProductsPanelProps {  
   onAddToCart: (producto: Producto) => void  
-  searchTerm: string  
+  searchTerm?: string  
 }  
   
-const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm }) => {  
+const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm = '' }) => {  
   const { productos, loading } = usePOS()  
   const [selectedFilter, setSelectedFilter] = useState('all')
+  const [localSearch, setLocalSearch] = useState('')
   const [showPrice, setShowPrice] = useState<Record<string, boolean>>({})
   const [showInfo, setShowInfo] = useState<Record<string, boolean>>({})
   
@@ -23,10 +24,13 @@ const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm }
     }).format(Math.max(0, price || 0))  
   }  
   
+  // Usar búsqueda local o externa
+  const currentSearch = localSearch || searchTerm
+  
   const filteredProducts = productos.filter(p => {  
-    const matchesSearch = searchTerm ?   
-      p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||  
-      (p.codigo && p.codigo.toLowerCase().includes(searchTerm.toLowerCase())) : true  
+    const matchesSearch = currentSearch ?   
+      p.nombre.toLowerCase().includes(currentSearch.toLowerCase()) ||  
+      (p.codigo && p.codigo.toLowerCase().includes(currentSearch.toLowerCase())) : true  
     
     const matchesFilter = selectedFilter === 'all' ? true :
       selectedFilter === 'con_sku' ? p.codigo && p.codigo.trim() !== '' :
@@ -73,7 +77,7 @@ const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm }
           <div className="text-center py-8 text-gray-500">Cargando productos...</div>  
         ) : filteredProducts.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            {searchTerm ? 'No se encontraron productos con ese término' : 'No hay productos disponibles'}
+            {currentSearch ? 'No se encontraron productos con ese término' : 'No hay productos disponibles'}
           </div>
         ) : filteredProducts.map(product => (  
           <div key={product.id} className="space-y-2">
@@ -148,6 +152,8 @@ const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm }
       {/* Search bar at bottom */}
       <div className="relative mt-6">  
         <input
+          value={localSearch}
+          onChange={(e) => setLocalSearch(e.target.value)}
           type="text"
           placeholder="Buscar productos..."
           className="w-full pl-4 pr-10 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
