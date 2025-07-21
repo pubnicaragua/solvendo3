@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { User, Search, Plus } from 'lucide-react'
+import { User, Search, Plus, Check } from 'lucide-react'
 import { usePOS } from '../../contexts/POSContext'
 import toast from 'react-hot-toast'
 
@@ -47,6 +47,7 @@ export default function ClientsPanel({ onClientSelected, clientSearchTerm = '' }
   const pick = (c:any) => {
     selectClient(c)
     onClientSelected(c)
+    toast.success(`Cliente ${c.razon_social} seleccionado`)
   }
 
   const save = async () => {
@@ -129,10 +130,19 @@ export default function ClientsPanel({ onClientSelected, clientSearchTerm = '' }
         {filtered.map(c => (
           <li key={c.id}
             onClick={()=>pick(c)}
-            className="p-3 bg-white border rounded hover:bg-gray-50 cursor-pointer flex justify-between"
+            className={`p-3 border rounded hover:bg-gray-50 cursor-pointer flex justify-between items-center ${
+              currentCliente?.id === c.id ? 'bg-blue-50 border-blue-200' : 'bg-white'
+            }`}
           >
-            <span>{c.razon_social} — {c.rut}</span>
-            <Plus className="w-4 h-4 text-blue-600" />
+            <div>
+              <span className="font-medium">{c.razon_social}</span>
+              <p className="text-xs text-gray-600">{c.rut}</p>
+            </div>
+            {currentCliente?.id === c.id ? (
+              <Check className="w-4 h-4 text-blue-600" />
+            ) : (
+              <Plus className="w-4 h-4 text-blue-600" />
+            )}
           </li>
         ))}
         {!filtered.length && (

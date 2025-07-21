@@ -203,7 +203,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   // Función para validar que los números no sean negativos
   const validatePositiveNumber = (value: number): number => {
-    return Math.max(0, Number(value) || 0);
+    return Math.max(0, isNaN(Number(value)) ? 0 : Number(value));
   };
 
   // Función para formatear precios de manera consistente
@@ -276,7 +276,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const found = prev.find(i => i.id === producto.id);  
       if (found) {  
         return prev.map(i =>  
-          i.id === producto.id ? { ...i, quantity: i.quantity + 1 } : i  
+          i.id === producto.id ? { ...i, quantity: validatePositiveNumber(i.quantity + 1) } : i  
         );  
       }  
       return [...prev, { ...producto, quantity: 1 }];  
@@ -284,12 +284,13 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };  
   
   const updateQuantity = (productId: string, quantity: number) => {  
-    if (quantity <= 0) {  
+    const validQuantity = validatePositiveNumber(quantity);
+    if (validQuantity <= 0) {  
       removeFromCart(productId);  
     } else {  
       setCarrito(prev =>  
         prev.map(i =>  
-          i.id === productId ? { ...i, quantity } : i  
+          i.id === productId ? { ...i, quantity: validQuantity } : i  
         )  
       );  
     }  

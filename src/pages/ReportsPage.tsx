@@ -334,9 +334,9 @@ export const ReportsPage: React.FC = () => {
         </div>
 
         {/* CONTENEDOR PRINCIPAL: Gráfico y Panel de Acciones Lateral */}
-        <div className="flex flex-col lg:flex-row gap-6 relative">
+        <div className="flex flex-col lg:flex-row gap-4 relative">
           {/* Chart Section */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4 flex-1 ">
+          <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4 flex-1">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold text-gray-900">
                 Ventas totales por mes
@@ -370,12 +370,12 @@ export const ReportsPage: React.FC = () => {
 
             {/* Recharts */}
             {loadingChart ? (
-              <div className="h-[260px] flex items-center justify-center flex-col">
+              <div className="h-[300px] flex items-center justify-center flex-col">
                 <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
                 <p className="text-gray-600 mt-3">Cargando gráfico...</p>
               </div>
             ) : chartError ? (
-              <div className="h-[260px] flex items-center justify-center flex-col text-red-600">
+              <div className="h-[300px] flex items-center justify-center flex-col text-red-600">
                 <p>{chartError}</p>
                 <button
                   onClick={loadMonthlyData}
@@ -385,14 +385,15 @@ export const ReportsPage: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={260}>
-                <ComposedChart data={monthlyData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+              <ResponsiveContainer width="100%" height={300}>
+                <ComposedChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid stroke="#eee" strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="mes" axisLine={false} tickLine={false} />
                   <YAxis
-                    tickFormatter={n => formatPrice(n).replace('CLP', '').trim()}
+                    tickFormatter={n => formatPrice(n).replace('$', '$').replace('.', '.')}
                     axisLine={false}
                     tickLine={false}
+                    width={80}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   {showAnterior && (
@@ -433,32 +434,32 @@ export const ReportsPage: React.FC = () => {
           </div>
 
           {/* Panel de Acciones Lateral (Fijo a la derecha) */}
-          <div className="hidden lg:flex flex-col items-center p-4 space-y-6 bg-white rounded-2xl shadow-sm h-fit">
+          <div className="hidden lg:flex flex-col items-center p-3 space-y-4 bg-white rounded-2xl shadow-sm h-fit w-32">
             <button
               onClick={() => toast.success('Reporte descargado')}
-              className="group flex flex-col items-center text-blue-600 hover:text-blue-800 transition-colors p-2 rounded-lg hover:bg-blue-50" // Botón azul
+              className="group flex flex-col items-center text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-lg hover:bg-blue-50"
               title="Descargar Reporte"
             >
-              <Download className="w-5 h-5" />
-              <span className="text-xs mt-1">Descargar</span>
+              <Download className="w-4 h-4" />
+              <span className="text-xs mt-1 text-center">Descargar</span>
             </button>
             <button
               onClick={() => setShowFilters(true)}
-              className="group flex flex-col items-center text-blue-600 hover:text-blue-800 transition-colors p-2 rounded-lg hover:bg-blue-50" // Botón azul
+              className="group flex flex-col items-center text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-lg hover:bg-blue-50"
               title="Filtrar"
             >
-              <Filter className="w-5 h-5" />
-              <span className="text-xs mt-1">Filtros</span>
+              <Filter className="w-4 h-4" />
+              <span className="text-xs mt-1 text-center">Filtros</span>
             </button>
-            <div className="text-center text-xs text-gray-500 mt-auto pt-4 border-t border-gray-100 w-full">
-              <Clock className="w-5 h-5 text-blue-600 mx-auto mb-1" /> {/* Icono de reloj azul */}
-              <div className="text-[10px] text-gray-500">
+            <div className="text-center text-xs text-gray-500 mt-auto pt-3 border-t border-gray-100 w-full">
+              <Clock className="w-4 h-4 text-blue-600 mx-auto mb-1" />
+              <div className="text-[9px] text-gray-500">
                 {new Date().toLocaleDateString('es-CL')}
               </div>
-              <div className="text-[10px] text-gray-500">
+              <div className="text-[9px] text-gray-500">
                  {new Date().toLocaleTimeString('es-CL')}
               </div>
-              <div className="text-center py-2 text-gray-500">
+              <div className="text-center py-1 text-gray-500 text-[8px]">
                 Última actualización: {lastUpdate}
               </div>
             </div>

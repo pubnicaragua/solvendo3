@@ -133,8 +133,8 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
   }
 
   const totalConDescuento = validatePositiveNumber(total * (1 - (validatePositiveNumber(billingData.descuentoGlobal) / 100)))
-  const vuelto = billingData.metodoPago === 'efectivo' && validatePositiveNumber(billingData.montoRecibido) > totalConDescuento
-    ? validatePositiveNumber(validatePositiveNumber(billingData.montoRecibido) - totalConDescuento) 
+  const vuelto = billingData.metodoPago === 'efectivo' 
+    ? Math.max(0, validatePositiveNumber(billingData.montoRecibido) - totalConDescuento)
     : 0
 
   if (showPrintDialog) {
@@ -301,7 +301,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
               {/* Payment Methods */}
               <div className="mb-6">
                 <h4 className="text-sm font-medium text-gray-700 mb-3">Métodos de pago</h4>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   <button
                     onClick={() => setBillingData(prev => ({ ...prev, metodoPago: 'efectivo' }))}
                     className={`flex items-center gap-2 px-4 py-3 rounded-lg ${
@@ -313,6 +313,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
                     <DollarSign className="w-5 h-5" />
                     <span>Efectivo</span>
                   </button>
+                  
                   <button
                     onClick={() => setBillingData(prev => ({ ...prev, metodoPago: 'tarjeta' }))}
                     className={`flex items-center gap-2 px-4 py-3 rounded-lg ${
@@ -324,6 +325,18 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
                     <CreditCard className="w-5 h-5" />
                     <span>Tarjeta</span>
                   </button>
+                  
+                  {/* Selector de POS para tarjeta */}
+                  {billingData.metodoPago === 'tarjeta' && (
+                    <div className="mt-3">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Terminal POS</label>
+                      <select className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        <option>Terminal Principal - SumUp</option>
+                        <option>Terminal Secundaria - SumUp</option>
+                        <option>Terminal Móvil - SumUp</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
               </div>
 

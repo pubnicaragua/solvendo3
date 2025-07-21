@@ -21,7 +21,7 @@ const SummaryLine = ({ label, value, colorClass = 'text-gray-900', icon: Icon }:
 export const CashClosePage: React.FC = () => {
   const { currentAperturaCaja, openCaja, loading: contextLoading } = usePOS();
   const navigate = useNavigate(); // Ahora está correctamente importado
-  const { user } = useAuth(); // Asegúrate de que `user` contenga el nombre y la URL del avatar.
+  const { user, logout } = useAuth(); // Añadir logout
 
   const [isClosing, setIsClosing] = useState(false);
   const [ventas, setVentas] = useState<Venta[]>([]);
@@ -140,8 +140,12 @@ export const CashClosePage: React.FC = () => {
       
       toast.success('✅ Caja cerrada exitosamente.');
       
-      // Navegar al dashboard después de un cierre exitoso
-      setTimeout(() => navigate('/'), 1500);
+      // Cerrar sesión automáticamente después de cerrar caja
+      setTimeout(async () => {
+        await logout();
+        navigate('/login');
+      }, 2000);
+      
     } catch (error: any) {
       toast.error('Error al cerrar la caja: ' + error.message);
     } finally {

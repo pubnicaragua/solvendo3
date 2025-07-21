@@ -142,16 +142,134 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       return;
     }
     
-    toast.success(`Imprimiendo ${copies} ${copies === 1 ? 'copia' : 'copias'}`);
-    // Simular impresión
-    setTimeout(() => {
-      try {
-        window.print();
-      } catch (error) {
-        console.error('Error al imprimir:', error);
-        toast.error('Error al imprimir');
+    // Crear contenido específico del documento para impresión
+    const printContent = `
+<html>
+  <head>
+    <title>Reimprimir Documento</title>
+    <style>
+      body { 
+        font-family: 'Courier New', monospace; 
+        margin: 0; 
+        padding: 20px; 
+        font-size: 12px;
+        line-height: 1.4;
+        width: 80mm;
+        max-width: 300px;
       }
-    }, 500);
+      .receipt { 
+        width: 100%;
+        margin: 0 auto; 
+        padding: 0;
+      }
+      .header { 
+        text-align: center; 
+        margin-bottom: 15px; 
+        border-bottom: 1px dashed #000; 
+        padding-bottom: 15px; 
+      }
+      .company { 
+        font-size: 16px; 
+        font-weight: bold; 
+        margin-bottom: 5px; 
+      }
+      .info { 
+        margin-bottom: 3px; 
+        font-size: 10px;
+      }
+      .document-type { 
+        font-size: 14px; 
+        font-weight: bold; 
+        margin: 10px 0; 
+        text-align: center;
+      }
+      .totals { 
+        margin-top: 15px; 
+        border-top: 1px dashed #000;
+        padding-top: 10px;
+      }
+      .total-line { 
+        display: flex; 
+        justify-content: space-between; 
+        margin-bottom: 3px; 
+        font-size: 11px;
+      }
+      .grand-total { 
+        font-size: 14px; 
+        font-weight: bold; 
+        border-top: 1px solid #000; 
+        padding-top: 8px; 
+        margin-top: 8px; 
+      }
+      .footer { 
+        margin-top: 20px; 
+        text-align: center; 
+        font-size: 9px; 
+        border-top: 1px dashed #000;
+        padding-top: 10px;
+      }
+      @media print {
+        body { margin: 0; padding: 10px; }
+        .receipt { width: 100%; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="receipt">
+      <div class="header">
+        <div class="company">ANROLTEC SPA</div>
+        <div class="info">RUT: 78.168.951-3</div>
+        <div class="info">Av. Providencia 1234, Santiago</div>
+        <div class="info">Teléfono: +56 2 2345 6789</div>
+      </div>
+      
+      <div class="document-type">${selectedDoc.tipo.toUpperCase()}</div>
+      <div class="info">Folio: ${selectedDoc.folio}</div>
+      <div class="info">Fecha: ${new Date().toLocaleDateString('es-CL')}</div>
+      <div class="info">Hora: ${new Date().toLocaleTimeString('es-CL')}</div>
+      
+      <div class="totals">
+        <div class="total-line grand-total">
+          <span>TOTAL:</span>
+          <span>${formatPrice(selectedDoc.total)}</span>
+        </div>
+      </div>
+      
+      <div class="footer">
+        <p>Documento reimpreso</p>
+        <p>Copia ${copies} de ${copies}</p>
+        <p>Fecha reimpresión: ${new Date().toLocaleDateString('es-CL')}</p>
+      </div>
+    </div>
+    
+    <script>
+      window.onload = function() {
+        setTimeout(function() {
+          for(let i = 0; i < ${copies}; i++) {
+            setTimeout(() => window.print(), i * 1000);
+          }
+          window.onafterprint = function() {
+            window.close();
+          };
+        }, 500);
+      };
+    </script>
+  </body>
+</html>
+    `;
+      
+    // Crear nueva ventana para impresión
+    const printWindow = window.open('', '_blank', 'width=400,height=600,scrollbars=yes');
+    if (!printWindow) {
+      toast.error('Error al abrir ventana de impresión');
+      return;
+    }
+      
+    // Escribir contenido y configurar impresión automática
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    
+    toast.success(`Imprimiendo ${copies} ${copies === 1 ? 'copia' : 'copias'}`);
   }
 
   return (
