@@ -59,7 +59,13 @@ const Dashboard: React.FC = () => {
       currency: 'CLP',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(Math.max(0, n || 0))
+    }).format(validatePositiveNumber(n))
+
+  // Función para validar números positivos
+  const validatePositiveNumber = (value: number): number => {
+    const num = Number(value);
+    return isNaN(num) || num < 0 ? 0 : num;
+  };
 
   const handleSaveDraft = async () => {
     if (!draftName.trim() || carrito.length===0) return
@@ -150,7 +156,7 @@ const Dashboard: React.FC = () => {
               {filteredProducts.map(p => {
                 const item = carrito.find(i=>i.id===p.id)
                 const qty  = item?.quantity || 0
-                const itemTotal = Math.max(0, qty * p.precio)
+                const itemTotal = validatePositiveNumber(qty * validatePositiveNumber(p.precio))
                 return (
                   <div key={p.id} className="flex justify-between items-center py-4 border-b last:border-b-0">
                     <div className="flex-1"><h4 className="font-medium">{p.nombre}</h4></div>
@@ -210,7 +216,7 @@ const Dashboard: React.FC = () => {
                 <div className="flex items-center justify-end">
                     <span className="text-lg font-semibold mr-2">Total</span>
                     <div className="bg-gray-100 p-2 rounded-lg text-right min-w-[100px]">
-                        <span className="text-xl font-bold">{fmt(total)}</span>
+                        <span className="text-xl font-bold">{fmt(validatePositiveNumber(total))}</span>
                     </div>
                 </div>
             </div>

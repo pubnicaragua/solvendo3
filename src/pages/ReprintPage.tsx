@@ -142,129 +142,50 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       return;
     }
     
-    // Crear contenido específico del documento para impresión
-    const printContent = `
-<html>
-  <head>
-    <title>Reimprimir Documento</title>
-    <style>
-      body { 
-        font-family: 'Courier New', monospace; 
-        margin: 0; 
-        padding: 20px; 
-        font-size: 12px;
-        line-height: 1.4;
-        width: 80mm;
-        max-width: 300px;
-      }
-      .receipt { 
-        width: 100%;
-        margin: 0 auto; 
-        padding: 0;
-      }
-      .header { 
-        text-align: center; 
-        margin-bottom: 15px; 
-        border-bottom: 1px dashed #000; 
-        padding-bottom: 15px; 
-      }
-      .company { 
-        font-size: 16px; 
-        font-weight: bold; 
-        margin-bottom: 5px; 
-      }
-      .info { 
-        margin-bottom: 3px; 
-        font-size: 10px;
-      }
-      .document-type { 
-        font-size: 14px; 
-        font-weight: bold; 
-        margin: 10px 0; 
-        text-align: center;
-      }
-      .totals { 
-        margin-top: 15px; 
-        border-top: 1px dashed #000;
-        padding-top: 10px;
-      }
-      .total-line { 
-        display: flex; 
-        justify-content: space-between; 
-        margin-bottom: 3px; 
-        font-size: 11px;
-      }
-      .grand-total { 
-        font-size: 14px; 
-        font-weight: bold; 
-        border-top: 1px solid #000; 
-        padding-top: 8px; 
-        margin-top: 8px; 
-      }
-      .footer { 
-        margin-top: 20px; 
-        text-align: center; 
-        font-size: 9px; 
-        border-top: 1px dashed #000;
-        padding-top: 10px;
-      }
-      @media print {
-        body { margin: 0; padding: 10px; }
-        .receipt { width: 100%; }
-        @page { margin: 0; }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="receipt">
-      <div class="header">
-        <div class="company">ANROLTEC SPA</div>
-        <div class="info">RUT: 78.168.951-3</div>
-        <div class="info">Av. Providencia 1234, Santiago</div>
-        <div class="info">Teléfono: +56 2 2345 6789</div>
-      </div>
-      
-      <div class="document-type">${selectedDoc.tipo.toUpperCase()}</div>
-      <div class="info">Folio: ${selectedDoc.folio}</div>
-      <div class="info">Fecha: ${new Date().toLocaleDateString('es-CL')}</div>
-      <div class="info">Hora: ${new Date().toLocaleTimeString('es-CL')}</div>
-      
-      <div class="totals">
-        <div class="total-line grand-total">
-          <span>TOTAL:</span>
-          <span>${formatPrice(selectedDoc.total)}</span>
+    try {
+      // Usar la función de impresión del navegador directamente
+      const printContent = `
+        <div style="font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 15px; margin-bottom: 15px;">
+            <div style="font-size: 16px; font-weight: bold;">ANROLTEC SPA</div>
+            <div style="font-size: 10px;">RUT: 78.168.951-3</div>
+            <div style="font-size: 10px;">Av. Providencia 1234, Santiago</div>
+          </div>
+          
+          <div style="text-align: center; font-weight: bold; margin: 10px 0;">
+            ${selectedDoc.tipo.toUpperCase()}
+          </div>
+          <div style="font-size: 10px;">Folio: ${selectedDoc.folio}</div>
+          <div style="font-size: 10px;">Total: ${formatPrice(selectedDoc.total)}</div>
+          <div style="font-size: 10px;">Fecha: ${new Date().toLocaleDateString('es-CL')}</div>
+          
+          <div style="text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px;">
+            <div style="font-size: 9px;">Documento reimpreso</div>
+            <div style="font-size: 9px;">Copias: ${copies}</div>
+          </div>
         </div>
-      </div>
+      `;
       
-      <div class="footer">
-        <p>Documento reimpreso</p>
-        <p>Copia ${copies} de ${copies}</p>
-        <p>Fecha reimpresión: ${new Date().toLocaleDateString('es-CL')}</p>
-      </div>
-    </div>
-    
-    <script>
-      window.onload = function() {
-        window.print();
-        window.onafterprint = function() {
-          window.close();
-        };
-      };
-    </script>
-  </body>
-</html>
-    `;
+      // Crear un elemento temporal para imprimir
+      const printElement = document.createElement('div');
+      printElement.innerHTML = printContent;
+      printElement.style.display = 'none';
+      document.body.appendChild(printElement);
       
-    // Crear nueva ventana para impresión
-    const printWindow = window.open('', '_blank', 'width=300,height=500,scrollbars=no,menubar=no,toolbar=no,location=no,status=no');
-    if (!printWindow) {
-      toast.error('Error al abrir ventana de impresión');
-      return;
+      // Configurar impresión
+      const originalContent = document.body.innerHTML;
+      document.body.innerHTML = printContent;
+      window.print();
+      document.body.innerHTML = originalContent;
+      
+      // Limpiar
+      if (document.body.contains(printElement)) {
+        document.body.removeChild(printElement);
+      }
+    } catch (error) {
+      console.error('Error en impresión:', error);
+      toast.error('Error al imprimir documento');
     }
-      
-    // Escribir contenido y configurar impresión automática
-    printWindow.document.write(printContent);
-    printWindow.document.close();
     
     toast.success(`Imprimiendo ${copies} ${copies === 1 ? 'copia' : 'copias'}`);
   }

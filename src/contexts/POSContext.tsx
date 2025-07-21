@@ -276,15 +276,15 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const found = prev.find(i => i.id === producto.id);  
       if (found) {  
         return prev.map(i =>  
-          i.id === producto.id ? { ...i, quantity: Math.max(1, (i.quantity || 0) + 1) } : i  
+          i.id === producto.id ? { ...i, quantity: validatePositiveNumber((i.quantity || 0) + 1) } : i  
         );  
       }  
-      return [...prev, { ...producto, quantity: 1 }];  
+      return [...prev, { ...producto, quantity: 1, precio: validatePositiveNumber(producto.precio) }];  
     });  
   };  
   
   const updateQuantity = (productId: string, quantity: number) => {  
-    const validQuantity = Math.max(0, Math.floor(quantity || 0));
+    const validQuantity = validatePositiveNumber(Math.floor(quantity || 0));
     if (validQuantity <= 0) {  
       removeFromCart(productId);  
     } else {  
