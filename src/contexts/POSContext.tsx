@@ -121,6 +121,7 @@ export interface POSContextType {
   carrito: CartItem[];  
   total: number;  
   addToCart: (producto: Producto) => void;  
+  addToCartWithQuantity: (producto: Producto, quantity?: number) => void;
   updateQuantity: (productId: string, quantity: number) => void;  
   removeFromCart: (productId: string) => void;  
   clearCart: () => void;  
@@ -248,16 +249,24 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setLoading(true);  
     
     try {  
-      // Intentar cargar desde Back Office primero
-      try {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'https://api.anroltec.cl'}/api/productos?empresa_id=${empresaId}`);
-        if (response.ok) {
-          const backOfficeData = await response.json();
-          setProductos(backOfficeData || []);
+      // Cargar desde Back Office
+      const backOfficeUrl = import.meta.env.VITE_BACKEND_URL || 'https://api.anroltec.cl';
+      const response = await fetch(`${backOfficeUrl}/api/productos?empresa_id=${empresaId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const backOfficeData = await response.json();
+        if (backOfficeData && Array.isArray(backOfficeData)) {
+          setProductos(backOfficeData.map(p => ({
+            ...p,
+            precio: validatePositiveNumber(p.precio)
+          })));
           return;
         }
-      } catch (backOfficeError) {
-        console.log('Back Office no disponible, usando datos locales');
       }
 
       // Fallback a datos locales
@@ -286,7 +295,50 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // --- Carrito ---  
   const addToCart = (producto: Producto) => {  
     setCarrito(prev => {
-      const found = prev.find(i => i.id === producto.id);
+      const existingIndex = prev.findIndex(i => i.id === producto.id);
+      
+      if (existingIndex >= 0) {
+        // Si el producto ya existe, incrementar cantidad
+        const newCarrito = [...prev];
+        newCarrito[existingIndex] = {
+          ...newCarrito[existingIndex],
+          quantity: validatePositiveNumber(newCarrito[existingIndex].quantity + 1)
+        };
+        return newCarrito;
+      }
+      
+      // Si es nuevo producto, agregarlo
+      return [...prev, { 
+        ...producto, 
+        quantity: 1, 
+        precio: validatePositiveNumber(producto.precio)
+      }];
+    });
+  };
+
+  const addToCartWithQuantity = (producto: Producto, quantity: number = 1) => {  
+    setCarrito(prev => {
+      const existingIndex = prev.findIndex(i => i.id === producto.id);
+      const validQuantity = Math.max(1, Math.floor(validatePositiveNumber(quantity)));
+      
+      if (existingIndex >= 0) {
+        // Si el producto ya existe, sumar la cantidad
+        const newCarrito = [...prev];
+        newCarrito[existingIndex] = {
+          ...newCarrito[existingIndex],
+          quantity: validatePositiveNumber(newCarrito[existingIndex].quantity + validQuantity)
+        };
+        return newCarrito;
+      }
+      
+      // Si es nuevo producto, agregarlo con la cantidad especificada
+      return [...prev, { 
+        ...producto, 
+        quantity: validQuantity, 
+        precio: validatePositiveNumber(producto.precio)
+      }];
+    });
+  };
       if (found) {
         return prev.map(i =>
           i.id === producto.id 
@@ -425,16 +477,21 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const loadClientes = useCallback(async () => {  
     if (!empresaId) return;
     try {  
-      // Intentar cargar desde Back Office primero
-      try {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'https://api.anroltec.cl'}/api/clientes?empresa_id=${empresaId}`);
-        if (response.ok) {
-          const backOfficeData = await response.json();
-          setClientes(backOfficeData || []);
+      // Cargar desde Back Office
+      const backOfficeUrl = import.meta.env.VITE_BACKEND_URL || 'https://api.anroltec.cl';
+      const response = await fetch(`${backOfficeUrl}/api/clientes?empresa_id=${empresaId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const backOfficeData = await response.json();
+        if (backOfficeData && Array.isArray(backOfficeData)) {
+          setClientes(backOfficeData);
           return;
         }
-      } catch (backOfficeError) {
-        console.log('Back Office no disponible, usando datos locales');
       }
 
       // Fallback a datos locales
@@ -990,6 +1047,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const value: POSContextType = {  
     productos, loading, loadProductos,  
     carrito, total, addToCart, updateQuantity, removeFromCart, clearCart,  
+    addToCartWithQuantity,
     borradores, loadBorradores, saveDraft, loadDraft, deleteDraft,  
     clientes, currentCliente, loadClientes, selectClient, crearCliente,  
     procesarVenta,  

@@ -33,7 +33,7 @@ const Dashboard: React.FC = () => {
   const { user }         = useAuth()
   const {
     productos, carrito, total,
-    addToCart, updateQuantity, removeFromCart, clearCart,
+    addToCart, addToCartWithQuantity, updateQuantity, removeFromCart, clearCart,
     borradores, loadBorradores, saveDraft, loadDraft, deleteDraft, 
     promociones, loadPromociones, aplicarPromocion,
     currentCliente, selectClient
@@ -169,7 +169,7 @@ const Dashboard: React.FC = () => {
                         <Minus className="w-4 h-4" />
                       </button>
                       <span className="w-8 text-center flex-shrink-0">{qty}</span>
-                      <button onClick={()=>addToCart(p)}
+                     <button onClick={()=>addToCartWithQuantity(p, 1)}
                         className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
                         <Plus className="w-4 h-4" />
                       </button>
