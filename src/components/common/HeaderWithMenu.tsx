@@ -22,6 +22,7 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({ title, userName,
   const { productos } = usePOS();
   const [time, setTime] = React.useState('');
   const [showNotifications, setShowNotifications] = React.useState(false);
+  const [showLogoutModal, setShowLogoutModal] = React.useState(false);
 
   React.useEffect(() => {
     if (showClock) {
@@ -76,6 +77,11 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({ title, userName,
 
   const handleStockClick = () => {
     setShowNotifications(true);
+  };
+
+  const handleLogout = () => {
+    // Lógica de logout aquí
+    setShowLogoutModal(false);
   };
 
   return (
@@ -175,9 +181,14 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({ title, userName,
           </div>
         </div>
       )}
-    </>
-  );
-};
+
+      {/* Modal de logout */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <LogOut className="w-6 h-6 text-red-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900">Cerrar sesión</h3>
               <p className="text-sm text-gray-500 text-center">
