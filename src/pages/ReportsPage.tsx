@@ -434,7 +434,7 @@ export const ReportsPage: React.FC = () => {
           </div>
 
           {/* Panel de Acciones Lateral (Fijo a la derecha) */}
-          <div className="hidden lg:flex flex-col items-center p-2 space-y-3 bg-white rounded-2xl shadow-sm h-fit w-24">
+          <div className="hidden lg:flex flex-col items-center p-3 space-y-3 bg-white rounded-2xl shadow-sm h-fit w-20">
             <button
               onClick={() => toast.success('Reporte descargado')}
               className="group flex flex-col items-center text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-lg hover:bg-blue-50 text-center"
@@ -453,13 +453,13 @@ export const ReportsPage: React.FC = () => {
             </button>
             <div className="text-center text-gray-500 mt-auto pt-2 border-t border-gray-100 w-full">
               <Clock className="w-4 h-4 text-blue-600 mx-auto mb-1" />
-              <div className="text-[8px] text-gray-500">
+              <div className="text-[7px] text-gray-500">
                 {new Date().toLocaleDateString('es-CL')}
               </div>
-              <div className="text-[8px] text-gray-500">
+              <div className="text-[7px] text-gray-500">
                  {new Date().toLocaleTimeString('es-CL')}
               </div>
-              <div className="text-center py-1 text-gray-500 text-[7px]">
+              <div className="text-center py-1 text-gray-500 text-[6px]">
                 Última: {lastUpdate.split(',')[1]}
               </div>
             </div>
