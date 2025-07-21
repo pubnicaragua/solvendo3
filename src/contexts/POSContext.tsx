@@ -121,7 +121,6 @@ export interface POSContextType {
   carrito: CartItem[];  
   total: number;  
   addToCart: (producto: Producto) => void;  
-  addToCartWithQuantity: (producto: Producto, quantity?: number) => void;
   updateQuantity: (productId: string, quantity: number) => void;  
   removeFromCart: (productId: string) => void;  
   clearCart: () => void;  
@@ -339,20 +338,6 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }];
     });
   };
-      if (found) {
-        return prev.map(i =>
-          i.id === producto.id 
-            ? { ...i, quantity: Math.max(1, (i.quantity || 0) + 1) } 
-            : i
-        );
-      }
-      return [...prev, { 
-        ...producto, 
-        quantity: 1, 
-        precio: Math.max(0, Number(producto.precio) || 0)
-      }];
-    });
-  };  
   
   const updateQuantity = (productId: string, quantity: number) => {  
     const validQuantity = Math.max(1, Math.floor(Number(quantity) || 1));
@@ -477,21 +462,16 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const loadClientes = useCallback(async () => {  
     if (!empresaId) return;
     try {  
-      // Cargar desde Back Office
-      const backOfficeUrl = import.meta.env.VITE_BACKEND_URL || 'https://api.anroltec.cl';
-      const response = await fetch(`${backOfficeUrl}/api/clientes?empresa_id=${empresaId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        const backOfficeData = await response.json();
-        if (backOfficeData && Array.isArray(backOfficeData)) {
-          setClientes(backOfficeData);
+      // Intentar cargar desde Back Office primero
+      try {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'https://api.anroltec.cl'}/api/clientes?empresa_id=${empresaId}`);
+        if (response.ok) {
+          const backOfficeData = await response.json();
+          setClientes(backOfficeData || []);
           return;
         }
+      } catch (backOfficeError) {
+        console.log('Back Office no disponible, usando datos locales');
       }
 
       // Fallback a datos locales
@@ -1047,14 +1027,13 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const value: POSContextType = {  
     productos, loading, loadProductos,  
     carrito, total, addToCart, updateQuantity, removeFromCart, clearCart,  
-    addToCartWithQuantity,
     borradores, loadBorradores, saveDraft, loadDraft, deleteDraft,  
     clientes, currentCliente, loadClientes, selectClient, crearCliente,  
     procesarVenta,  
     cajaAbierta, currentAperturaCaja, checkCajaStatus, openCaja, closeCaja, getDefaultCajaId,  
     promociones, loadPromociones, aplicarPromocion,  
     docsDisponibles, loadDocsDisponibles, selectDoc,  
-    generarDTE, enviarDTEAlSII,
+    generarDTE, enviarDTEAlSII
   };  
   
   return <POSContext.Provider value={value}>{children}</POSContext.Provider>;  
