@@ -30,7 +30,8 @@ const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm =
   const filteredProducts = productos.filter(p => {  
     const matchesSearch = currentSearch ?   
       p.nombre.toLowerCase().includes(currentSearch.toLowerCase()) ||  
-      (p.codigo && p.codigo.toLowerCase().includes(currentSearch.toLowerCase())) : true  
+      (p.codigo && p.codigo.toLowerCase().includes(currentSearch.toLowerCase())) ||
+      (p.codigo_barras && p.codigo_barras.toLowerCase().includes(currentSearch.toLowerCase())) : true  
     
     const matchesFilter = selectedFilter === 'all' ? true :
       selectedFilter === 'con_sku' ? p.codigo && p.codigo.trim() !== '' :
@@ -153,7 +154,10 @@ const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm =
       <div className="relative mt-6">  
         <input
           value={localSearch}
-          onChange={(e) => setLocalSearch(e.target.value)}
+          onChange={(e) => {
+            setLocalSearch(e.target.value)
+            // Trigger search immediately
+          }}
           type="text"
           placeholder="Buscar productos..."
           className="w-full pl-4 pr-10 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

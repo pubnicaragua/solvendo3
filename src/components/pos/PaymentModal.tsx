@@ -351,6 +351,18 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
           {/* Payment Summary */}
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            <div className="mb-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={selectedMethod === 'efectivo'}
+                  onChange={() => {}}
+                  className="rounded border-gray-300 text-blue-600"
+                />
+                <span className="text-sm">Enviar al SII (solo para pagos en efectivo)</span>
+              </label>
+            </div>
+            
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm">Total a pagar</span>

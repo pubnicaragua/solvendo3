@@ -28,6 +28,12 @@ export const BACKEND_ENDPOINTS: BackOfficeEndpoints = {
   // Autenticación del terminal
   authenticateTerminal: '/auth/terminal',
   
+  // Roles y permisos
+  getUserRoles: '/auth/roles',
+  
+  // Terminales POS
+  getTerminales: '/config/terminales',
+  
   // Sincronización de datos
   syncProducts: '/sync/products',
   syncPromotions: '/sync/promotions', 
