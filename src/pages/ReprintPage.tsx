@@ -211,6 +211,7 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       @media print {
         body { margin: 0; padding: 10px; }
         .receipt { width: 100%; }
+        @page { margin: 0; }
       }
     </style>
   </head>
@@ -244,14 +245,10 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     
     <script>
       window.onload = function() {
-        setTimeout(function() {
-          for(let i = 0; i < ${copies}; i++) {
-            setTimeout(() => window.print(), i * 1000);
-          }
-          window.onafterprint = function() {
-            window.close();
-          };
-        }, 500);
+        window.print();
+        window.onafterprint = function() {
+          window.close();
+        };
       };
     </script>
   </body>
@@ -259,7 +256,7 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     `;
       
     // Crear nueva ventana para impresión
-    const printWindow = window.open('', '_blank', 'width=400,height=600,scrollbars=yes');
+    const printWindow = window.open('', '_blank', 'width=300,height=500,scrollbars=no,menubar=no,toolbar=no,location=no,status=no');
     if (!printWindow) {
       toast.error('Error al abrir ventana de impresión');
       return;

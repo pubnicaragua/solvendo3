@@ -2,10 +2,9 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FileText, Truck, Plus, Calendar, CreditCard, DollarSign, Percent } from 'lucide-react'
 import { HeaderWithMenu } from '../components/common/HeaderWithMenu'
-import { usePOS } from '../contexts/POSContext'
+import { usePOS, Cliente } from '../contexts/POSContext'
 import { useAuth } from '../contexts/AuthContext'
 import { ClientModal } from '../components/pos/ClientModal'
-import { Cliente } from '../lib/supabase'
 import toast from 'react-hot-toast'
 import { supabase } from '../lib/supabase'
 import { useEffect } from 'react'
@@ -32,7 +31,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
   
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { carrito, total, clearCart, procesarVenta, currentCliente, selectClient } = usePOS()
+  const { carrito, total, clearCart, procesarVenta, currentCliente, selectClient, clientes, loadClientes } = usePOS()
 
   // Función para validar números positivos
   const validatePositiveNumber = (value: number): number => {
@@ -44,6 +43,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
     if (currentCliente) {
       setSelectedClient(currentCliente);
     }
+    loadClientes();
   }, [currentCliente]);
 
   const handleClose = () => {
@@ -269,12 +269,33 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
                       </div>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => setShowClientModal(true)}
-                      className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                    >
-                      Seleccionar cliente
-                    </button>
+                    <div className="space-y-3">
+                      <select
+                        onChange={(e) => {
+                          const clienteId = e.target.value;
+                          if (clienteId) {
+                            const cliente = clientes.find(c => c.id === clienteId);
+                            if (cliente) {
+                              handleClientSelect(cliente);
+                            }
+                          }
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      >
+                        <option value="">Seleccionar cliente existente</option>
+                        {clientes.map(cliente => (
+                          <option key={cliente.id} value={cliente.id}>
+                            {cliente.razon_social} - {cliente.rut}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => setShowClientModal(true)}
+                        className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm"
+                      >
+                        + Registrar nuevo cliente
+                      </button>
+                    </div>
                   )}
                 </div>
               )}

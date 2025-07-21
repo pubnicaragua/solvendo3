@@ -276,7 +276,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const found = prev.find(i => i.id === producto.id);  
       if (found) {  
         return prev.map(i =>  
-          i.id === producto.id ? { ...i, quantity: validatePositiveNumber(i.quantity + 1) } : i  
+          i.id === producto.id ? { ...i, quantity: Math.max(1, (i.quantity || 0) + 1) } : i  
         );  
       }  
       return [...prev, { ...producto, quantity: 1 }];  
@@ -284,7 +284,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };  
   
   const updateQuantity = (productId: string, quantity: number) => {  
-    const validQuantity = validatePositiveNumber(quantity);
+    const validQuantity = Math.max(0, Math.floor(quantity || 0));
     if (validQuantity <= 0) {  
       removeFromCart(productId);  
     } else {  
@@ -406,26 +406,6 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const loadClientes = useCallback(async () => {  
     if (!empresaId) return;
     try {  
-      // Insertar cliente de ejemplo si no existe ninguno
-      await supabase
-        .from('clientes')
-        .insert({
-          id: 'g1eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-          empresa_id: empresaId,
-          razon_social: 'Cliente Demo',
-          rut: '11.111.111-1',
-          direccion: 'Calle Demo 456',
-          comuna: 'Santiago',
-          ciudad: 'Santiago',
-          giro: 'Persona Natural',
-          telefono: '+56 9 8765 4321',
-          email: 'cliente@demo.cl',
-          contacto: 'Cliente Demo',
-          activo: true
-        })
-        .onConflict('id')
-        .ignore();
-      
       // Cargar clientes
       const { data, error } = await supabase
         .from('clientes')  
@@ -439,31 +419,8 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       } else {  
         if (data && data.length > 0) {
           setClientes(data);
-          // Si no hay cliente seleccionado, seleccionar el primero
-          if (!currentCliente && data.length > 0) {
-            setCurrentCliente(data[0]);
-          }
         } else {
-          // Si no hay clientes, crear uno de ejemplo
-          const exampleClient = {
-            id: 'example-client',
-            empresa_id: empresaId,
-            razon_social: 'Cliente Ejemplo',
-            rut: '11.111.111-1',
-            direccion: 'Calle Ejemplo 123',
-            comuna: 'Santiago',
-            ciudad: 'Santiago',
-            region: 'Metropolitana',
-            giro: 'Comercio',
-            telefono: '+56 9 1234 5678',
-            email: 'ejemplo@cliente.cl',
-            contacto: 'Contacto Ejemplo',
-            activo: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          setClientes([exampleClient]);
-          setCurrentCliente(exampleClient);
+          setClientes([]);
         }
       }  
     } catch (error) {  

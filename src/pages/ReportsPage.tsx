@@ -390,10 +390,10 @@ export const ReportsPage: React.FC = () => {
                   <CartesianGrid stroke="#eee" strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="mes" axisLine={false} tickLine={false} />
                   <YAxis
-                    tickFormatter={n => formatPrice(n).replace('$', '$').replace('.', '.')}
+                    tickFormatter={n => formatPrice(n)}
                     axisLine={false}
                     tickLine={false}
-                    width={80}
+                    width={100}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   {showAnterior && (
@@ -434,33 +434,33 @@ export const ReportsPage: React.FC = () => {
           </div>
 
           {/* Panel de Acciones Lateral (Fijo a la derecha) */}
-          <div className="hidden lg:flex flex-col items-center p-3 space-y-4 bg-white rounded-2xl shadow-sm h-fit w-32">
+          <div className="hidden lg:flex flex-col items-center p-2 space-y-3 bg-white rounded-2xl shadow-sm h-fit w-24">
             <button
               onClick={() => toast.success('Reporte descargado')}
-              className="group flex flex-col items-center text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-lg hover:bg-blue-50"
+              className="group flex flex-col items-center text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-lg hover:bg-blue-50 text-center"
               title="Descargar Reporte"
             >
               <Download className="w-4 h-4" />
-              <span className="text-xs mt-1 text-center">Descargar</span>
+              <span className="text-[10px] mt-1">Descargar</span>
             </button>
             <button
               onClick={() => setShowFilters(true)}
-              className="group flex flex-col items-center text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-lg hover:bg-blue-50"
+              className="group flex flex-col items-center text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-lg hover:bg-blue-50 text-center"
               title="Filtrar"
             >
               <Filter className="w-4 h-4" />
-              <span className="text-xs mt-1 text-center">Filtros</span>
+              <span className="text-[10px] mt-1">Filtros</span>
             </button>
-            <div className="text-center text-xs text-gray-500 mt-auto pt-3 border-t border-gray-100 w-full">
+            <div className="text-center text-gray-500 mt-auto pt-2 border-t border-gray-100 w-full">
               <Clock className="w-4 h-4 text-blue-600 mx-auto mb-1" />
-              <div className="text-[9px] text-gray-500">
+              <div className="text-[8px] text-gray-500">
                 {new Date().toLocaleDateString('es-CL')}
               </div>
-              <div className="text-[9px] text-gray-500">
+              <div className="text-[8px] text-gray-500">
                  {new Date().toLocaleTimeString('es-CL')}
               </div>
-              <div className="text-center py-1 text-gray-500 text-[8px]">
-                Última actualización: {lastUpdate}
+              <div className="text-center py-1 text-gray-500 text-[7px]">
+                Última: {lastUpdate.split(',')[1]}
               </div>
             </div>
           </div>
