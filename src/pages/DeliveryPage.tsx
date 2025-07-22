@@ -444,8 +444,6 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               </button>
             </div>
 
-          </div>
-        </div>
 
         <aside className="w-96 bg-gray-100 p-6 flex flex-col border-l-0 shadow-none">
           <div className="mb-4">
