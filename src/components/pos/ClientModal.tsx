@@ -133,7 +133,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
           </div>
 
           {/* Campos del formulario */}
-          <div className="space-y-3 mb-6">
+          <div className="space-y-4 mb-6">
             {/* Cliente Extranjero */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Cliente Extranjero</label>
@@ -146,6 +146,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                 <option value="Sí">Sí</option>
               </select>
             </div>
+            
             {/* RUT */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">RUT {newClient.clienteExtranjero === 'No' ? '*' : ''}</label>
@@ -161,7 +162,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
             {/* Campos condicionales */}
             {clientType === 'empresa' ? (
               <>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Razón Social *</label>
                     <input
@@ -186,7 +187,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
               </>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Nombres *</label>
                     <input
@@ -221,7 +222,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
             )}
 
             {/* Teléfono y Email */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
                 <input
@@ -245,7 +246,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
             </div>
 
             {/* Dirección */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
                 <input
@@ -279,7 +280,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
             </div>
             
             {/* Contacto y Más atributos */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Persona de Contacto</label>
                 <input
@@ -300,18 +301,18 @@ export const ClientModal: React.FC<ClientModalProps> = ({
           </div>
         </div>
 
-        <div className="p-6 border-t border-gray-200 flex gap-4 justify-end flex-shrink-0 mt-8">
+        <div className="p-6 border-t border-gray-200 flex gap-4 justify-end flex-shrink-0">
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-12 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+            className="px-8 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handleCreateClient}
             disabled={loading || (clientType === 'empresa' && (!newClient.razon_social || !newClient.rut)) || (clientType === 'persona' && (!newClient.nombres || !newClient.apellidos || !newClient.rut))}
-            className="px-12 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Guardando...' : 'Guardar cliente'}
           </button>
