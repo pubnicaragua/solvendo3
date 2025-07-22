@@ -600,7 +600,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const procesarVenta = async (  
     metodoPago: string,  
     tipoDte: 'boleta' | 'factura' | 'nota_credito',
-    clienteId?: string  
+    clienteId?: string,
     enviarSII: boolean = false
   ): Promise<ApiResult<Venta>> => {  
     if (!cajaAbierta || !currentAperturaCaja) {  

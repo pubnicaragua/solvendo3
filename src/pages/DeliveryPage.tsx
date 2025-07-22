@@ -153,6 +153,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     };
 
     fetchProductsAndDocs();
+  }, [empresaId, docSearch, carrito]);
 
   const formatPrice = (n: number) =>
     new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(n);
