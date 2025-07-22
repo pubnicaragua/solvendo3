@@ -38,6 +38,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
   const [showClientSelection, setShowClientSelection] = useState(false);
+  const [showClientModal, setShowClientModal] = useState(false);
   const [clientError, setClientError] = useState(false);
 
   const [despachoData, setDespachoData] = useState({
@@ -176,7 +177,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
   const handleClientSelect = (c: Cliente) => {
     setSelectedClient(c);
-    selectClient(c)
+    selectClient(c);
     setDespachoData((p) => ({
       ...p,
       destinatario: c.razon_social,
@@ -430,20 +431,23 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     placeholder="Nombre del destinatario"
                   />
                 </div>
-              <div className="flex justify-between items-center text-lg font-semibold">
-                <span>Total de despacho</span>
-                <span>{formatPrice(total)}</span>
               </div>
-              
-              <button
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                onClick={handleConfirm}
-                disabled={!selectedClient || carrito.length === 0}
-              >
-                Confirmar despacho
-              </button>
-            </div>
+            )}
 
+            <div className="flex justify-between items-center text-lg font-semibold">
+              <span>Total de despacho</span>
+              <span>{formatPrice(total)}</span>
+            </div>
+            
+            <button
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              onClick={handleConfirm}
+              disabled={!selectedClient || carrito.length === 0}
+            >
+              Confirmar despacho
+            </button>
+          </div>
+        </div>
 
         <aside className="w-96 bg-gray-100 p-6 flex flex-col border-l-0 shadow-none">
           <div className="mb-4">
@@ -553,5 +557,5 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         </div>
       )}
     </div>
-  )
-}
+  );
+};
