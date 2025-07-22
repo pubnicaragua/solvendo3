@@ -249,26 +249,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
       }
     }
   };
-  }
-
-      printWindow.document.write(printContent);
-      printWindow.document.close();
-      
-      // Llamar callback después de un breve delay
-      setTimeout(() => {
-        if (onPrint) {
-          onPrint();
-        }
-      }, 1500);
-      
-    } catch (error) {
-      console.error('Error al imprimir:', error);
-      // Fallback: usar window.print() directamente
-      window.print();
-      if (onPrint) {
-        onPrint();
-      }
-    }
+  
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
