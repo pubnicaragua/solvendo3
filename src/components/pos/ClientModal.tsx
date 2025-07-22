@@ -237,38 +237,16 @@ export const ClientModal: React.FC<ClientModalProps> = ({
               </div>
             </div>
 
-            {/* Dirección */}
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
-                <input
-                  type="text"
-                  value={newClient.direccion}
-                  onChange={(e) => setNewClient(prev => ({ ...prev, direccion: e.target.value }))}
-                  placeholder="Calle, número, depto."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Comuna</label>
-                <input
-                  type="text"
-                  value={newClient.comuna}
-                  onChange={(e) => setNewClient(prev => ({ ...prev, comuna: e.target.value }))}
-                  placeholder="Comuna"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ciudad</label>
-                <input
-                  type="text"
-                  value={newClient.ciudad}
-                  onChange={(e) => setNewClient(prev => ({ ...prev, ciudad: e.target.value }))}
-                  placeholder="Ciudad"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
+            {/* Dirección simplificada */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+              <input
+                type="text"
+                value={newClient.direccion}
+                onChange={(e) => setNewClient(prev => ({ ...prev, direccion: e.target.value }))}
+                placeholder="Dirección completa"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              />
             </div>
             
           </div>

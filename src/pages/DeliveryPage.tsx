@@ -37,7 +37,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const [docsDisponibles, setDocsDisponibles] = useState<any[]>([]);
 
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
-  const [showClientModal, setShowClientModal] = useState(false);
+  const [showClientSelection, setShowClientSelection] = useState(false);
   const [clientError, setClientError] = useState(false);
 
   const [despachoData, setDespachoData] = useState({
@@ -279,7 +279,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   };
 
   const handleSelectClient = () => {
-    setShowClientSelection(true);
+    setShowClientModal(true);
   };
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
@@ -535,11 +535,54 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         </aside>
       </div>
 
-      <ClientModal
-        isOpen={showClientModal}
-        onClose={() => setShowClientModal(false)}
-        onClientSelect={handleClientSelect}
-      />
+      {/* Modal de selección de cliente */}
+      {showClientSelection && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-96 overflow-hidden">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Seleccionar Cliente</h3>
+              <button
+                onClick={() => setShowClientSelection(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <XIcon className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {clientes.map((cliente) => (
+                <div
+                  key={cliente.id}
+                  onClick={() => handleClientSelect(cliente)}
+                  className="p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                >
+                  <div className="font-medium text-gray-900">{cliente.razon_social}</div>
+                  <div className="text-sm text-gray-600">RUT: {cliente.rut}</div>
+                  {cliente.direccion && (
+                    <div className="text-sm text-gray-600">{cliente.direccion}</div>
+                  )}
+                </div>
+              ))}
+              
+              {clientes.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <User className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                  <p>No hay clientes registrados</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="mt-4 pt-4 border-t">
+              <button
+                onClick={() => setShowClientSelection(false)}
+                className="w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {clientError && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
