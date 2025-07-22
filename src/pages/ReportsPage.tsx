@@ -453,12 +453,12 @@ export const ReportsPage: React.FC = () => {
           {/* Panel de Acciones Lateral (Fijo a la derecha) */}
           <div className="hidden lg:flex flex-col items-center p-3 space-y-3 bg-white rounded-2xl shadow-sm h-fit w-20">
             <button
-              onClick={() => toast.success('Reporte descargado')}
+              onClick={handleDownloadExcel}
               className="group flex flex-col items-center text-blue-600 hover:text-blue-800 transition-colors p-1 rounded-lg hover:bg-blue-50 text-center"
               title="Descargar Reporte"
             >
               <Download className="w-4 h-4" />
-              <span className="text-[10px] mt-1">Descargar</span>
+              <span className="text-[10px] mt-1">Descargar Excel</span>
             </button>
             <button
               onClick={() => setShowFilters(true)}
