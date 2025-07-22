@@ -46,6 +46,13 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
     loadClientes();
   }, [currentCliente]);
 
+  // Cargar datos del carrito si está vacío
+  useEffect(() => {
+    if (carrito.length === 0) {
+      // Si no hay datos en el carrito, redirigir al dashboard
+      navigate('/');
+    }
+  }, [carrito, navigate]);
   const handleClose = () => {
     if (onClose) {
       onClose()
@@ -100,9 +107,54 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
   
   // Función para manejar la impresión
   const handlePrint = () => {
-    // Imprimir
+    // Generar e imprimir boleta con datos reales
     try {
-      window.print();
+      const printContent = `
+        <div style="font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 15px; margin-bottom: 15px;">
+            <div style="font-size: 16px; font-weight: bold;">ANROLTEC SPA</div>
+            <div style="font-size: 10px;">RUT: 78.168.951-3</div>
+            <div style="font-size: 10px;">Av. Providencia 1234, Santiago</div>
+          </div>
+          
+          <div style="text-align: center; font-weight: bold; margin: 10px 0;">
+            ${billingData.tipoDte.toUpperCase()}
+          </div>
+          <div style="font-size: 10px;">Folio: V${Date.now()}</div>
+          <div style="font-size: 10px;">Cliente: ${selectedClient?.razon_social || 'Consumidor Final'}</div>
+          <div style="font-size: 10px;">RUT: ${selectedClient?.rut || '66.666.666-6'}</div>
+          <div style="font-size: 10px;">Método: ${billingData.metodoPago}</div>
+          <div style="font-size: 10px;">Total: ${formatPrice(totalConDescuento)}</div>
+          <div style="font-size: 10px;">Fecha: ${new Date().toLocaleDateString('es-CL')}</div>
+          
+          <div style="border-top: 1px dashed #000; margin-top: 15px; padding-top: 10px;">
+            <div style="font-size: 10px; font-weight: bold;">PRODUCTOS:</div>
+            ${carrito.map(item => `
+              <div style="font-size: 9px; margin: 5px 0;">
+                ${item.nombre} x${item.quantity} - ${formatPrice(item.precio * item.quantity)}
+              </div>
+            `).join('')}
+          </div>
+          
+          <div style="text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px;">
+            <div style="font-size: 9px;">¡Gracias por su compra!</div>
+            <div style="font-size: 9px;">Powered by Solvendo</div>
+          </div>
+        </div>
+      `;
+      
+      const printWindow = window.open('', '_blank', 'width=400,height=600');
+      if (printWindow) {
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head><title>Boleta Solvendo</title></head>
+          <body>${printContent}</body>
+          <script>window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 1000); }</script>
+          </html>
+        `);
+        printWindow.document.close();
+      }
     } catch (error) {
       console.error('Error al imprimir:', error);
     }
@@ -149,6 +201,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
               <input
                 type="email"
                 placeholder="Email"
+                defaultValue={selectedClient?.email || ''}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
