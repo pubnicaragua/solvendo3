@@ -287,7 +287,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const newCarrito = [...prev];
         newCarrito[existingIndex] = {
           ...newCarrito[existingIndex],
-          quantity: validatePositiveNumber(newCarrito[existingIndex].quantity + 1)
+          quantity: newCarrito[existingIndex].quantity + 1
         };
         return newCarrito;
       }
@@ -296,7 +296,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return [...prev, { 
         ...producto, 
         quantity: 1, 
-        precio: validatePositiveNumber(producto.precio)
+        precio: Math.ceil(producto.precio)
       }];
     });
   };
@@ -304,14 +304,14 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addToCartWithQuantity = (producto: Producto, quantity: number = 1) => {  
     setCarrito(prev => {
       const existingIndex = prev.findIndex(i => i.id === producto.id);
-      const validQuantity = Math.max(1, Math.floor(validatePositiveNumber(quantity)));
+      const validQuantity = Math.max(1, Math.floor(quantity));
       
       if (existingIndex >= 0) {
         // Si el producto ya existe, sumar la cantidad
         const newCarrito = [...prev];
         newCarrito[existingIndex] = {
           ...newCarrito[existingIndex],
-          quantity: validatePositiveNumber(newCarrito[existingIndex].quantity + validQuantity)
+          quantity: newCarrito[existingIndex].quantity + validQuantity
         };
         return newCarrito;
       }
@@ -320,7 +320,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return [...prev, { 
         ...producto, 
         quantity: validQuantity, 
-        precio: validatePositiveNumber(producto.precio)
+        precio: Math.ceil(producto.precio)
       }];
     });
   };

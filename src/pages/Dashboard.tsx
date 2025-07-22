@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Search, Star, FileText, Gift, User, Filter,
   Plus, Minus, X as XIcon, Percent, DollarSign, CreditCard, Truck
@@ -30,6 +31,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
 const Dashboard: React.FC = () => {
   // toggleSidebar y user se obtienen de sus respectivos contextos y se pasan a HeaderWithMenu
   const { user }         = useAuth()
+  const navigate = useNavigate()
   const {
     productos, carrito, total,
     addToCart, addToCartWithQuantity, updateQuantity, removeFromCart, clearCart,
@@ -108,8 +110,8 @@ const Dashboard: React.FC = () => {
       return
     }
     
-    // Navegar a la página de facturación
-    window.location.href = '/facturacion'
+    // Navegar a la página de facturación preservando el contexto
+    navigate('/facturacion')
   }
 
   const handlePaymentComplete = (metodoPago: string, tipoDte: string) => {

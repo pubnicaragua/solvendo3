@@ -12,7 +12,8 @@ import {
 import { HeaderWithMenu } from '../components/common/HeaderWithMenu';
 import { useAuth } from '../contexts/AuthContext';
 import { usePOS } from '../contexts/POSContext';
-import { supabase, Cliente } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
+import type { Cliente } from '../contexts/POSContext';
 import { ClientModal } from '../components/pos/ClientModal';
 
 export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -25,7 +26,8 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     updateQuantity,
     clearCart,
     currentCliente,
-    selectClient
+    selectClient,
+    clientes
   } = usePOS();
 
   const [productSearch, setProductSearch] = useState('');

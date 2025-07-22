@@ -118,9 +118,6 @@ export const ReportsPage: React.FC = () => {
     setLoadingKpis(true);
     setKpiError(null); 
     try {
-      // Insertar datos de prueba si no existen
-      await supabase.rpc('insert_sample_ventas_if_empty', { empresa_id_arg: empresaId });
-      
       // Intentar cargar datos reales
       try {
         const { data: ventas, error } = await supabase
