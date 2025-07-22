@@ -63,6 +63,7 @@ const Dashboard: React.FC = () => {
   const [despacho, setDespacho] = useState(false)
   const [documentos, setDocumentos] = useState(false)
   const [cupon, setCupon] = useState(false)
+  const [descuentos, setDescuentos] = useState(false)
 
   useEffect(() => {
     loadBorradores()
@@ -394,16 +395,102 @@ const Dashboard: React.FC = () => {
                 
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                    <div 
+                      className={`w-4 h-4 ${envioInmediato ? 'bg-blue-600' : 'border border-gray-300'} rounded-full flex items-center justify-center cursor-pointer`}
+                      onClick={() => setEnvioInmediato(!envioInmediato)}
+                    >
+                      {envioInmediato && <div className="w-2 h-2 bg-white rounded-full"></div>}
                     </div>
                     <span className="text-sm">Envío inmediato</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Truck className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Despacho</span>
+                    <Truck 
+                      className={`w-4 h-4 ${despacho ? 'text-blue-600' : 'text-gray-400'} cursor-pointer`}
+                      onClick={() => setDespacho(!despacho)}
+                    />
+                    <span className={`text-sm ${despacho ? 'text-blue-600' : 'text-gray-600'} cursor-pointer`} onClick={() => setDespacho(!despacho)}>Despacho</span>
                   </div>
                 </div>
+                
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={documentos}
+                      onChange={() => setDocumentos(!documentos)}
+                      className="rounded border-gray-300 text-blue-600"
+                    />
+                    <span className="text-sm">Documentos</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Plus 
+                      className={`w-4 h-4 ${cupon ? 'text-blue-600' : 'text-gray-400'} cursor-pointer`}
+                      onClick={() => setCupon(!cupon)}
+                    />
+                    <span className={`text-sm ${cupon ? 'text-blue-600' : 'text-gray-600'} cursor-pointer`} onClick={() => setCupon(!cupon)}>Agregar cupón</span>
+                  </div>
+                </div>
+                
+                {/* Mostrar campos adicionales si están seleccionados */}
+                {envioInmediato && (
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <h5 className="text-sm font-medium text-blue-800 mb-2">Configuración de Entrega Inmediata</h5>
+                    <input
+                      type="text"
+                      placeholder="Instrucciones especiales"
+                      className="w-full px-3 py-2 border border-blue-300 rounded-lg text-sm"
+                    />
+                  </div>
+                )}
+                
+                {despacho && (
+                  <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                    <h5 className="text-sm font-medium text-green-800 mb-2">Configuración de Despacho</h5>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Dirección de entrega"
+                        className="px-3 py-2 border border-green-300 rounded-lg text-sm"
+                      />
+                      <input
+                        type="date"
+                        className="px-3 py-2 border border-green-300 rounded-lg text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {documentos && (
+                  <div className="mt-4 p-3 bg-purple-50 rounded-lg">
+                    <h5 className="text-sm font-medium text-purple-800 mb-2">Documentos Adicionales</h5>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2">
+                        <input type="checkbox" className="rounded border-purple-300 text-purple-600" />
+                        <span className="text-sm">Guía de despacho</span>
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input type="checkbox" className="rounded border-purple-300 text-purple-600" />
+                        <span className="text-sm">Orden de compra</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
+                
+                {cupon && (
+                  <div className="mt-4 p-3 bg-orange-50 rounded-lg">
+                    <h5 className="text-sm font-medium text-orange-800 mb-2">Cupón de Descuento</h5>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Código del cupón"
+                        className="flex-1 px-3 py-2 border border-orange-300 rounded-lg text-sm"
+                      />
+                      <button className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-700">
+                        Aplicar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Payment Methods */}

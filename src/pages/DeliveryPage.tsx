@@ -186,7 +186,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       region: c.region || '',
       numDocumento: c.rut
     }));
-    setShowClientModal(false);
+    setShowClientSelection(false);
     setClientError(false);
   };
 
