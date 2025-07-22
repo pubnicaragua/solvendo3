@@ -187,9 +187,6 @@ export const ReportsPage: React.FC = () => {
     setLoadingChart(true); 
     setChartError(null);
     try {
-      // Insertar datos de prueba si no existen
-      await supabase.rpc('insert_sample_ventas_if_empty', { empresa_id_arg: empresaId });
-      
       // Intentar cargar datos reales
       let data;
       try {

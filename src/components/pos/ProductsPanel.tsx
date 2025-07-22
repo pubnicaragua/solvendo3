@@ -156,11 +156,10 @@ const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm =
           value={localSearch}
           onChange={(e) => {
             setLocalSearch(e.target.value)
-            // Trigger search immediately
           }}
           type="text"
           placeholder="Buscar productos..."
-          className="w-full pl-4 pr-10 py-2 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-4 pr-10 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"/>
       </div>

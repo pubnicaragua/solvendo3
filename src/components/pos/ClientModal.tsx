@@ -291,18 +291,18 @@ export const ClientModal: React.FC<ClientModalProps> = ({
           </div>
         </div>
 
-        <div className="p-6 border-t border-gray-200 flex gap-3 justify-end flex-shrink-0">
+        <div className="p-6 border-t border-gray-200 flex gap-4 justify-end flex-shrink-0 mt-6">
           <button
             onClick={onClose}
             disabled={loading}
-            className="w-full sm:w-auto px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+            className="px-8 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handleCreateClient}
             disabled={loading || (clientType === 'empresa' && (!newClient.razon_social || !newClient.rut)) || (clientType === 'persona' && (!newClient.nombres || !newClient.apellidos || !newClient.rut))}
-            className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Guardando...' : 'Guardar cliente'}
           </button>
