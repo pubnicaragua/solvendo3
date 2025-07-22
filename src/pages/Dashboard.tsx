@@ -331,8 +331,8 @@ const Dashboard: React.FC = () => {
       />
       <ReceiptModal
         isOpen={showReceipt}
-        onClose={handleReceiptPrint}
-        onPrint={handleReceiptPrint}
+        onClose={handleReceiptClose}
+        onPrint={handleReceiptClose}
         onSendEmail={()=>toast.success('Enviado por email')}
       />
     </div>
