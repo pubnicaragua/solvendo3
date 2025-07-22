@@ -186,7 +186,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       region: c.region || '',
       numDocumento: c.rut
     }));
-    setShowClientSelection(false);
+    setShowClientModal(false);
     setClientError(false);
   };
 
@@ -279,7 +279,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   };
 
   const handleSelectClient = () => {
-    setShowClientModal(true);
+    setShowClientSelection(true);
   };
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
