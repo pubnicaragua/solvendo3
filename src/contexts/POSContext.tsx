@@ -143,7 +143,8 @@ export interface POSContextType {
   procesarVenta: (  
     metodoPago: string,  
     tipoDte: 'boleta' | 'factura' | 'nota_credito',  
-    clienteId?: string  
+    clienteId?: string,
+    enviarSII?: boolean
   ) => Promise<ApiResult<Venta>>;  
   
   // SII Integration

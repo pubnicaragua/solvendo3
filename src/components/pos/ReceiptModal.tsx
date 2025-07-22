@@ -38,6 +38,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   };
 
   // Función para imprimir toda la factura
+  const handlePrint = () => {
     try {
       // Crear ventana de impresión personalizada
       const printWindow = window.open('', '_blank', 'width=400,height=600,scrollbars=yes');
@@ -228,6 +229,26 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   </script>
 </body>
 </html>`;
+      
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      
+      // Llamar callback después de un breve delay
+      setTimeout(() => {
+        if (onPrint) {
+          onPrint();
+        }
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Error al imprimir:', error);
+      // Fallback: usar window.print() directamente
+      window.print();
+      if (onPrint) {
+        onPrint();
+      }
+    }
+  };
   }
 
       printWindow.document.write(printContent);

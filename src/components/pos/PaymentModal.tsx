@@ -355,8 +355,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={selectedMethod === 'efectivo'}
-                  onChange={() => {}}
+                  checked={enviarSII}
+                  onChange={(e) => setEnviarSII(e.target.checked)}
                   className="rounded border-gray-300 text-blue-600"
                 />
                 <span className="text-sm">Enviar al SII (solo para pagos en efectivo)</span>
