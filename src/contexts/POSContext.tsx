@@ -470,7 +470,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const selectClient = (cliente: Cliente | null) => {  
     setCurrentCliente(cliente);  
     if (cliente) {  
-        toast.success(`Cliente ${cliente.razon_social} seleccionado`);  
+        toast.success(`Cliente ${cliente.razon_social || cliente.nombre + ' ' + cliente.apellidos} seleccionado`);  
     } else {  
         toast.info('Cliente deseleccionado');  
     }  

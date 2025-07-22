@@ -44,7 +44,6 @@ const Dashboard: React.FC = () => {
   const [showDraftModal, setShowDraftModal] = useState(false)
   const [draftName, setDraftName]         = useState('')
   const [showReceipt, setShowReceipt]     = useState(false) 
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showSearchResults, setShowSearchResults] = useState(false)
   
   // Estados del panel de pago
@@ -68,7 +67,7 @@ const Dashboard: React.FC = () => {
       currency: 'CLP',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(validatePositiveNumber(n))
+    }).format(Math.max(0, Number(n) || 0))
 
   // Función para validar números positivos
   const validatePositiveNumber = (value: number): number => {
@@ -109,7 +108,8 @@ const Dashboard: React.FC = () => {
       return
     }
     
-    setShowPaymentModal(true)
+    // Navegar a la página de facturación
+    window.location.href = '/facturacion'
   }
 
   const handlePaymentComplete = (metodoPago: string, tipoDte: string) => {

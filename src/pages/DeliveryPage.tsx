@@ -367,7 +367,15 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             </div>
 
             <button
-              onClick={() => setShowClientModal(true)}
+              onClick={() => {
+                if (clientes.length === 0) {
+                  setShowClientModal(true);
+                } else {
+                  // Mostrar selector de clientes existentes
+                  const clienteSeleccionado = clientes[0]; // Por simplicidad, seleccionar el primero
+                  handleClientSelect(clienteSeleccionado);
+                }
+              }}
               className={`w-3/4 py-2.5 mb-3 text-sm rounded-md font-medium transition-colors flex items-center justify-center gap-2 ${
                 clientError 
                   ? 'bg-red-500 text-white' 
@@ -390,7 +398,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 <span className="text-xl font-bold text-gray-900">{formatPrice(total)}</span> 
                 <button
                   onClick={handleConfirm}
-                  disabled={!selectedClient || carrito.length === 0}
+                  disabled={!selectedClient}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors text-base"
                 >
                   Despachar

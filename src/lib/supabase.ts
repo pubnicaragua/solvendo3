@@ -111,6 +111,8 @@ export interface Cliente {
   empresa_id: string
   razon_social: string
   rut?: string
+  nombres?: string
+  apellidos?: string
   direccion?: string
   comuna?: string
   ciudad?: string
