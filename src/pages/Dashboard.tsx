@@ -47,6 +47,7 @@ const Dashboard: React.FC = () => {
   const [draftName, setDraftName]         = useState('')
   const [showReceipt, setShowReceipt]     = useState(false) 
   const [showSearchResults, setShowSearchResults] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
   
   // Estados del panel de pago
   const [selectedMethod, setSelectedMethod] = useState<string>('efectivo')
@@ -157,52 +158,59 @@ const Dashboard: React.FC = () => {
             />
           </div>
           
-          {!shouldShowProducts ? (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
-              <div className="text-center">
-                <Search className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <p className="text-lg">Busca productos para agregarlos</p>
-                <p className="text-sm">Escribe el nombre o código del producto</p>
-              </div>
-            </div>
-          ) : (
-            <div className="flex-1 overflow-y-auto mb-6 space-y-4">
-              {filteredProducts.map(p => {
-                const item = carrito.find(i=>i.id===p.id)
-                const qty  = item?.quantity || 0
-                const itemTotal = validatePositiveNumber(qty * validatePositiveNumber(p.precio))
-                return (
-                  <div key={p.id} className="flex justify-between items-center py-4 border-b last:border-b-0">
-                    <div className="flex-1"><h4 className="font-medium">{p.nombre}</h4></div>
-                    <div className="flex items-center space-x-2">
-                      <button onClick={()=>qty>0&&updateQuantity(p.id,qty-1)}
-                        className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
-                        <Minus className="w-4 h-4" />
-                      </button>
-                      <span className="w-8 text-center flex-shrink-0">{qty}</span>
-                     <button onClick={()=>addToCartWithQuantity(p, 1)}
-                        className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <div className="flex items-center space-x-4 ml-6">
-                      <span className="font-semibold">{fmt(itemTotal)}</span>
-                      {qty>0&&(
-                        <button onClick={()=>removeFromCart(p.id)} className="text-gray-600 p-1 rounded-full hover:bg-gray-100">
-                          <XIcon className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-              {filteredProducts.length === 0 && (
-                <div className="text-center text-gray-500 py-8">
-                  No se encontraron productos
+          <div className="flex-1 overflow-y-auto mb-6 space-y-4">
+            {/* Mostrar productos del carrito siempre */}
+            {carrito.map(item => (
+              <div key={item.id} className="flex justify-between items-center py-4 border-b last:border-b-0">
+                <div className="flex-1"><h4 className="font-medium">{item.nombre}</h4></div>
+                <div className="flex items-center space-x-2">
+                  <button onClick={()=>updateQuantity(item.id, Math.max(0, item.quantity-1))}
+                    className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="w-8 text-center flex-shrink-0">{item.quantity}</span>
+                  <button onClick={()=>updateQuantity(item.id, item.quantity+1)}
+                    className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
+                    <Plus className="w-4 h-4" />
+                  </button>
                 </div>
-              )}
-            </div>
-          )}
+                <div className="flex items-center space-x-4 ml-6">
+                  <span className="font-semibold">{fmt(item.precio * item.quantity)}</span>
+                  <button onClick={()=>removeFromCart(item.id)} className="text-gray-600 p-1 rounded-full hover:bg-gray-100">
+                    <XIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+            
+            {/* Mostrar productos filtrados para agregar */}
+            {shouldShowProducts && filteredProducts.map(p => {
+              const item = carrito.find(i=>i.id===p.id)
+              if (item) return null // No mostrar si ya está en el carrito
+              return (
+                <div key={p.id} className="flex justify-between items-center py-4 border-b last:border-b-0 bg-blue-50">
+                  <div className="flex-1"><h4 className="font-medium text-blue-800">{p.nombre}</h4></div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-blue-600">{fmt(p.precio)}</span>
+                    <button onClick={()=>addToCart(p)}
+                      className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center">
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+            
+            {carrito.length === 0 && !shouldShowProducts && (
+              <div className="flex-1 flex items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <Search className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg">Busca productos para agregarlos</p>
+                  <p className="text-sm">Escribe el nombre o código del producto</p>
+                </div>
+              </div>
+            )}
+          </div>
           
           <div className="border-t pt-4 flex flex-col">
             <div className="grid grid-cols-2 gap-4 items-center mb-4">
@@ -230,7 +238,7 @@ const Dashboard: React.FC = () => {
                 <div className="flex items-center justify-end">
                     <span className="text-lg font-semibold mr-2">Total</span>
                     <div className="bg-gray-100 p-2 rounded-lg text-right min-w-[100px]">
-                        <span className="text-xl font-bold">{fmt(validatePositiveNumber(total))}</span>
+                        <span className="text-xl font-bold">{fmt(total)}</span>
                     </div>
                 </div>
             </div>
@@ -243,7 +251,7 @@ const Dashboard: React.FC = () => {
                 <FileText className="w-4 h-4 mr-1" />Guardar borrador
               </button>
               <button
-                onClick={startPayment}
+                onClick={() => setShowPaymentModal(true)}
                 disabled={carrito.length===0}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded font-semibold text-base disabled:opacity-50"
               >
