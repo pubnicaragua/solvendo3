@@ -573,6 +573,9 @@ const Dashboard: React.FC = () => {
                   </div>
                 )}
               </div>
+            </div>
+          </aside>
+        )}
       </div>
 
       <DraftSaveModal
@@ -622,7 +625,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       )}
-    </aside>
+    </div>
   )
 }
 
