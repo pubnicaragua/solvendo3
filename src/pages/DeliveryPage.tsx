@@ -401,6 +401,56 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         </div>
 
         <aside className="w-96 bg-gray-100 p-6 flex flex-col border-l-0 shadow-none">
+          <div className="mb-6 space-y-4">
+            <h4 className="text-lg font-semibold text-gray-900">Selección de Cliente</h4>
+            
+            {selectedClient ? (
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-blue-900">
+                      {selectedClient.razon_social}
+                    </p>
+                    <p className="text-xs text-blue-700">RUT: {selectedClient.rut}</p>
+                  </div>
+                  <button
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium px-3 py-1 rounded border border-blue-300"
+                    onClick={() => setSelectedClient(null)}
+                  >
+                    Cambiar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Lista de clientes existentes */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h5 className="text-sm font-medium text-gray-700 mb-3">Clientes Existentes</h5>
+                  <div className="max-h-32 overflow-y-auto space-y-2">
+                    {clientes.slice(0, 5).map(cliente => (
+                      <button
+                        key={cliente.id}
+                        onClick={() => handleClientSelect(cliente)}
+                        className="w-full text-left p-2 hover:bg-gray-100 rounded text-sm border border-gray-200"
+                      >
+                        <div className="font-medium">{cliente.razon_social}</div>
+                        <div className="text-xs text-gray-500">{cliente.rut}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Botón para registrar nuevo cliente */}
+                <button
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                  onClick={() => setShowClientModal(true)}
+                >
+                  + Registrar nuevo cliente
+                </button>
+              </div>
+            )}
+          </div>
+
           <div className="mb-4">
             <div className="flex items-center text-blue-800 font-medium mb-3">
               <FileText className="w-4 h-4 mr-2" /> Documentos disponibles

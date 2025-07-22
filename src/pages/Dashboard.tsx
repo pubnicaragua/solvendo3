@@ -345,6 +345,140 @@ const Dashboard: React.FC = () => {
         onPrint={handleReceiptClose}
         onSendEmail={()=>toast.success('Enviado por email')}
       />
+      
+      {/* Payment Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50">
+          <div className="bg-white h-full w-96 shadow-xl overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">Facturación</h3>
+                <button onClick={() => setShowPaymentModal(false)} className="text-gray-400 hover:text-gray-600">
+                  <XIcon className="w-6 h-6" />
+                </button>
+              </div>
+              
+              {/* Document Type Selection */}
+              <div className="space-y-4 mb-6">
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="dte"
+                      value="boleta"
+                      checked={selectedDte === 'boleta'}
+                      onChange={() => setSelectedDte('boleta')}
+                      className="text-blue-600"
+                    />
+                    <span>Boleta electrónica</span>
+                  </label>
+                  
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="dte"
+                      value="factura"
+                      checked={selectedDte === 'factura'}
+                      onChange={() => setSelectedDte('factura')}
+                      className="text-blue-600"
+                    />
+                    <span>Factura electrónica</span>
+                  </label>
+                </div>
+                
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                    </div>
+                    <span className="text-sm">Envío inmediato</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Truck className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm text-gray-600">Despacho</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Methods */}
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Métodos de pago</h4>
+                <div className="grid grid-cols-1 gap-3">
+                  <button
+                    onClick={() => setSelectedMethod('efectivo')}
+                    className={`flex items-center gap-2 px-4 py-3 rounded-lg ${
+                      selectedMethod === 'efectivo' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    } transition-colors`}
+                  >
+                    <DollarSign className="w-5 h-5" />
+                    <span>Efectivo</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => setSelectedMethod('tarjeta')}
+                    className={`flex items-center gap-2 px-4 py-3 rounded-lg ${
+                      selectedMethod === 'tarjeta' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    } transition-colors`}
+                  >
+                    <CreditCard className="w-5 h-5" />
+                    <span>Tarjeta</span>
+                  </button>
+                </div>
+                
+                {/* Cash Amount for Efectivo */}
+                {selectedMethod === 'efectivo' && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Monto recibido</label>
+                    <input
+                      type="number"
+                      value={montoRecibido}
+                      onChange={(e) => setMontoRecibido(Math.max(0, parseFloat(e.target.value) || 0))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      min="0"
+                      step="1"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Payment Summary */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm">Total a pagar</span>
+                    <span className="font-semibold">{fmt(total)}</span>
+                  </div>
+                  {selectedMethod === 'efectivo' && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Monto recibido</span>
+                        <span>{fmt(montoRecibido)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Vuelto</span>
+                        <span>{fmt(Math.max(0, montoRecibido - total))}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <button
+                onClick={() => handlePaymentComplete(selectedMethod, selectedDte)}
+                disabled={loading || carrito.length === 0 || (selectedMethod === 'efectivo' && montoRecibido < total)}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {loading ? 'Procesando...' : 'Confirmar pago'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
