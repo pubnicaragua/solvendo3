@@ -57,6 +57,12 @@ const Dashboard: React.FC = () => {
   const [montoRecibido, setMontoRecibido] = useState<number>(0)
   const [enviarSII, setEnviarSII] = useState(false)
   const [loading, setLoading] = useState(false)
+  
+  // Estados para opciones de entrega
+  const [envioInmediato, setEnvioInmediato] = useState(false)
+  const [despacho, setDespacho] = useState(false)
+  const [documentos, setDocumentos] = useState(false)
+  const [cupon, setCupon] = useState(false)
 
   useEffect(() => {
     loadBorradores()
