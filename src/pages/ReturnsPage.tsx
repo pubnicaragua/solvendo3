@@ -6,7 +6,10 @@ import {
   Minus,
   X as XIcon,
   Check,
-  Info
+  Info,
+  User,
+  Mail,
+  CreditCard
 } from 'lucide-react';
 import { HeaderWithMenu } from '../components/common/HeaderWithMenu';
 import { supabase } from '../lib/supabase';
@@ -22,6 +25,13 @@ interface VentaItem {
   returnable: number;
 }
 
+interface ClienteDevolucion {
+  nombre: string;
+  rut: string;
+  correo: string;
+  tipoReembolso: 'efectivo' | 'bancario';
+  cuentaTarjeta: string;
+}
 export const ReturnsPage: React.FC = () => {
   const [folio, setFolio] = useState('');
   const [folioInput, setFolioInput] = useState('');
@@ -33,6 +43,15 @@ export const ReturnsPage: React.FC = () => {
   const [tipoNota, setTipoNota] = useState('Nota de crédito manual');
   const [clienteSearch, setClienteSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false); // Nuevo estado para controlar la visibilidad del modal
+  const [showClienteForm, setShowClienteForm] = useState(false);
+  const [clienteDevolucion, setClienteDevolucion] = useState<ClienteDevolucion>({
+    nombre: '',
+    rut: '',
+    correo: '',
+    tipoReembolso: 'efectivo',
+    cuentaTarjeta: ''
+  });
+  const [showBoletaModal, setShowBoletaModal] = useState(false);
 
   // Estado para almacenar la venta seleccionada
   const [venta, setVenta] = useState<any>(null);
@@ -57,6 +76,11 @@ export const ReturnsPage: React.FC = () => {
     ];
     setVentaItems(exampleItems);
     setFolio('342043593');
+    // Inicializar con algunos items seleccionados para mostrar datos
+    setSelectedItems({
+      'example-item-1': 1,
+      'example-item-2': 1
+    });
   }, []);
 
   // Total calculado de los ítems seleccionados para devolución
@@ -246,6 +270,72 @@ export const ReturnsPage: React.FC = () => {
       return;
     }
     
+    // Mostrar formulario de cliente primero
+    setShowClienteForm(true);
+  };
+
+  const handleConfirmDevolucion = () => {
+    if (!clienteDevolucion.nombre || !clienteDevolucion.rut || !clienteDevolucion.correo) {
+      toast.error('Por favor complete todos los campos del cliente');
+      return;
+    }
+    
+    if (clienteDevolucion.tipoReembolso === 'bancario' && !clienteDevolucion.cuentaTarjeta) {
+      toast.error('Por favor ingrese la cuenta/tarjeta para reembolso bancario');
+      return;
+    }
+    
+    setShowClienteForm(false);
+    setShowBoletaModal(true);
+  };
+
+  const handlePrintBoleta = () => {
+    try {
+      const printContent = `
+        <div style="font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 15px; margin-bottom: 15px;">
+            <div style="font-size: 16px; font-weight: bold;">ANROLTEC SPA</div>
+            <div style="font-size: 10px;">RUT: 78.168.951-3</div>
+            <div style="font-size: 10px;">Av. Providencia 1234, Santiago</div>
+          </div>
+          
+          <div style="text-align: center; font-weight: bold; margin: 10px 0;">
+            NOTA DE CRÉDITO
+          </div>
+          <div style="font-size: 10px;">Folio: NC-${folio}</div>
+          <div style="font-size: 10px;">Cliente: ${clienteDevolucion.nombre}</div>
+          <div style="font-size: 10px;">RUT: ${clienteDevolucion.rut}</div>
+          <div style="font-size: 10px;">Email: ${clienteDevolucion.correo}</div>
+          <div style="font-size: 10px;">Reembolso: ${clienteDevolucion.tipoReembolso}</div>
+          ${clienteDevolucion.tipoReembolso === 'bancario' ? `<div style="font-size: 10px;">Cuenta: ${clienteDevolucion.cuentaTarjeta}</div>` : ''}
+          <div style="font-size: 10px;">Total: ${formatPrice(total)}</div>
+          <div style="font-size: 10px;">Fecha: ${new Date().toLocaleDateString('es-CL')}</div>
+          
+          <div style="text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px;">
+            <div style="font-size: 9px;">Nota de crédito generada</div>
+            <div style="font-size: 9px;">Powered by Solvendo</div>
+          </div>
+        </div>
+      `;
+      
+      const printWindow = window.open('', '_blank', 'width=400,height=600');
+      if (printWindow) {
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head><title>Nota de Crédito</title></head>
+          <body>${printContent}</body>
+          <script>window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 1000); }</script>
+          </html>
+        `);
+        printWindow.document.close();
+      }
+    } catch (error) {
+      console.error('Error al imprimir:', error);
+    }
+    
+    setShowBoletaModal(false);
+    toast.success('Devolución procesada correctamente');
     // Preparar los datos para el modal de devoluciones
     const itemsToReturn = Object.entries(selectedItems).map(([id, qty]) => {
       const item = ventaItems.find(i => i.id === +id);
@@ -273,6 +363,8 @@ export const ReturnsPage: React.FC = () => {
     setShowForm(false);
     setTipoNota('Nota de crédito manual');
     setClienteSearch('');
+    setShowClienteForm(false);
+    setShowBoletaModal(false);
     toast('Devolución cancelada.', { icon: '👋' });
   };
 
@@ -312,8 +404,8 @@ export const ReturnsPage: React.FC = () => {
             <span className="text-right pr-1">Importe</span>
           </div>
           <div className="space-y-3 pb-4 flex-grow overflow-y-auto">
-            {ventaItems.length === 0 && showForm ? (
-              <p className="text-center text-gray-500 py-8">No hay ítems retornables para este folio.</p>
+            {ventaItems.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">Busque un folio para cargar los ítems retornables.</p>
             ) : (
               ventaItems.map(item => {
                 const qty = selectedItems[item.id] || 0;
@@ -469,6 +561,137 @@ export const ReturnsPage: React.FC = () => {
         </aside>
       </div>
 
+      {/* Modal de datos del cliente */}
+      {showClienteForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Datos del Cliente</h3>
+              <button onClick={() => setShowClienteForm(false)} className="text-gray-400 hover:text-gray-600">
+                <XIcon className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo *</label>
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={clienteDevolucion.nombre}
+                    onChange={(e) => setClienteDevolucion(prev => ({ ...prev, nombre: e.target.value }))}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Nombre del cliente"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">RUT *</label>
+                <input
+                  type="text"
+                  value={clienteDevolucion.rut}
+                  onChange={(e) => setClienteDevolucion(prev => ({ ...prev, rut: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  placeholder="12.345.678-9"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Correo electrónico *</label>
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-gray-400" />
+                  <input
+                    type="email"
+                    value={clienteDevolucion.correo}
+                    onChange={(e) => setClienteDevolucion(prev => ({ ...prev, correo: e.target.value }))}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="cliente@ejemplo.com"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de reembolso *</label>
+                <div className="flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-gray-400" />
+                  <select
+                    value={clienteDevolucion.tipoReembolso}
+                    onChange={(e) => setClienteDevolucion(prev => ({ ...prev, tipoReembolso: e.target.value as 'efectivo' | 'bancario' }))}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="efectivo">Efectivo</option>
+                    <option value="bancario">Bancario</option>
+                  </select>
+                </div>
+              </div>
+              
+              {clienteDevolucion.tipoReembolso === 'bancario' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Cuenta/Tarjeta *</label>
+                  <input
+                    type="text"
+                    value={clienteDevolucion.cuentaTarjeta}
+                    onChange={(e) => setClienteDevolucion(prev => ({ ...prev, cuentaTarjeta: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Número de cuenta o tarjeta"
+                  />
+                </div>
+              )}
+            </div>
+            
+            <div className="flex gap-3 p-6 border-t border-gray-200">
+              <button
+                onClick={() => setShowClienteForm(false)}
+                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmDevolucion}
+                className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                Continuar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de boleta generada */}
+      {showBoletaModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <div className="p-6 text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Nota de crédito generada</h3>
+              <p className="text-gray-600 mb-6">Enviar por correo electrónico (Opcional)</p>
+              
+              <div className="flex mb-4">
+                <input
+                  type="email"
+                  placeholder="Email"
+                  defaultValue={clienteDevolucion.correo}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={() => toast.success('Nota de crédito enviada por email')}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-r-lg hover:bg-blue-700"
+                >
+                  Enviar
+                </button>
+              </div>
+              
+              <button
+                onClick={handlePrintBoleta}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700"
+              >
+                Imprimir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Renderiza el ReturnsModal */}
       <ReturnsModal
         isOpen={isModalOpen}

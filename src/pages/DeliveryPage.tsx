@@ -15,6 +15,7 @@ import { usePOS } from '../contexts/POSContext';
 import { supabase } from '../lib/supabase';
 import type { Cliente } from '../contexts/POSContext';
 import { ClientModal } from '../components/pos/ClientModal';
+import toast from 'react-hot-toast';
 
 export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { user, empresaId } = useAuth();
@@ -232,7 +233,6 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             destinatario: selectedClient.razon_social,
             direccion: selectedClient.direccion || '',
             comuna: selectedClient.comuna || '',
-            ciudad: selectedClient.ciudad || '',
             region: selectedClient.region || '',
             numero_documento: selectedClient.rut,
             total
@@ -283,6 +283,15 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     }
   };
 
+  const handleSelectClient = () => {
+    if (clientes.length === 0) {
+      setShowClientModal(true);
+    } else {
+      // Mostrar lista de clientes existentes
+      const clienteSeleccionado = clientes[0]; // Por simplicidad, seleccionar el primero
+      handleClientSelect(clienteSeleccionado);
+    }
+  };
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
       <HeaderWithMenu
@@ -369,15 +378,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             </div>
 
             <button
-              onClick={() => {
-                if (clientes.length === 0) {
-                  setShowClientModal(true);
-                } else {
-                  // Mostrar selector de clientes existentes
-                  const clienteSeleccionado = clientes[0]; // Por simplicidad, seleccionar el primero
-                  handleClientSelect(clienteSeleccionado);
-                }
-              }}
+              onClick={handleSelectClient}
               className={`w-3/4 py-2.5 mb-3 text-sm rounded-md font-medium transition-colors flex items-center justify-center gap-2 ${
                 clientError 
                   ? 'bg-red-500 text-white' 
@@ -400,7 +401,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 <span className="text-xl font-bold text-gray-900">{formatPrice(total)}</span> 
                 <button
                   onClick={handleConfirm}
-                  disabled={!selectedClient}
+                  disabled={!selectedClient || carrito.length === 0}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors text-base"
                 >
                   Despachar
