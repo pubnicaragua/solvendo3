@@ -150,64 +150,165 @@ const Dashboard: React.FC = () => {
 
   const handlePrintReceipt = () => {
     try {
-      const printContent = `
-        <div style="font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 15px; margin-bottom: 15px;">
-            <div style="font-size: 16px; font-weight: bold;">ANROLTEC SPA</div>
-            <div style="font-size: 10px;">RUT: 78.168.951-3</div>
-            <div style="font-size: 10px;">Av. Providencia 1234, Santiago</div>
-          </div>
-          
-          <div style="text-align: center; font-weight: bold; margin: 10px 0;">
-            ${selectedDte.toUpperCase()}
-          </div>
-          <div style="font-size: 10px;">Folio: V${Date.now()}</div>
-          <div style="font-size: 10px;">Cliente: ${selectedClient?.razon_social || 'Consumidor Final'}</div>
-          <div style="font-size: 10px;">RUT: ${selectedClient?.rut || '66.666.666-6'}</div>
-          <div style="font-size: 10px;">Método: ${selectedMethod}</div>
-          <div style="font-size: 10px;">Total: ${fmt(total)}</div>
-          <div style="font-size: 10px;">Fecha: ${new Date().toLocaleDateString('es-CL')}</div>
-          
-          <div style="border-top: 1px dashed #000; margin-top: 15px; padding-top: 10px;">
-            <div style="font-size: 10px; font-weight: bold;">PRODUCTOS:</div>
-            ${carrito.map(item => `
-              <div style="font-size: 9px; margin: 5px 0;">
-                ${item.nombre} x${item.quantity} - ${fmt(item.precio * item.quantity)}
-              </div>
-            `).join('')}
-          </div>
-          
-          <div style="border-top: 1px dashed #000; margin-top: 15px; padding-top: 10px;">
-            <div style="font-size: 10px; font-weight: bold;">RESUMEN:</div>
-            <div style="font-size: 9px; margin: 3px 0;">Subtotal: ${fmt(total)}</div>
-            <div style="font-size: 10px; font-weight: bold; margin: 5px 0; border-top: 1px solid #000; padding-top: 5px;">TOTAL: ${fmt(total)}</div>
-            ${selectedMethod === 'efectivo' ? `
-              <div style="font-size: 9px; margin: 3px 0;">Recibido: ${fmt(montoRecibido)}</div>
-              <div style="font-size: 9px; margin: 3px 0;">Vuelto: ${fmt(Math.max(0, montoRecibido - total))}</div>
-            ` : ''}
-          </div>
-          
-          <div style="text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px;">
-            <div style="font-size: 9px;">¡Gracias por su compra!</div>
-            <div style="font-size: 9px;">Powered by Solvendo</div>
-          </div>
+      // Generate PDF content
+      const pdfContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Boleta Solvendo</title>
+  <style>
+    @page { margin: 0; size: 80mm auto; }
+    body { 
+      font-family: 'Courier New', monospace; 
+      margin: 0; 
+      padding: 10mm; 
+      font-size: 12px;
+      line-height: 1.4;
+      width: 80mm;
+      box-sizing: border-box;
+    }
+    .receipt { width: 100%; }
+    .header { 
+      text-align: center; 
+      margin-bottom: 15px; 
+      border-bottom: 1px dashed #000; 
+      padding-bottom: 15px; 
+    }
+    .company { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+    .info { margin-bottom: 3px; font-size: 10px; }
+    .document-type { 
+      font-size: 14px; 
+      font-weight: bold; 
+      margin: 10px 0; 
+      text-align: center;
+      background: #f0f0f0;
+      padding: 5px;
+      border: 1px solid #000;
+    }
+    .totales { 
+      margin-top: 15px; 
+      border-top: 2px solid #000;
+      padding-top: 10px;
+      background: #f5f5f5;
+      padding: 10px;
+    }
+    .total-line { 
+      display: flex; 
+      justify-content: space-between; 
+      margin-bottom: 5px; 
+      font-size: 11px;
+    }
+    .grand-total { 
+      font-size: 16px; 
+      font-weight: bold; 
+      border-top: 2px solid #000; 
+      padding-top: 8px; 
+      margin-top: 8px; 
+      background: #000;
+      color: #fff;
+      padding: 8px;
+    }
+    .footer { 
+      margin-top: 20px; 
+      text-align: center; 
+      font-size: 9px; 
+      border-top: 1px dashed #000;
+      padding-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="receipt">
+    <div class="header">
+      <div class="company">ANROLTEC SPA</div>
+      <div class="info">Servicios de Tecnología</div>
+      <div class="info">RUT: 78.168.951-3</div>
+      <div class="info">Av. Providencia 1234, Santiago</div>
+      <div class="info">Teléfono: +56 2 2345 6789</div>
+    </div>
+    
+    <div class="document-type">${selectedDte.toUpperCase()}</div>
+    <div class="info"><strong>Folio:</strong> V${Date.now()}</div>
+    <div class="info"><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-CL')}</div>
+    <div class="info"><strong>Hora:</strong> ${new Date().toLocaleTimeString('es-CL')}</div>
+    <div class="info"><strong>Cajero:</strong> ${user?.nombre || 'Usuario'}</div>
+    <div class="info"><strong>Cliente:</strong> ${selectedClient?.razon_social || 'Consumidor Final'}</div>
+    <div class="info"><strong>RUT:</strong> ${selectedClient?.rut || '66.666.666-6'}</div>
+    <div class="info"><strong>Método:</strong> ${selectedMethod}</div>
+    
+    <div style="border-top: 1px dashed #000; margin: 15px 0; padding-top: 10px;">
+      <div style="font-weight: bold; margin-bottom: 10px;">PRODUCTOS:</div>
+      ${carrito.map(item => `
+        <div style="margin: 5px 0; display: flex; justify-content: space-between;">
+          <span>${item.nombre} x${item.quantity}</span>
+          <span>${fmt(item.precio * item.quantity)}</span>
         </div>
-      `;
+      `).join('')}
+    </div>
+    
+    <div class="totales">
+      <div class="total-line">
+        <span>Subtotal:</span>
+        <span>${fmt(total)}</span>
+      </div>
+      <div class="total-line">
+        <span>Descuentos:</span>
+        <span>$0</span>
+      </div>
+      <div class="total-line grand-total">
+        <span>TOTAL:</span>
+        <span>${fmt(total)}</span>
+      </div>
+      ${selectedMethod === 'efectivo' ? `
+        <div class="total-line">
+          <span>Recibido:</span>
+          <span>${fmt(montoRecibido)}</span>
+        </div>
+        <div class="total-line">
+          <span>Vuelto:</span>
+          <span>${fmt(Math.max(0, montoRecibido - total))}</span>
+        </div>
+      ` : ''}
+    </div>
+    
+    <div class="footer">
+      <p>¡Gracias por su compra!</p>
+      <p>Powered by Solvendo</p>
+    </div>
+  </div>
+</body>
+</html>`;
       
+      // Create blob and download link for PDF
+      const blob = new Blob([pdfContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      
+      // Create download link
+      const downloadLink = document.createElement('a');
+      downloadLink.href = url;
+      downloadLink.download = `boleta_${Date.now()}.html`;
+      downloadLink.style.display = 'none';
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(url);
+      
+      // Open print window
       const printWindow = window.open('', '_blank', 'width=400,height=600');
       if (printWindow) {
-        printWindow.document.write(`
-          <!DOCTYPE html>
-          <html>
-          <head><title>Boleta Solvendo</title></head>
-          <body>${printContent}</body>
-          <script>window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 1000); }</script>
-          </html>
+        printWindow.document.write(pdfContent + `
+          <script>
+            window.onload = function() { 
+              window.print(); 
+              setTimeout(function() { window.close(); }, 1000); 
+            }
+          </script>
         `);
         printWindow.document.close();
       }
     } catch (error) {
       console.error('Error al imprimir:', error);
+      toast.error('Error al generar el documento');
     }
     
     // Limpiar carrito y cerrar modal
