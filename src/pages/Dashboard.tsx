@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import {
   Search, Star, FileText, Gift, User, Filter,
-  Plus, Minus, X as XIcon, Percent
+  Plus, Minus, X as XIcon, Percent, DollarSign, CreditCard, Truck
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { usePOS } from '../contexts/POSContext'
@@ -12,7 +12,6 @@ import ProductsPanel     from '../components/pos/ProductsPanel'
 import ClientsPanel      from '../components/pos/ClientsPanel'
 import { ReceiptModal}       from '../components/pos/ReceiptModal'
 import { DraftSaveModal}     from '../components/pos/DraftSaveModal'
-import { PaymentModal }      from '../components/pos/PaymentModal'
 
 // Importamos el nuevo componente HeaderWithMenu
 import { HeaderWithMenu } from '../components/common/HeaderWithMenu' 
@@ -36,7 +35,7 @@ const Dashboard: React.FC = () => {
     addToCart, addToCartWithQuantity, updateQuantity, removeFromCart, clearCart,
     borradores, loadBorradores, saveDraft, loadDraft, deleteDraft, 
     promociones, loadPromociones, aplicarPromocion,
-    currentCliente, selectClient
+    currentCliente, selectClient, clientes, loadClientes, procesarVenta
   } = usePOS()
 
   const [activeTab, setActiveTab]         = useState<TabId>('destacado')
@@ -46,12 +45,22 @@ const Dashboard: React.FC = () => {
   const [draftName, setDraftName]         = useState('')
   const [showReceipt, setShowReceipt]     = useState(false) 
   const [showSearchResults, setShowSearchResults] = useState(false)
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showPaymentPanel, setShowPaymentPanel] = useState(false)
+  
+  // Estados del panel de pago
+  const [selectedMethod, setSelectedMethod] = useState<string>('efectivo')
+  const [selectedDte, setSelectedDte] = useState<string>('boleta')
+  const [selectedTerminal, setSelectedTerminal] = useState<string>('terminal_principal')
+  const [selectedClient, setSelectedClient] = useState<any>(null)
+  const [montoRecibido, setMontoRecibido] = useState<number>(0)
+  const [enviarSII, setEnviarSII] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     loadBorradores()
     loadPromociones()
-  },[loadBorradores])
+    loadClientes()
+  },[loadBorradores, loadPromociones, loadClientes])
 
   const fmt = (n:number) =>
     new Intl.NumberFormat('es-CL', { 
