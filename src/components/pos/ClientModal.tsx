@@ -210,14 +210,6 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                   </div>
                 </div>
                 
-                {/* Agregar campo para continuar agregando más folios */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">¿Continuar agregando más folios?</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                    <option value="no">No</option>
-                    <option value="si">Sí</option>
-                  </select>
-                </div>
               </>
             )}
 
@@ -279,25 +271,6 @@ export const ClientModal: React.FC<ClientModalProps> = ({
               </div>
             </div>
             
-            {/* Contacto y Más atributos */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Persona de Contacto</label>
-                <input
-                  type="text"
-                  value={newClient.contacto}
-                  onChange={(e) => setNewClient(prev => ({ ...prev, contacto: e.target.value }))}
-                  placeholder="Nombre del contacto principal"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Más atributos</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                  <option>Seleccionar</option>
-                </select>
-              </div>
-            </div>
           </div>
         </div>
 

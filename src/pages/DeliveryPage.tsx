@@ -366,17 +366,35 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               </select>
             </div>
 
-            <button
-              onClick={handleSelectClient}
-              className={`w-3/4 py-2.5 mb-3 text-sm rounded-md font-medium transition-colors flex items-center justify-center gap-2 ${
-                clientError 
-                  ? 'bg-red-500 text-white' 
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
-            >
-              <Search className="w-4 h-4 text-white" />
-              {selectedClient ? selectedClient.razon_social : 'Seleccionar cliente'}
-            </button>
+            {/* Client Selection */}
+            <div className="mb-6">
+              {selectedClient ? (
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-blue-900">
+                        {selectedClient.razon_social}
+                      </p>
+                      <p className="text-xs text-blue-700">RUT: {selectedClient.rut}</p>
+                    </div>
+                    <button
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      onClick={() => setSelectedClient(null)}
+                    >
+                      Cambiar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={handleSelectClient}
+                  className="w-full py-2.5 mb-3 text-sm rounded-md font-medium transition-colors flex items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  <Search className="w-4 h-4 text-white" />
+                  Seleccionar cliente
+                </button>
+              )}
+            </div>
 
             <div className="space-y-4 mb-6">
               <h4 className="text-lg font-semibold text-gray-900">Datos de Despacho</h4>
