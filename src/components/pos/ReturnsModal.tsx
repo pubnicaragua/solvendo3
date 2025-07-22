@@ -122,13 +122,12 @@ export const ReturnsModal: React.FC<ReturnsModalProps> = ({
                 Enviar
               </button>
               <button 
-                onClick={() => { setShowCreditNote(false); onClose(); }}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
                 onClick={() => { 
                   setShowCreditNote(false); 
                   onClose(); 
                   navigate('/');
                 }}
+                className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
               >
                 Imprimir
               </button>

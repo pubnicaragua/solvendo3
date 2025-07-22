@@ -155,7 +155,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     fetchProductsAndDocs();
 
   const formatPrice = (n: number) =>
-    new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(n)
+    new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(n);
 
   const handleSelectDoc = (doc: any) => {
     const existingItem = carrito.find(item => item.id === doc.id);

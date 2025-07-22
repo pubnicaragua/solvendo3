@@ -248,12 +248,13 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setLoading(true);  
     
     try {  
-      // Cargar desde Back Office
+      // Cargar desde Back Office primero
       const backOfficeUrl = import.meta.env.VITE_BACKEND_URL || 'https://api.anroltec.cl';
       const response = await fetch(`${backOfficeUrl}/api/productos?empresa_id=${empresaId}`, {
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('pos_token') || ''}`
         }
       });
       
@@ -262,8 +263,10 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (backOfficeData && Array.isArray(backOfficeData)) {
           setProductos(backOfficeData.map(p => ({
             ...p,
-            precio: validatePositiveNumber(p.precio)
+            precio: validatePositiveNumber(p.precio),
+            stock: validatePositiveNumber(p.stock || 0)
           })));
+          console.log('✅ Productos cargados desde Back Office:', backOfficeData.length);
           return;
         }
       }
@@ -462,16 +465,23 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const loadClientes = useCallback(async () => {  
     if (!empresaId) return;
     try {  
-      // Intentar cargar desde Back Office primero
-      try {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'https://api.anroltec.cl'}/api/clientes?empresa_id=${empresaId}`);
-        if (response.ok) {
-          const backOfficeData = await response.json();
-          setClientes(backOfficeData || []);
+      // Cargar desde Back Office
+      const backOfficeUrl = import.meta.env.VITE_BACKEND_URL || 'https://api.anroltec.cl';
+      const response = await fetch(`${backOfficeUrl}/api/clientes?empresa_id=${empresaId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('pos_token') || ''}`
+        }
+      });
+      
+      if (response.ok) {
+        const backOfficeData = await response.json();
+        if (backOfficeData && Array.isArray(backOfficeData)) {
+          setClientes(backOfficeData);
+          console.log('✅ Clientes cargados desde Back Office:', backOfficeData.length);
           return;
         }
-      } catch (backOfficeError) {
-        console.log('Back Office no disponible, usando datos locales');
       }
 
       // Fallback a datos locales
@@ -590,6 +600,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     metodoPago: string,  
     tipoDte: 'boleta' | 'factura' | 'nota_credito',
     clienteId?: string  
+    enviarSII: boolean = false
   ): Promise<ApiResult<Venta>> => {  
     if (!cajaAbierta || !currentAperturaCaja) {  
       toast.error('🔴 Error: La caja está cerrada. No se puede procesar la venta.');  
@@ -600,6 +611,30 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }  
       
     try {  
+      // Obtener siguiente folio desde Back Office
+      let folio = `V${Date.now()}`;
+      try {
+        const backOfficeUrl = import.meta.env.VITE_BACKEND_URL || 'https://api.anroltec.cl';
+        const folioResponse = await fetch(`${backOfficeUrl}/api/folio/next`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('pos_token') || ''}`
+          },
+          body: JSON.stringify({
+            empresa_id: empresaId,
+            tipo_documento: tipoDte === 'boleta' ? 39 : tipoDte === 'factura' ? 33 : 61
+          })
+        });
+        
+        if (folioResponse.ok) {
+          const folioData = await folioResponse.json();
+          folio = folioData.folio || folio;
+        }
+      } catch (folioError) {
+        console.log('Usando folio local:', folio);
+      }
+
       // Insertar la venta directamente
       const { data: venta, error } = await supabase
         .from('ventas')
@@ -610,7 +645,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           apertura_caja_id: currentAperturaCaja.id,
           cliente_id: clienteId || null,
           usuario_id: user.id,
-          folio: `V${Date.now()}`,
+          folio: folio,
           tipo_dte: tipoDte,
           metodo_pago: metodoPago,
           subtotal: total,
@@ -829,6 +864,26 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!empresaId) return;
     setLoading(true);
     try {
+      // Cargar desde Back Office
+      const backOfficeUrl = import.meta.env.VITE_BACKEND_URL || 'https://api.anroltec.cl';
+      const response = await fetch(`${backOfficeUrl}/api/promociones?empresa_id=${empresaId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('pos_token') || ''}`
+        }
+      });
+      
+      if (response.ok) {
+        const backOfficeData = await response.json();
+        if (backOfficeData && Array.isArray(backOfficeData)) {
+          setPromociones(backOfficeData);
+          console.log('✅ Promociones cargadas desde Back Office:', backOfficeData.length);
+          return;
+        }
+      }
+
+      // Fallback a datos locales
       const { data, error } = await supabase
         .from('promociones')
         .select('*')
