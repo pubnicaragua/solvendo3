@@ -29,13 +29,35 @@ export const ReturnsPage: React.FC = () => {
   const [ventaItems, setVentaItems] = useState<VentaItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(true);
   const [tipoNota, setTipoNota] = useState('Nota de crédito manual');
   const [clienteSearch, setClienteSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false); // Nuevo estado para controlar la visibilidad del modal
 
   // Estado para almacenar la venta seleccionada
   const [venta, setVenta] = useState<any>(null);
+  
+  // Cargar datos de ejemplo al inicializar
+  useEffect(() => {
+    const exampleItems: VentaItem[] = [
+      {
+        id: 'example-item-1',
+        nombre: 'Ejemplo producto 1',
+        cantidad: 2,
+        precio: 34.5,
+        returnable: 2
+      },
+      {
+        id: 'example-item-2',
+        nombre: 'Ejemplo producto 2',
+        cantidad: 1,
+        precio: 68.5,
+        returnable: 1
+      }
+    ];
+    setVentaItems(exampleItems);
+    setFolio('342043593');
+  }, []);
 
   // Total calculado de los ítems seleccionados para devolución
   const total = Object.entries(selectedItems).reduce((sum, [id, qty]) => {

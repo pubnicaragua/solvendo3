@@ -270,6 +270,26 @@ export const ReportsPage: React.FC = () => {
     loadMonthlyData();
     toast.success('Datos actualizados');
   };
+  
+  const handleDownloadExcel = () => {
+    // Crear datos para Excel
+    const excelData = [
+      ['Fecha', 'Ventas Totales', 'Margen', 'Unidades Vendidas', 'N° Ventas', 'Ticket Promedio'],
+      [new Date().toLocaleDateString('es-CL'), data.ventasTotales, data.margen, data.unidadesVendidas, data.numeroVentas, data.ticketPromedio]
+    ];
+    
+    // Simular descarga
+    const csvContent = excelData.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `reporte_ventas_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    toast.success('Reporte descargado en Excel');
+  };
 
   return (
     <div className="h-screen bg-white flex flex-col relative">

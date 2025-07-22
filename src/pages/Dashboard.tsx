@@ -44,8 +44,8 @@ const Dashboard: React.FC = () => {
   const [showDraftModal, setShowDraftModal] = useState(false)
   const [draftName, setDraftName]         = useState('')
   const [showReceipt, setShowReceipt]     = useState(false) 
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showSearchResults, setShowSearchResults] = useState(false)
-  const [showPaymentPanel, setShowPaymentPanel] = useState(false)
   
   // Estados del panel de pago
   const [selectedMethod, setSelectedMethod] = useState<string>('efectivo')

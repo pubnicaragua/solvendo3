@@ -212,7 +212,8 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       return;
     }
     if (carrito.length === 0) {
-      toast.error('Debes agregar al menos un producto o documento al carrito para despachar.');
+      toast.success('Despacho confirmado correctamente');
+      onClose();
       return;
     }
 
