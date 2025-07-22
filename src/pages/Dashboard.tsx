@@ -544,7 +544,12 @@ const Dashboard: React.FC = () => {
             </div>
             
             <div className="space-y-6">
-              <h4 className="text-lg font-semibold text-gray-900">Facturación</h4>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-semibold text-gray-900">Facturación</h4>
+                <button onClick={() => setShowPaymentModal(false)} className="text-gray-400 hover:text-gray-600">
+                  <XIcon className="w-6 h-6" />
+                </button>
+              </div>
               
               {/* Document Type Selection */}
               <div className="space-y-4">
@@ -674,6 +679,98 @@ const Dashboard: React.FC = () => {
                   </div>
                 )}
               </div>
+              
+              {/* Payment Methods */}
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Métodos de pago</h4>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <button
+                    onClick={() => setSelectedMethod('efectivo')}
+                    className={`flex items-center gap-2 px-4 py-3 rounded-lg ${
+                      selectedMethod === 'efectivo' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    } transition-colors`}
+                  >
+                    <DollarSign className="w-5 h-5" />
+                    <span>Efectivo</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => setSelectedMethod('tarjeta')}
+                    className={`flex items-center gap-2 px-4 py-3 rounded-lg ${
+                      selectedMethod === 'tarjeta' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    } transition-colors`}
+                  >
+                    <CreditCard className="w-5 h-5" />
+                    <span>Tarjeta</span>
+                  </button>
+                </div>
+                
+                {/* Terminal Selection for Card */}
+                {selectedMethod === 'tarjeta' && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Terminal POS</label>
+                    <select
+                      value={selectedTerminal}
+                      onChange={(e) => setSelectedTerminal(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    >
+                      <option value="terminal_principal">Terminal Principal - SumUp</option>
+                      <option value="terminal_secundaria">Terminal Secundaria - SumUp</option>
+                      <option value="terminal_movil">Terminal Móvil - SumUp</option>
+                    </select>
+                  </div>
+                )}
+                
+                {/* Cash Amount for Efectivo */}
+                {selectedMethod === 'efectivo' && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Monto recibido</label>
+                    <input
+                      type="number"
+                      value={montoRecibido}
+                      onChange={(e) => setMontoRecibido(Math.max(0, parseFloat(e.target.value) || 0))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      min="0"
+                      step="1"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Payment Summary */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm">Total a pagar</span>
+                    <span className="font-semibold">{fmt(total)}</span>
+                  </div>
+                  {selectedMethod === 'efectivo' && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Monto recibido</span>
+                        <span>{fmt(montoRecibido)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Vuelto</span>
+                        <span>{fmt(Math.max(0, montoRecibido - total))}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <button
+                onClick={handlePaymentComplete}
+                disabled={loading || carrito.length === 0 || (selectedMethod === 'efectivo' && montoRecibido < total)}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {loading ? 'Procesando...' : 'Confirmar pago'}
+              </button>
             </div>
           </aside>
         )}
