@@ -182,6 +182,10 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       if (document.body.contains(printElement)) {
         document.body.removeChild(printElement);
       }
+      
+      // Limpiar selección para permitir nueva selección
+      setSelectedDoc(null);
+      setSearchTerm('');
     } catch (error) {
       console.error('Error en impresión:', error);
       toast.error('Error al imprimir documento');

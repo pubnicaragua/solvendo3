@@ -136,6 +136,17 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
             `).join('')}
           </div>
           
+          <div style="border-top: 1px dashed #000; margin-top: 15px; padding-top: 10px;">
+            <div style="font-size: 10px; font-weight: bold;">RESUMEN:</div>
+            <div style="font-size: 9px; margin: 3px 0;">Subtotal: ${formatPrice(total)}</div>
+            ${billingData.descuentoGlobal > 0 ? `<div style="font-size: 9px; margin: 3px 0; color: red;">Descuento (${billingData.descuentoGlobal}%): -${formatPrice(total * (billingData.descuentoGlobal / 100))}</div>` : ''}
+            <div style="font-size: 10px; font-weight: bold; margin: 5px 0; border-top: 1px solid #000; padding-top: 5px;">TOTAL: ${formatPrice(totalConDescuento)}</div>
+            ${billingData.metodoPago === 'efectivo' ? `
+              <div style="font-size: 9px; margin: 3px 0;">Recibido: ${formatPrice(billingData.montoRecibido)}</div>
+              <div style="font-size: 9px; margin: 3px 0;">Vuelto: ${formatPrice(vuelto)}</div>
+            ` : ''}
+          </div>
+          
           <div style="text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px;">
             <div style="font-size: 9px;">¡Gracias por su compra!</div>
             <div style="font-size: 9px;">Powered by Solvendo</div>

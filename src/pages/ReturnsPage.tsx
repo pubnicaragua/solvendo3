@@ -51,6 +51,8 @@ export const ReturnsPage: React.FC = () => {
     tipoReembolso: 'efectivo',
     cuentaTarjeta: ''
   });
+  const [showMotivoInput, setShowMotivoInput] = useState(false);
+  const [motivoDevolucion, setMotivoDevolucion] = useState('');
   const [showBoletaModal, setShowBoletaModal] = useState(false);
 
   // Estado para almacenar la venta seleccionada
@@ -592,12 +594,27 @@ export const ReturnsPage: React.FC = () => {
                 <input
                   type="text"
                   value={clienteDevolucion.rut}
-                  onChange={(e) => setClienteDevolucion(prev => ({ ...prev, rut: e.target.value }))}
+                  onChange={(e) => {
+                    setClienteDevolucion(prev => ({ ...prev, cuentaTarjeta: e.target.value }));
+                    setShowMotivoInput(true);
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   placeholder="12.345.678-9"
                 />
               </div>
               
+            
+            {showMotivoInput && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Motivo de devolución *</label>
+                <textarea
+                  value={motivoDevolucion}
+                  onChange={(e) => setMotivoDevolucion(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg h-20 resize-none"
+                  placeholder="Ingrese el motivo de la devolución..."
+                />
+              </div>
+            )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Correo electrónico *</label>
                 <div className="flex items-center gap-2">

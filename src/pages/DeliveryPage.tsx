@@ -227,14 +227,9 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           {
             empresa_id: empresaId,
             usuario_id: user?.id,
-            fecha: despachoData.fecha,
-            tipo: despachoData.tipo,
             cliente_id: selectedClient.id,
             destinatario: selectedClient.razon_social,
-            direccion: selectedClient.direccion || '',
-            comuna: selectedClient.comuna || '',
-            region: selectedClient.region || '',
-            numero_documento: selectedClient.rut,
+            direccion: selectedClient.direccion || 'Sin dirección',
             total
           }
         ])
@@ -284,13 +279,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   };
 
   const handleSelectClient = () => {
-    if (clientes.length === 0) {
-      setShowClientModal(true);
-    } else {
-      // Mostrar lista de clientes existentes
-      const clienteSeleccionado = clientes[0]; // Por simplicidad, seleccionar el primero
-      handleClientSelect(clienteSeleccionado);
-    }
+    setShowClientModal(true);
   };
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
