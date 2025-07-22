@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Search, Star, FileText, Gift, User, Filter,
+  Search, Star, FileText, Gift, User, Filter, Package,
   Plus, Minus, X as XIcon, Percent, DollarSign, CreditCard, Truck
 } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -48,6 +48,7 @@ const Dashboard: React.FC = () => {
   const [showReceipt, setShowReceipt]     = useState(false) 
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showPrintDialog, setShowPrintDialog] = useState(false)
   
   // Estados del panel de pago
   const [selectedMethod, setSelectedMethod] = useState<string>('efectivo')
@@ -59,7 +60,7 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(false)
   
   // Estados para opciones de entrega
-  const [envioInmediato, setEnvioInmediato] = useState(false)
+  const [envioInmediato, setEnvioInmediato] = useState(true)
   const [despacho, setDespacho] = useState(false)
   const [documentos, setDocumentos] = useState(false)
   const [cupon, setCupon] = useState(false)
@@ -117,15 +118,105 @@ const Dashboard: React.FC = () => {
       toast.error('El carrito está vacío')
       return
     }
-    
-    // Navegar a la página de facturación preservando el contexto
-    navigate('/facturacion')
+    setShowPaymentModal(true)
   }
 
-  const handlePaymentComplete = (metodoPago: string, tipoDte: string) => {
-    setShowPaymentModal(false)
-    setShowReceipt(true)
+  const handlePaymentComplete = async () => {
+    if (carrito.length === 0) {
+      toast.error('No hay productos en el carrito')
+      return
+    }
+
+    setLoading(true)
+    
+    try {
+      // Procesar la venta
+      const result = await procesarVenta(selectedMethod, selectedDte as 'boleta' | 'factura' | 'nota_credito', selectedClient?.id);
+      
+      if (result.success) {
+        // Mostrar diálogo de impresión
+        setShowPaymentModal(false)
+        setShowPrintDialog(true)
+      } else {
+        toast.error(result.error || 'Error al procesar la venta')
+      }
+    } catch (error) {
+      console.error('Error processing payment:', error)
+      toast.error('Error al procesar el pago')
+    } finally {
+      setLoading(false)
+    }
   }
+
+  const handlePrintReceipt = () => {
+    try {
+      const printContent = `
+        <div style="font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 15px; margin-bottom: 15px;">
+            <div style="font-size: 16px; font-weight: bold;">ANROLTEC SPA</div>
+            <div style="font-size: 10px;">RUT: 78.168.951-3</div>
+            <div style="font-size: 10px;">Av. Providencia 1234, Santiago</div>
+          </div>
+          
+          <div style="text-align: center; font-weight: bold; margin: 10px 0;">
+            ${selectedDte.toUpperCase()}
+          </div>
+          <div style="font-size: 10px;">Folio: V${Date.now()}</div>
+          <div style="font-size: 10px;">Cliente: ${selectedClient?.razon_social || 'Consumidor Final'}</div>
+          <div style="font-size: 10px;">RUT: ${selectedClient?.rut || '66.666.666-6'}</div>
+          <div style="font-size: 10px;">Método: ${selectedMethod}</div>
+          <div style="font-size: 10px;">Total: ${fmt(total)}</div>
+          <div style="font-size: 10px;">Fecha: ${new Date().toLocaleDateString('es-CL')}</div>
+          
+          <div style="border-top: 1px dashed #000; margin-top: 15px; padding-top: 10px;">
+            <div style="font-size: 10px; font-weight: bold;">PRODUCTOS:</div>
+            ${carrito.map(item => `
+              <div style="font-size: 9px; margin: 5px 0;">
+                ${item.nombre} x${item.quantity} - ${fmt(item.precio * item.quantity)}
+              </div>
+            `).join('')}
+          </div>
+          
+          <div style="border-top: 1px dashed #000; margin-top: 15px; padding-top: 10px;">
+            <div style="font-size: 10px; font-weight: bold;">RESUMEN:</div>
+            <div style="font-size: 9px; margin: 3px 0;">Subtotal: ${fmt(total)}</div>
+            <div style="font-size: 10px; font-weight: bold; margin: 5px 0; border-top: 1px solid #000; padding-top: 5px;">TOTAL: ${fmt(total)}</div>
+            ${selectedMethod === 'efectivo' ? `
+              <div style="font-size: 9px; margin: 3px 0;">Recibido: ${fmt(montoRecibido)}</div>
+              <div style="font-size: 9px; margin: 3px 0;">Vuelto: ${fmt(Math.max(0, montoRecibido - total))}</div>
+            ` : ''}
+          </div>
+          
+          <div style="text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px;">
+            <div style="font-size: 9px;">¡Gracias por su compra!</div>
+            <div style="font-size: 9px;">Powered by Solvendo</div>
+          </div>
+        </div>
+      `;
+      
+      const printWindow = window.open('', '_blank', 'width=400,height=600');
+      if (printWindow) {
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head><title>Boleta Solvendo</title></head>
+          <body>${printContent}</body>
+          <script>window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 1000); }</script>
+          </html>
+        `);
+        printWindow.document.close();
+      }
+    } catch (error) {
+      console.error('Error al imprimir:', error);
+    }
+    
+    // Limpiar carrito y cerrar modal
+    clearCart();
+    setShowPaymentModal(false)
+    setShowPrintDialog(false)
+    setActiveTab('destacado')
+  }
+
   const handleReceiptClose = () => {
     setShowReceipt(false)
     clearCart()
@@ -268,7 +359,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <aside className="flex-1 p-6 bg-gray-50 border-l flex flex-col overflow-y-auto">
+        <aside className={`flex-1 p-6 bg-gray-50 border-l flex flex-col overflow-y-auto ${showPaymentModal ? 'hidden' : ''}`}>
           {activeTab==='destacado' && <ProductHighlights />}
           {activeTab==='borradores' && (
             <DraftsPanel
@@ -322,7 +413,7 @@ const Dashboard: React.FC = () => {
             />
           )}
 
-          <nav className="flex justify-around items-center h-16 bg-white border-t mt-auto">
+          <nav className={`flex justify-around items-center h-16 bg-white border-t mt-auto ${showPaymentModal ? 'hidden' : ''}`}>
             {TABS.map(tab => (
               <button
                 key={tab.id as string}
@@ -337,36 +428,25 @@ const Dashboard: React.FC = () => {
             ))}
           </nav>
         </aside>
-      </div>
 
-      <DraftSaveModal
-        isOpen={showDraftModal}
-        draftName={draftName}
-        setDraftName={setDraftName}
-        onClose={()=>setShowDraftModal(false)}
-        onSave={handleSaveDraft}
-      />
-      <ReceiptModal
-        isOpen={showReceipt}
-        onClose={handleReceiptClose}
-        onPrint={handleReceiptClose}
-        onSendEmail={()=>toast.success('Enviado por email')}
-      />
-      
-      {/* Payment Modal */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50">
-          <div className="bg-white h-full w-96 shadow-xl overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-gray-900">Facturación</h3>
-                <button onClick={() => setShowPaymentModal(false)} className="text-gray-400 hover:text-gray-600">
-                  <XIcon className="w-6 h-6" />
-                </button>
+        {/* Payment Modal Panel */}
+        {showPaymentModal && (
+          <aside className="flex-1 p-6 bg-white border-l flex flex-col overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-blue-600" />
+                <h3 className="text-xl font-semibold text-gray-900">Pagar</h3>
               </div>
+              <button onClick={() => setShowPaymentModal(false)} className="text-gray-400 hover:text-gray-600">
+                <XIcon className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              <h4 className="text-lg font-semibold text-gray-900">Facturación</h4>
               
               {/* Document Type Selection */}
-              <div className="space-y-4 mb-6">
+              <div className="space-y-4">
                 <div className="flex items-center gap-4">
                   <label className="flex items-center gap-2">
                     <input
@@ -401,7 +481,8 @@ const Dashboard: React.FC = () => {
                     >
                       {envioInmediato && <div className="w-2 h-2 bg-white rounded-full"></div>}
                     </div>
-                    <span className="text-sm">Envío inmediato</span>
+                    <Package className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm">Entrega inmediata</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Truck 
@@ -420,7 +501,8 @@ const Dashboard: React.FC = () => {
                       onChange={() => setDocumentos(!documentos)}
                       className="rounded border-gray-300 text-blue-600"
                     />
-                    <span className="text-sm">Documentos</span>
+                    <Percent className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm">Descuentos</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Plus 
@@ -431,7 +513,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Mostrar campos adicionales si están seleccionados */}
+                {/* Conditional sections */}
                 {envioInmediato && (
                   <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                     <h5 className="text-sm font-medium text-blue-800 mb-2">Configuración de Entrega Inmediata</h5>
@@ -462,16 +544,15 @@ const Dashboard: React.FC = () => {
                 
                 {documentos && (
                   <div className="mt-4 p-3 bg-purple-50 rounded-lg">
-                    <h5 className="text-sm font-medium text-purple-800 mb-2">Documentos Adicionales</h5>
+                    <h5 className="text-sm font-medium text-purple-800 mb-2">Descuentos</h5>
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2">
-                        <input type="checkbox" className="rounded border-purple-300 text-purple-600" />
-                        <span className="text-sm">Guía de despacho</span>
-                      </label>
-                      <label className="flex items-center gap-2">
-                        <input type="checkbox" className="rounded border-purple-300 text-purple-600" />
-                        <span className="text-sm">Orden de compra</span>
-                      </label>
+                      <input
+                        type="number"
+                        placeholder="Porcentaje de descuento"
+                        className="w-full px-3 py-2 border border-purple-300 rounded-lg text-sm"
+                        min="0"
+                        max="100"
+                      />
                     </div>
                   </div>
                 )}
@@ -492,81 +573,50 @@ const Dashboard: React.FC = () => {
                   </div>
                 )}
               </div>
+      </div>
 
-              {/* Payment Methods */}
-              <div className="mb-6">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Métodos de pago</h4>
-                <div className="grid grid-cols-1 gap-3">
-                  <button
-                    onClick={() => setSelectedMethod('efectivo')}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-lg ${
-                      selectedMethod === 'efectivo' 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    } transition-colors`}
-                  >
-                    <DollarSign className="w-5 h-5" />
-                    <span>Efectivo</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => setSelectedMethod('tarjeta')}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-lg ${
-                      selectedMethod === 'tarjeta' 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    } transition-colors`}
-                  >
-                    <CreditCard className="w-5 h-5" />
-                    <span>Tarjeta</span>
-                  </button>
-                </div>
-                
-                {/* Cash Amount for Efectivo */}
-                {selectedMethod === 'efectivo' && (
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Monto recibido</label>
-                    <input
-                      type="number"
-                      value={montoRecibido}
-                      onChange={(e) => setMontoRecibido(Math.max(0, parseFloat(e.target.value) || 0))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                      min="0"
-                      step="1"
-                    />
-                  </div>
-                )}
+      <DraftSaveModal
+        isOpen={showDraftModal}
+        draftName={draftName}
+        setDraftName={setDraftName}
+        onClose={()=>setShowDraftModal(false)}
+        onSave={handleSaveDraft}
+      />
+      <ReceiptModal
+        isOpen={showReceipt}
+        onClose={handleReceiptClose}
+        onPrint={handleReceiptClose}
+        onSendEmail={()=>toast.success('Enviado por email')}
+      />
+      
+      {/* Print Dialog */}
+      {showPrintDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <div className="p-6 text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Boleta generada</h3>
+              <p className="text-gray-600 mb-6">Enviar por correo electrónico (Opcional)</p>
+              
+              <div className="flex mb-4">
+                <input
+                  type="email"
+                  placeholder="Email"
+                  defaultValue={selectedClient?.email || ''}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={() => toast.success('Documento enviado por email')}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-r-lg hover:bg-blue-700"
+                >
+                  Enviar
+                </button>
               </div>
-
-              {/* Payment Summary */}
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm">Total a pagar</span>
-                    <span className="font-semibold">{fmt(total)}</span>
-                  </div>
-                  {selectedMethod === 'efectivo' && (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Monto recibido</span>
-                        <span>{fmt(montoRecibido)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm">Vuelto</span>
-                        <span>{fmt(Math.max(0, montoRecibido - total))}</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Action Button */}
+              
               <button
-                onClick={() => handlePaymentComplete(selectedMethod, selectedDte)}
-                disabled={loading || carrito.length === 0 || (selectedMethod === 'efectivo' && montoRecibido < total)}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                onClick={handlePrintReceipt}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700"
               >
-                {loading ? 'Procesando...' : 'Confirmar pago'}
+                Imprimir
               </button>
             </div>
           </div>

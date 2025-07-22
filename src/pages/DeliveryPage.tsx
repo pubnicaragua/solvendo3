@@ -366,115 +366,70 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               </select>
             </div>
 
+            <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
+              <div>
+                N° Líneas: {carrito.length} / Tot. ítems: {carrito.reduce((acc, item) => acc + item.quantity, 0)}
+              </div>
+              <select
+                className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 focus:ring-blue-500 focus:border-blue-500"
+                value={despachoData.tipo}
+                onChange={(e) => setDespachoData(p => ({ ...p, tipo: e.target.value }))}
+              >
+                <option>Guía de despacho manual</option>
+              </select>
+            </div>
+
             <button
               onClick={handleSelectClient}
-              className={`w-3/4 py-2.5 mb-3 text-sm rounded-md font-medium transition-colors flex items-center justify-center gap-2 ${
+              className={`w-full py-3 mb-4 text-sm rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
                 clientError 
                   ? 'bg-red-500 text-white' 
                   : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             >
-              <Search className="w-4 h-4 text-white" />
-              {selectedClient ? selectedClient.razon_social : 'Seleccionar cliente'}
+              <Search className="w-4 h-4" />
+              {selectedClient ? selectedClient.razon_social : 'Cliente'}
             </button>
 
-            <div className="space-y-4 mb-6">
-              <h4 className="text-lg font-semibold text-gray-900">Datos de Despacho</h4>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
-                  <input
-                    type="date"
-                    value={despachoData.fecha}
-                    onChange={(e) => setDespachoData(p => ({ ...p, fecha: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  />
+            {/* Mostrar datos de despacho solo si hay cliente seleccionado */}
+            {selectedClient && (
+              <div className="space-y-4 mb-6">
+                <h4 className="text-lg font-semibold text-gray-900">Datos de Despacho</h4>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                    <input
+                      type="date"
+                      value={despachoData.fecha}
+                      onChange={(e) => setDespachoData(p => ({ ...p, fecha: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                    <select
+                      value={despachoData.tipo}
+                      onChange={(e) => setDespachoData(prev => ({ ...prev, tipo: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    >
+                      <option>Tipo de despacho</option>
+                      <option>Entrega inmediata</option>
+                      <option>Entrega programada</option>
+                    </select>
+                  </div>
                 </div>
+                
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-                  <select
-                    value={despachoData.tipo}
-                    onChange={(e) => setDespachoData(prev => ({ ...prev, tipo: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  >
-                    <option>Tipo de despacho</option>
-                    <option>Entrega inmediata</option>
-                    <option>Entrega programada</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Destinatario</label>
-                <input
-                  type="text"
-                  value={despachoData.destinatario}
-                  onChange={(e) => setDespachoData(prev => ({ ...prev, destinatario: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  placeholder="Nombre del destinatario"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
-                <input
-                  type="text"
-                  value={despachoData.direccion}
-                  onChange={(e) => setDespachoData(prev => ({ ...prev, direccion: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  placeholder="Dirección completa"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Comuna</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Destinatario</label>
                   <input
                     type="text"
-                    value={despachoData.comuna}
-                    onChange={(e) => setDespachoData(prev => ({ ...prev, comuna: e.target.value }))}
+                    value={despachoData.destinatario}
+                    onChange={(e) => setDespachoData(prev => ({ ...prev, destinatario: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Comuna"
+                    placeholder="Nombre del destinatario"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Ciudad</label>
-                  <input
-                    type="text"
-                    value={despachoData.ciudad}
-                    onChange={(e) => setDespachoData(prev => ({ ...prev, ciudad: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Ciudad"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Región</label>
-                <input
-                  type="text"
-                  value={despachoData.region}
-                  onChange={(e) => setDespachoData(prev => ({ ...prev, region: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  placeholder="Región"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Núm. documento</label>
-                <input
-                  type="text"
-                  value={despachoData.numeroDocumento}
-                  onChange={(e) => setDespachoData(prev => ({ ...prev, numeroDocumento: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  placeholder="Número de documento"
-                />
-              </div>
-            </div>
-
-            {/* Total y botón de confirmación */}
-            <div className="border-t pt-4 space-y-4">
               <div className="flex justify-between items-center text-lg font-semibold">
                 <span>Total de despacho</span>
                 <span>{formatPrice(total)}</span>
@@ -536,13 +491,13 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       </div>
 
       {/* Modal de selección de cliente */}
-      {showClientSelection && (
+      {showClientModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-96 overflow-hidden">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Seleccionar Cliente</h3>
               <button
-                onClick={() => setShowClientSelection(false)}
+                onClick={() => setShowClientModal(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <XIcon className="w-6 h-6" />
@@ -574,7 +529,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             
             <div className="mt-4 pt-4 border-t">
               <button
-                onClick={() => setShowClientSelection(false)}
+                onClick={() => setShowClientModal(false)}
                 className="w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200"
               >
                 Cancelar
