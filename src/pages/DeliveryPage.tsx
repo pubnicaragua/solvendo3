@@ -383,19 +383,6 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               </select>
             </div>
 
-            <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
-              <div>
-                N° Líneas: {carrito.length} / Tot. ítems: {carrito.reduce((acc, item) => acc + item.quantity, 0)}
-              </div>
-              <select
-                className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 focus:ring-blue-500 focus:border-blue-500"
-                value={despachoData.tipo}
-                onChange={(e) => setDespachoData(p => ({ ...p, tipo: e.target.value }))}
-              >
-                <option>Guía de despacho manual</option>
-              </select>
-            </div>
-
             <button
               onClick={handleSelectClient}
               className={`w-full py-3 mb-4 text-sm rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
