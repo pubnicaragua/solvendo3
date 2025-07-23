@@ -163,16 +163,26 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(n);
 
   const handleSelectDoc = (doc: any) => {
-    const existingItem = carrito.find(item => item.id === doc.id);
-    if (existingItem) {
-      return; 
-    }
-    addToCart({
+    // Clear existing cart and add the selected document
+    clearCart();
+    
+    // Add document as a product to cart
+    const documentProduct = {
       id: doc.id,
+      empresa_id: empresaId || '',
       nombre: doc.label,
       precio: doc.total,
-      quantity: 1
-    });
+      stock: 1,
+      activo: true,
+      created_at: new Date().toISOString(),
+      costo: 0,
+      descripcion: 'Documento seleccionado para despacho',
+      codigo: doc.id,
+      destacado: false,
+      updated_at: new Date().toISOString()
+    };
+    
+    addToCart(documentProduct);
   };
 
   const handleClientSelect = (c: Cliente) => {
@@ -216,30 +226,35 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       return;
     }
     if (carrito.length === 0) {
-      toast.success('Despacho confirmado correctamente');
-      onClose();
+      toast.error('No hay productos para despachar');
       return;
     }
 
     try {
-      const { data: despacho, error: despachoError } = await supabase
+      const { data: despacho, error } = await supabase
         .from('despachos')
         .insert([
           {
             empresa_id: empresaId,
             usuario_id: user?.id,
+            usuario_id: user?.id,
             cliente_id: selectedClient.id,
-            destinatario: selectedClient.razon_social,
-            direccion: selectedClient.direccion || 'Sin dirección',
+            destinatario: despachoData.destinatario,
+            direccion: despachoData.direccion,
+            comuna: despachoData.comuna,
+            ciudad: despachoData.ciudad,
+            region: despachoData.region,
+            tipo: despachoData.tipo,
+            numero_documento: despachoData.numDocumento,
             total
           }
         ])
         .select()
         .single();
 
-      if (despachoError || !despacho) {
-        console.error('Error al crear despacho:', despachoError);
-        toast.error('Error al crear despacho: ' + despachoError?.message);
+      if (error) {
+        console.error('Error al crear despacho:', error);
+        toast.error('Error al crear despacho: ' + error.message);
         return;
       }
 
@@ -247,11 +262,12 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         despacho_id: despacho.id,
         producto_id: item.id,
         cantidad: item.quantity,
-        precio: item.precio,
-        descuento: 0
+        precio: item.precio
       }));
 
-      const { error: itemsError } = await supabase.from('despachos_items').insert(detalles);
+      const { error: itemsError } = await supabase
+        .from('despachos_items')
+        .insert(detalles);
 
       if (itemsError) {
         console.error('Error al insertar detalles del despacho:', itemsError);
