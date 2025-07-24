@@ -316,7 +316,7 @@ export const CashClosePage: React.FC = () => {
                   </div>
                   <div className="bg-[#F8F9FB] p-4 rounded-lg border border-[#E0E0E0] flex flex-col justify-between">
                       <label className="block text-xs font-normal text-[#828282] mb-1">Diferencia</label>
-                      <p className={`text-xl font-bold ${diferencia === 0 ? 'text-[#2196F3]' : (diferencia > 0 ? 'text-red-500' : 'text-green-500')}`}>
+                      <p className={`text-xl font-bold ${diferencia === 0 ? 'text-[#2196F3]' : (diferencia > 0 ? 'text-green-500' : 'text-red-500')}`}>
                           {formatPrice(Math.abs(diferencia))}
                       </p>
                   </div>
