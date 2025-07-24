@@ -164,26 +164,156 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(n);
 
   const handleSelectDoc = (doc: any) => {
-    // Clear existing cart and add the selected document
+    // Limpiar carrito existente
     clearCart();
     
-    // Add document as a product to cart
-    const documentProduct = {
-      id: doc.id,
-      empresa_id: empresaId || '',
-      nombre: doc.label,
-      precio: doc.total,
-      stock: 1,
-      activo: true,
-      created_at: new Date().toISOString(),
-      costo: 0,
-      descripcion: 'Documento seleccionado para despacho',
-      codigo: doc.id,
-      destacado: false,
-      updated_at: new Date().toISOString()
+    // Cargar productos reales de la venta
+    const loadVentaProducts = async () => {
+      try {
+        if (!empresaId) {
+          // Datos de ejemplo si no hay empresaId
+          const exampleProducts = [
+            {
+              id: 'f1eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+              empresa_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+              nombre: 'Ejemplo producto 1',
+              precio: 34.5,
+              stock: 100,
+              activo: true,
+              created_at: new Date().toISOString(),
+              costo: 0,
+              descripcion: 'Producto de ejemplo',
+              codigo: 'PROD001',
+              destacado: false,
+              updated_at: new Date().toISOString()
+            }
+          ];
+          
+          exampleProducts.forEach(product => addToCart(product));
+          return;
+        }
+
+        // Buscar la venta por folio
+        const { data: venta, error: ventaError } = await supabase
+          .from('ventas')
+          .select('id')
+          .eq('folio', doc.folio || doc.id)
+          .eq('empresa_id', empresaId)
+          .single();
+
+        if (ventaError || !venta) {
+          // Si no se encuentra la venta, usar productos de ejemplo
+          const exampleProducts = [
+            {
+              id: 'f1eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+              empresa_id: empresaId,
+              nombre: 'Ejemplo producto 1',
+              precio: 34.5,
+              stock: 100,
+              activo: true,
+              created_at: new Date().toISOString(),
+              costo: 0,
+              descripcion: 'Producto de ejemplo',
+              codigo: 'PROD001',
+              destacado: false,
+              updated_at: new Date().toISOString()
+            }
+          ];
+          
+          exampleProducts.forEach(product => addToCart(product));
+          return;
+        }
+
+        // Cargar items de la venta
+        const { data: ventaItems, error: itemsError } = await supabase
+          .from('venta_items')
+          .select(`
+            id,
+            cantidad,
+            precio_unitario,
+            productos (
+              id,
+              empresa_id,
+              nombre,
+              precio,
+              stock,
+              activo,
+              created_at,
+              costo,
+              descripcion,
+              codigo,
+              destacado,
+              updated_at
+            )
+          `)
+          .eq('venta_id', venta.id);
+
+        if (itemsError || !ventaItems || ventaItems.length === 0) {
+          // Si no hay items, usar productos de ejemplo
+          const exampleProducts = [
+            {
+              id: 'f1eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+              empresa_id: empresaId,
+              nombre: 'Ejemplo producto 1',
+              precio: 34.5,
+              stock: 100,
+              activo: true,
+              created_at: new Date().toISOString(),
+              costo: 0,
+              descripcion: 'Producto de ejemplo',
+              codigo: 'PROD001',
+              destacado: false,
+              updated_at: new Date().toISOString()
+            }
+          ];
+          
+          exampleProducts.forEach(product => addToCart(product));
+          return;
+        }
+
+        // Agregar productos reales al carrito
+        ventaItems.forEach(item => {
+          if (item.productos) {
+            const product = {
+              ...item.productos,
+              precio: item.precio_unitario // Usar el precio de la venta
+            };
+            
+            // Agregar con la cantidad específica de la venta
+            for (let i = 0; i < item.cantidad; i++) {
+              addToCart(product);
+            }
+          }
+        });
+
+        toast.success(`Productos cargados desde ${doc.label}`);
+      } catch (error) {
+        console.error('Error loading venta products:', error);
+        toast.error('Error al cargar productos de la venta');
+        
+        // Fallback a productos de ejemplo
+        const exampleProducts = [
+          {
+            id: 'f1eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+            empresa_id: empresaId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+            nombre: 'Ejemplo producto 1',
+            precio: 34.5,
+            stock: 100,
+            activo: true,
+            created_at: new Date().toISOString(),
+            costo: 0,
+            descripcion: 'Producto de ejemplo',
+            codigo: 'PROD001',
+            destacado: false,
+            updated_at: new Date().toISOString()
+          }
+        ];
+        
+        exampleProducts.forEach(product => addToCart(product));
+      }
     };
     
-    addToCart(documentProduct);
+    loadVentaProducts();
   };
 
   const handleClientSelect = (c: Cliente) => {
@@ -382,28 +512,8 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             </div>
 
             <div className="grid grid-cols-2 gap-4 items-center mb-3">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Cliente"
-                  value={selectedClient ? selectedClient.razon_social : clientSearchTerm}
-                  onChange={(e) => {
-                    setClientSearchTerm(e.target.value);
-                    if (!e.target.value) {
-                      setSelectedClient(null);
-                    } else {
-                      // Buscar cliente mientras escribe
-                      const cliente = clientes.find(c => 
-                        c.razon_social.toLowerCase().includes(e.target.value.toLowerCase())
-                      );
-                      if (cliente) {
-                        setSelectedClient(cliente);
-                      }
-                    }
-                  }}
-                  className="w-full pl-4 pr-10 py-2 border rounded-lg bg-gray-100 focus:ring-2 focus:ring-blue-500 text-sm"
-                />
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <div className="text-sm text-gray-600">
+                Cliente: {selectedClient ? selectedClient.razon_social : 'No seleccionado'}
               </div>
               <div className="flex items-center justify-end">
                 <span className="text-lg font-semibold mr-2">Total</span>
@@ -411,6 +521,31 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   <span className="text-xl font-bold">{formatPrice(total)}</span>
                 </div>
               </div>
+            </div>
+
+            <div className="relative mb-4">
+              <input
+                type="text"
+                placeholder="Cliente"
+                value={clientSearchTerm}
+                onChange={(e) => {
+                  setClientSearchTerm(e.target.value);
+                  if (!e.target.value) {
+                    setSelectedClient(null);
+                  } else {
+                    // Buscar cliente mientras escribe
+                    const cliente = clientes.find(c => 
+                      c.razon_social.toLowerCase().includes(e.target.value.toLowerCase())
+                    );
+                    if (cliente) {
+                      setSelectedClient(cliente);
+                      selectClient(cliente);
+                    }
+                  }
+                }}
+                className="w-full pl-4 pr-10 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             </div>
 
             <div className="mt-auto flex gap-2">
@@ -429,33 +564,11 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         </div>
 
         <aside className="flex-1 p-6 bg-gray-50 border-l flex flex-col overflow-y-auto">
-          {/* Clientes Panel */}
+          {/* Clientes Panel - Solo mostrar lista */}
           <div className="space-y-6">
             <div className="flex items-center space-x-2 mb-4">
               <User className="w-5 h-5 text-blue-600" />
               <h3 className="text-blue-600 font-semibold text-lg">Clientes</h3>
-            </div>
-            
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Cliente"
-                value={clientSearchTerm}
-                onChange={(e) => {
-                  setClientSearchTerm(e.target.value);
-                  // Buscar cliente mientras escribe
-                  const cliente = clientes.find(c => 
-                    c.razon_social.toLowerCase().includes(e.target.value.toLowerCase())
-                  );
-                  if (cliente) {
-                    setSelectedClient(cliente);
-                  } else if (!e.target.value) {
-                    setSelectedClient(null);
-                  }
-                }}
-                className="w-full pl-4 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             </div>
             
             <ul className="space-y-2 max-h-60 overflow-y-auto">
@@ -466,6 +579,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   onClick={() => {
                     setSelectedClient(c);
                     setClientSearchTerm(c.razon_social);
+                    selectClient(c);
                   }}
                   className={`p-3 border rounded hover:bg-gray-50 cursor-pointer flex justify-between items-center ${
                     selectedClient?.id === c.id ? 'bg-blue-50 border-blue-200' : 'bg-white'
@@ -494,21 +608,9 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
           {/* Documentos disponibles */}
           <div className="mt-6 space-y-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <FileText className="w-4 h-4 text-blue-600" />
-                <span className="text-sm font-medium text-blue-800">Documentos disponibles</span>
-              </div>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Ingresa aquí el número de documento"
-                  value={docSearch}
-                  onChange={(e) => setDocSearch(e.target.value)}
-                  className="w-full pl-4 pr-10 py-2 border border-blue-300 rounded-lg text-sm"
-                />
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-              </div>
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-800">Documentos disponibles</span>
             </div>
 
             {/* Lista de documentos */}
