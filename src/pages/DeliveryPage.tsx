@@ -367,6 +367,41 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 </div>
               ))
             )}
+            
+            {/* Buscador de productos */}
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Buscar productos para agregar..."
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              
+              {/* Mostrar productos filtrados */}
+              {productSearch && (
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {productos.filter(p => 
+                    p.nombre.toLowerCase().includes(productSearch.toLowerCase())
+                  ).map(producto => (
+                    <div
+                      key={producto.id}
+                      onClick={() => {
+                        addToCart(producto);
+                        setProductSearch('');
+                      }}
+                      className="flex items-center justify-between p-3 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
+                    >
+                      <span className="font-medium text-blue-900">{producto.nombre}</span>
+                      <span className="text-sm text-blue-600">{formatPrice(producto.precio)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="mt-auto pt-4 border-t border-gray-200">
@@ -383,17 +418,55 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               </select>
             </div>
 
-            <button
-              onClick={handleSelectClient}
-              className={`w-full py-3 mb-4 text-sm rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-                clientError 
-                  ? 'bg-red-500 text-white' 
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
-            >
-              <Search className="w-4 h-4" />
-              {selectedClient ? selectedClient.razon_social : 'Cliente'}
-            </button>
+            {/* Selección de cliente */}
+            <div className="mb-4">
+              {selectedClient ? (
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-blue-900">
+                        {selectedClient.razon_social}
+                      </p>
+                      <p className="text-xs text-blue-700">RUT: {selectedClient.rut}</p>
+                    </div>
+                    <button
+                      onClick={() => setSelectedClient(null)}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      Cambiar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <select
+                    onChange={(e) => {
+                      const clienteId = e.target.value;
+                      if (clienteId) {
+                        const cliente = clientes.find(c => c.id === clienteId);
+                        if (cliente) {
+                          handleClientSelect(cliente);
+                        }
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="">Seleccionar cliente existente</option>
+                    {clientes.map(cliente => (
+                      <option key={cliente.id} value={cliente.id}>
+                        {cliente.razon_social} - {cliente.rut}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => setShowClientModal(true)}
+                    className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm"
+                  >
+                    + Registrar nuevo cliente
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Mostrar datos de despacho solo si hay cliente seleccionado */}
             {selectedClient && (
@@ -495,54 +568,12 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         </aside>
       </div>
 
-      {/* Modal de selección de cliente */}
-      {showClientModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-96 overflow-hidden">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Seleccionar Cliente</h3>
-              <button
-                onClick={() => setShowClientModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <XIcon className="w-6 h-6" />
-              </button>
-            </div>
-            
-            <div className="space-y-3 max-h-64 overflow-y-auto">
-              {clientes.map((cliente) => (
-                <div
-                  key={cliente.id}
-                  onClick={() => handleClientSelect(cliente)}
-                  className="p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                >
-                  <div className="font-medium text-gray-900">{cliente.razon_social}</div>
-                  <div className="text-sm text-gray-600">RUT: {cliente.rut}</div>
-                  {cliente.direccion && (
-                    <div className="text-sm text-gray-600">{cliente.direccion}</div>
-                  )}
-                </div>
-              ))}
-              
-              {clientes.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <User className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                  <p>No hay clientes registrados</p>
-                </div>
-              )}
-            </div>
-            
-            <div className="mt-4 pt-4 border-t">
-              <button
-                onClick={() => setShowClientModal(false)}
-                className="w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-200"
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Client Modal */}
+      <ClientModal
+        isOpen={showClientModal}
+        onClose={() => setShowClientModal(false)}
+        onClientSelect={handleClientSelect}
+      />
 
       {clientError && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
