@@ -188,6 +188,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const handleClientSelect = (c: Cliente) => {
     setSelectedClient(c);
     selectClient(c);
+    setClientSearchTerm(c.razon_social);
     setDespachoData((p) => ({
       ...p,
       destinatario: c.razon_social,
@@ -197,13 +198,13 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       region: c.region || '',
       numDocumento: c.rut
     }));
-    setShowClientModal(false);
     setClientError(false);
   };
 
   const handleCancelDespacho = () => {
     clearCart();
     setSelectedClient(null);
+    setClientSearchTerm('');
     setProductSearch('');
     setDocSearch('');
     setDespachoData({
@@ -328,7 +329,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             <span className="text-right pr-1">Importe</span>
           </div>
 
-          <div className="space-y-3 pb-4 flex-grow overflow-y-auto">
+          <div className="space-y-3 pb-4 flex-grow overflow-y-auto max-h-96">
             {carrito.length === 0 ? (
               <div className="text-center text-gray-500 py-8">No hay ítems en el despacho.</div>
             ) : (
@@ -367,213 +368,130 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 </div>
               ))
             )}
-            
-            {/* Buscador de productos */}
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Buscar productos para agregar..."
-                  value={productSearch}
-                  onChange={(e) => setProductSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              
-              {/* Mostrar productos filtrados */}
-              {productSearch && (
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {productos.filter(p => 
-                    p.nombre.toLowerCase().includes(productSearch.toLowerCase())
-                  ).map(producto => (
-                    <div
-                      key={producto.id}
-                      onClick={() => {
-                        addToCart(producto);
-                        setProductSearch('');
-                      }}
-                      className="flex items-center justify-between p-3 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
-                    >
-                      <span className="font-medium text-blue-900">{producto.nombre}</span>
-                      <span className="text-sm text-blue-600">{formatPrice(producto.precio)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
 
           <div className="mt-auto pt-4 border-t border-gray-200">
-            <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
-              <div>
-                N° Líneas: {carrito.length} / Tot. ítems: {carrito.reduce((acc, item) => acc + item.quantity, 0)}
-              </div>
-              <select
-                className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 focus:ring-blue-500 focus:border-blue-500"
-                value={despachoData.tipo}
-                onChange={(e) => setDespachoData(p => ({ ...p, tipo: e.target.value }))}
-              >
+            <div className="grid grid-cols-2 gap-4 items-center mb-4">
+              <span className="text-gray-600 text-sm">
+                N° Líneas {carrito.length} / Tot. ítems {carrito.reduce((acc, item) => acc + item.quantity, 0)}
+              </span>
+              <select className="px-2 py-1.5 border rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 w-fit ml-auto">
                 <option>Guía de despacho manual</option>
               </select>
             </div>
 
-            {/* Selección de cliente */}
-            <div className="mb-4">
-              {selectedClient ? (
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-blue-900">
-                        {selectedClient.razon_social}
-                      </p>
-                      <p className="text-xs text-blue-700">RUT: {selectedClient.rut}</p>
-                    </div>
-                    <button
-                      onClick={() => setSelectedClient(null)}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      Cambiar
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <select
-                    onChange={(e) => {
-                      const clienteId = e.target.value;
-                      if (clienteId) {
-                        const cliente = clientes.find(c => c.id === clienteId);
-                        if (cliente) {
-                          handleClientSelect(cliente);
-                        }
+            <div className="grid grid-cols-2 gap-4 items-center mb-3">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Cliente"
+                  value={selectedClient ? selectedClient.razon_social : clientSearchTerm}
+                  onChange={(e) => {
+                    setClientSearchTerm(e.target.value);
+                    if (!e.target.value) {
+                      setSelectedClient(null);
+                    } else {
+                      // Buscar cliente mientras escribe
+                      const cliente = clientes.find(c => 
+                        c.razon_social.toLowerCase().includes(e.target.value.toLowerCase())
+                      );
+                      if (cliente) {
+                        setSelectedClient(cliente);
                       }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  >
-                    <option value="">Seleccionar cliente existente</option>
-                    {clientes.map(cliente => (
-                      <option key={cliente.id} value={cliente.id}>
-                        {cliente.razon_social} - {cliente.rut}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={() => setShowClientModal(true)}
-                    className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm"
-                  >
-                    + Registrar nuevo cliente
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Mostrar datos de despacho solo si hay cliente seleccionado */}
-            {selectedClient && (
-              <div className="space-y-4 mb-6">
-                <h4 className="text-lg font-semibold text-gray-900">Datos de Despacho</h4>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
-                    <input
-                      type="date"
-                      value={despachoData.fecha}
-                      onChange={(e) => setDespachoData(p => ({ ...p, fecha: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-                    <select
-                      value={despachoData.tipo}
-                      onChange={(e) => setDespachoData(prev => ({ ...prev, tipo: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    >
-                      <option>Tipo de despacho</option>
-                      <option>Entrega inmediata</option>
-                      <option>Entrega programada</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Destinatario</label>
-                  <input
-                    type="text"
-                    value={despachoData.destinatario}
-                    onChange={(e) => setDespachoData(prev => ({ ...prev, destinatario: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Nombre del destinatario"
-                  />
+                    }
+                  }}
+                  className="w-full pl-4 pr-10 py-2 border rounded-lg bg-gray-100 focus:ring-2 focus:ring-blue-500 text-sm"
+                />
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              </div>
+              <div className="flex items-center justify-end">
+                <span className="text-lg font-semibold mr-2">Total</span>
+                <div className="bg-gray-100 p-2 rounded-lg text-right min-w-[100px]">
+                  <span className="text-xl font-bold">{formatPrice(total)}</span>
                 </div>
               </div>
-            )}
-
-            <div className="flex justify-between items-center text-lg font-semibold">
-              <span>Total de despacho</span>
-              <span>{formatPrice(total)}</span>
             </div>
-            
-            <button
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-              onClick={handleConfirm}
-              disabled={!selectedClient || carrito.length === 0}
-            >
-              Confirmar despacho
-            </button>
+
+            <div className="mt-auto flex gap-2">
+              <button onClick={handleCancelDespacho} className="flex-1 px-4 py-2 bg-gray-100 rounded flex items-center justify-center text-sm">
+                <XIcon className="w-4 h-4 mr-1" />Cancelar
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={!selectedClient || carrito.length === 0}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded font-semibold text-base disabled:opacity-50"
+              >
+                Despachar {formatPrice(total)}
+              </button>
+            </div>
           </div>
         </div>
 
-        <aside className="w-96 bg-gray-100 p-6 flex flex-col border-l-0 shadow-none">
-          <div className="mb-4">
-            <div className="flex items-center text-blue-800 font-medium mb-3">
-              <FileText className="w-4 h-4 mr-2" /> Documentos disponibles
+        <aside className="flex-1 p-6 bg-gray-50 border-l flex flex-col overflow-y-auto">
+          {/* Clientes Panel */}
+          <div className="space-y-6">
+            <div className="flex items-center space-x-2 mb-4">
+              <User className="w-5 h-5 text-blue-600" />
+              <h3 className="text-blue-600 font-semibold text-lg">Clientes</h3>
             </div>
+            
             <div className="relative">
               <input
                 type="text"
-                placeholder="Ingresa aquí el número de documento"
-                value={docSearch}
-                onChange={(e) => setDocSearch(e.target.value)}
-                className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Cliente"
+                value={clientSearchTerm}
+                onChange={(e) => {
+                  setClientSearchTerm(e.target.value);
+                  // Buscar cliente mientras escribe
+                  const cliente = clientes.find(c => 
+                    c.razon_social.toLowerCase().includes(e.target.value.toLowerCase())
+                  );
+                  if (cliente) {
+                    setSelectedClient(cliente);
+                  } else if (!e.target.value) {
+                    setSelectedClient(null);
+                  }
+                }}
+                className="w-full pl-4 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
               />
-              <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5"/>
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             </div>
-          </div>
-
-          <div className="space-y-3">
-            {docsDisponibles.length === 0 ? (
-              <div className="text-center text-gray-500 py-4">No hay documentos disponibles.</div>
-            ) : (
-              docsDisponibles.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="p-4 bg-gray-50 rounded-lg border border-gray-200 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors"
-                  onClick={() => handleSelectDoc(doc)}
+            
+            <ul className="space-y-2 max-h-60 overflow-y-auto">
+              {clientes.filter(c => 
+                c.razon_social.toLowerCase().includes(clientSearchTerm.toLowerCase())
+              ).map(c => (
+                <li key={c.id}
+                  onClick={() => {
+                    setSelectedClient(c);
+                    setClientSearchTerm(c.razon_social);
+                  }}
+                  className={`p-3 border rounded hover:bg-gray-50 cursor-pointer flex justify-between items-center ${
+                    selectedClient?.id === c.id ? 'bg-blue-50 border-blue-200' : 'bg-white'
+                  }`}
                 >
                   <div>
-                    <p className="font-medium text-gray-800 text-sm">{doc.label}</p>
-                    <p className="text-xs text-gray-600">{formatPrice(doc.total)}</p>
+                    <span className="font-medium">{c.razon_social}</span>
+                    <p className="text-xs text-gray-600">{c.rut}</p>
                   </div>
-                  {carrito.some(item => item.id === doc.id) ? (
-                    <Check className="w-5 h-5 text-green-500" />
+                  {selectedClient?.id === c.id ? (
+                    <Check className="w-4 h-4 text-blue-600" />
                   ) : (
-                    <Plus className="w-5 h-5 text-blue-500" />
+                    <Plus className="w-4 h-4 text-blue-600" />
                   )}
-                </div>
-              ))
-            )}
+                </li>
+              ))}
+              {clientes.filter(c => 
+                c.razon_social.toLowerCase().includes(clientSearchTerm.toLowerCase())
+              ).length === 0 && (
+                <li className="text-gray-500 text-center py-4">
+                  {clientSearchTerm ? 'Sin resultados' : 'Aquí aparecerán tus clientes'}
+                </li>
+              )}
+            </ul>
           </div>
         </aside>
       </div>
-
-      {/* Client Modal */}
-      <ClientModal
-        isOpen={showClientModal}
-        onClose={() => setShowClientModal(false)}
-        onClientSelect={handleClientSelect}
-      />
 
       {clientError && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
