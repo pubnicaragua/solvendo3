@@ -40,6 +40,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const [showClientSelection, setShowClientSelection] = useState(false);
   const [showClientModal, setShowClientModal] = useState(false);
   const [clientError, setClientError] = useState(false);
+  const [clientSearchTerm, setClientSearchTerm] = useState('');
 
   const [despachoData, setDespachoData] = useState({
     fecha: new Date().toISOString().split('T')[0], 
