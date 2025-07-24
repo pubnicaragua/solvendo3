@@ -77,13 +77,17 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         { id: '2', nombre: 'Ejemplo producto 2', precio: 68.5, stock: 50 },
         { id: '3', nombre: 'Ejemplo producto 3', precio: 34.5, stock: 75 }
       ]);
-      setDocsDisponibles([
-        { id: 'doc1', label: 'Boleta manual (no válida al SII) N°V17522786664074', total: 35 },
-        { id: 'doc2', label: 'Boleta manual (no válida al SII) N°3421457', total: 34000 },
-        { id: 'doc3', label: 'Factura N°1001', total: 45000 },
-        { id: 'doc4', label: 'Boleta manual (no válida al SII) N°9', total: 204 },
-        { id: 'doc5', label: 'Boleta manual (no válida al SII) N°3421456', total: 22000 }
-      ]);
+      
+      // Solo mostrar documentos si hay cliente seleccionado
+      if (selectedClient) {
+        setDocsDisponibles([
+          { id: 'doc1', label: 'Boleta manual (no válida al SII) N°V17522786664074', total: 35 },
+          { id: 'doc2', label: 'Boleta manual (no válida al SII) N°3421457', total: 34000 },
+          { id: 'doc3', label: 'Factura N°1001', total: 45000 }
+        ]);
+      } else {
+        setDocsDisponibles([]);
+      }
       return;
     }
 
@@ -108,36 +112,33 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           ]);
         }
 
-        // Cargar documentos disponibles
-        const { data: docs, error: docsError } = await supabase
-          .from('ventas')
-          .select('id, folio, tipo_dte, total')
-          .ilike('folio', `%${docSearch}%`)
-          .eq('empresa_id', empresaId)
-          .limit(10);
-        
-        if (!docsError && docs && docs.length > 0) {
-          setDocsDisponibles(
-            docs.map((d: any) => ({
-              id: d.id,
-              label:
-                (d.tipo_dte === 'boleta'
-                  ? 'Boleta manual (no válida al SII)'
-                  : d.tipo_dte) +
-                ' Nº' +
-                d.folio,
-              total: d.total
-            }))
-          );
+        // Cargar documentos disponibles solo si hay cliente seleccionado
+        if (selectedClient) {
+          const { data: docs, error: docsError } = await supabase
+            .from('ventas')
+            .select('id, folio, tipo_dte, total')
+            .eq('empresa_id', empresaId)
+            .eq('cliente_id', selectedClient.id)
+            .limit(10);
+          
+          if (!docsError && docs && docs.length > 0) {
+            setDocsDisponibles(
+              docs.map((d: any) => ({
+                id: d.id,
+                label:
+                  (d.tipo_dte === 'boleta'
+                    ? 'Boleta manual (no válida al SII)'
+                    : d.tipo_dte) +
+                  ' Nº' +
+                  d.folio,
+                total: d.total
+              }))
+            );
+          } else {
+            setDocsDisponibles([]);
+          }
         } else {
-          // Datos de ejemplo si no hay documentos
-          setDocsDisponibles([
-            { id: 'doc1', label: 'Boleta manual (no válida al SII) N°V17522786664074', total: 35 },
-            { id: 'doc2', label: 'Boleta manual (no válida al SII) N°3421457', total: 34000 },
-            { id: 'doc3', label: 'Factura N°1001', total: 45000 },
-            { id: 'doc4', label: 'Boleta manual (no válida al SII) N°9', total: 204 },
-            { id: 'doc5', label: 'Boleta manual (no válida al SII) N°3421456', total: 22000 }
-          ]);
+          setDocsDisponibles([]);
         }
       } catch (error) {
         console.error('Error loading data:', error);
@@ -147,18 +148,12 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           { id: '2', nombre: 'Ejemplo producto 2', precio: 68.5, stock: 50 },
           { id: '3', nombre: 'Ejemplo producto 3', precio: 34.5, stock: 75 }
         ]);
-        setDocsDisponibles([
-          { id: 'doc1', label: 'Boleta manual (no válida al SII) N°V17522786664074', total: 35 },
-          { id: 'doc2', label: 'Boleta manual (no válida al SII) N°3421457', total: 34000 },
-          { id: 'doc3', label: 'Factura N°1001', total: 45000 },
-          { id: 'doc4', label: 'Boleta manual (no válida al SII) N°9', total: 204 },
-          { id: 'doc5', label: 'Boleta manual (no válida al SII) N°3421456', total: 22000 }
-        ]);
+        setDocsDisponibles([]);
       }
     };
 
     fetchProductsAndDocs();
-  }, [empresaId, docSearch, carrito]);
+  }, [empresaId, docSearch, carrito, selectedClient]);
 
   const formatPrice = (n: number) =>
     new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(n);
@@ -197,7 +192,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         const { data: venta, error: ventaError } = await supabase
           .from('ventas')
           .select('id')
-          .eq('folio', doc.folio || doc.id)
+          .eq('id', doc.id)
           .eq('empresa_id', empresaId)
           .single();
 
