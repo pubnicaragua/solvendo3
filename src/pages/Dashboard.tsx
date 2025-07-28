@@ -416,10 +416,14 @@ const Dashboard: React.FC = () => {
                 <span className="text-gray-600 text-sm">
                     N° Líneas {carrito.length} / Tot. ítems {Math.max(0, carrito.reduce((s,i)=>s+Math.max(0, i.quantity||0),0))}
                 </span>
-                <select className="px-2 py-1.5 border rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 w-fit ml-auto">
-                    <option>Boleta manual</option>
-                    <option>Boleta electrónica</option>
-                    <option>Factura electrónica</option>
+                <select 
+                  value={selectedDte}
+                  onChange={(e) => setSelectedDte(e.target.value)}
+                  className="px-2 py-1.5 border rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 w-fit ml-auto"
+                >
+                    <option value="boleta_manual">Boleta manual</option>
+                    <option value="boleta">Boleta electrónica</option>
+                    <option value="factura">Factura electrónica</option>
                 </select>
             </div>
 
@@ -517,10 +521,12 @@ const Dashboard: React.FC = () => {
           <nav className={`flex justify-around items-center h-16 bg-white border-t mt-auto ${showPaymentModal ? 'hidden' : ''}`}>
             {TABS.map(tab => (
               <button
-                key={tab.id as string}
-                onClick={() => setActiveTab(tab.id as TabId)}
-                className={`flex-1 flex flex-col items-center py-3 ${
-                  activeTab === tab.id ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-colors ${
+                  activeTab === tab.id
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }`}
               >
                 {tab.icon}
