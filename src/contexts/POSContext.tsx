@@ -819,7 +819,6 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         .select('*')
         .eq('empresa_id', empresaId)
         .eq('activo', true)
-        .order('nombre', { ascending: true });
 
       if (error) {
         console.error('Error loading promociones', error);
