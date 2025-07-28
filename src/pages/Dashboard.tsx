@@ -557,11 +557,8 @@ const Dashboard: React.FC = () => {
             </div>
             
             <div className="space-y-6">
-              <div className="flex items-center justify-between mb-4">
+              <div className="mb-4">
                 <h4 className="text-lg font-semibold text-gray-900">Facturación</h4>
-                <button onClick={() => setShowPaymentModal(false)} className="text-gray-400 hover:text-gray-600">
-                  <XIcon className="w-6 h-6" />
-                </button>
               </div>
               
               {/* Document Type Selection */}
