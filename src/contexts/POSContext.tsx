@@ -259,7 +259,6 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       console.log('Productos cargados desde Supabase:', data);
       console.log('Error al cargar productos:', error);
-        .order('nombre', { ascending: true });  
   
       if (error) {  
         console.error('Error loading productos', error);  
@@ -812,6 +811,14 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const loadPromociones = useCallback(async () => {  
     if (!empresaId) return;
     setLoading(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('promociones')
+        .select('*')
+        .eq('empresa_id', empresaId)
+        .eq('activo', true)
+        .order('nombre', { ascending: true });
 
       if (error) {
         console.error('Error loading promociones', error);
