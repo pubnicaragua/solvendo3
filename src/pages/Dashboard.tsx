@@ -519,20 +519,6 @@ const Dashboard: React.FC = () => {
           )}
 
           <nav className={`flex justify-around items-center h-16 bg-white border-t mt-auto ${showPaymentModal ? 'hidden' : ''}`}>
-          <nav className={`flex justify-around items-center h-16 bg-white border-t mt-auto mb-4 ${showPaymentModal ? 'hidden' : ''}`}>
-            {TABS.map(tab => (
-              <button
-                key={tab.id as string}
-                onClick={() => setActiveTab(tab.id as TabId)}
-                className={`flex-1 flex flex-col items-center py-3 ${
-                  activeTab === tab.id ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                {tab.icon}
-                <span className="text-xs font-medium">{tab.label}</span>
-              </button>
-            ))}
-          </nav>
         </aside>
 
         {/* Payment Modal Panel */}
