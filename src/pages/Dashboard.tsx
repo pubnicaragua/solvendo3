@@ -70,7 +70,8 @@ const Dashboard: React.FC = () => {
     loadBorradores()
     loadPromociones()
     loadClientes()
-  },[loadBorradores, loadPromociones, loadClientes])
+    loadProductos()
+  },[loadBorradores, loadPromociones, loadClientes, loadProductos])
 
   const fmt = (n:number) =>
     new Intl.NumberFormat('es-CL', { 

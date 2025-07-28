@@ -252,7 +252,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
           </div>
         </div>
 
-        <div className="p-6 border-t border-gray-200 flex gap-4 justify-end flex-shrink-0" style={{ marginBottom: '80px' }}>
+        <div className="p-6 border-t border-gray-200 flex gap-4 justify-end flex-shrink-0" style={{ marginTop: '-20px' }}>
           <button
             onClick={onClose}
             disabled={loading}
