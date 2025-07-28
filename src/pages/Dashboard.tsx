@@ -416,14 +416,10 @@ const Dashboard: React.FC = () => {
                 <span className="text-gray-600 text-sm">
                     N° Líneas {carrito.length} / Tot. ítems {Math.max(0, carrito.reduce((s,i)=>s+Math.max(0, i.quantity||0),0))}
                 </span>
-                <select 
-                  value={selectedDte}
-                  onChange={(e) => setSelectedDte(e.target.value)}
-                  className="px-2 py-1.5 border rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 w-fit ml-auto"
-                >
-                    <option value="boleta_manual">Boleta manual</option>
-                    <option value="boleta">Boleta electrónica</option>
-                    <option value="factura">Factura electrónica</option>
+                <select className="px-2 py-1.5 border rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 w-fit ml-auto">
+                    <option>Boleta manual</option>
+                    <option>Boleta electrónica</option>
+                    <option>Factura electrónica</option>
                 </select>
             </div>
 
@@ -518,7 +514,7 @@ const Dashboard: React.FC = () => {
             />
           )}
 
-          <nav className={`flex justify-around items-center h-16 bg-white border-t mt-auto mb-4 ${showPaymentModal ? 'hidden' : ''}`}>
+          <nav className={`flex justify-around items-center h-16 bg-white border-t mt-auto ${showPaymentModal ? 'hidden' : ''}`}>
             {TABS.map(tab => (
               <button
                 key={tab.id as string}
