@@ -37,7 +37,7 @@ const Dashboard: React.FC = () => {
     addToCart, addToCartWithQuantity, updateQuantity, removeFromCart, clearCart,
     borradores, loadBorradores, saveDraft, loadDraft, deleteDraft, 
     promociones, loadPromociones, aplicarPromocion,
-    currentCliente, selectClient, clientes, loadClientes, procesarVenta
+    currentCliente, selectClient, clientes, loadClientes, procesarVenta, loadProductos
   } = usePOS()
 
   const [activeTab, setActiveTab]         = useState<TabId>('destacado')
