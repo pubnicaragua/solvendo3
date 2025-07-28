@@ -364,7 +364,6 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           {
             empresa_id: empresaId,
             usuario_id: user?.id,
-            usuario_id: user?.id,
             cliente_id: selectedClient.id,
             destinatario: despachoData.destinatario,
             direccion: despachoData.direccion,
