@@ -817,7 +817,6 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const { data, error } = await supabase
         .from('promociones')
         .select('*')
-        .eq('empresa_id', empresaId)
 
       if (error) {
         console.error('Error loading promociones', error);
