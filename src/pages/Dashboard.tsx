@@ -416,15 +416,22 @@ const Dashboard: React.FC = () => {
                 <span className="text-gray-600 text-sm">
                     N° Líneas {carrito.length} / Tot. ítems {Math.max(0, carrito.reduce((s,i)=>s+Math.max(0, i.quantity||0),0))}
                 </span>
-                <select 
-                  value={selectedDte}
-                  onChange={(e) => setSelectedDte(e.target.value)}
-                  className="px-2 py-1.5 border rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 w-fit ml-auto"
-                >
-                    <option value="boleta_manual">Boleta manual</option>
-                    <option value="boleta">Boleta electrónica</option>
-                    <option value="factura">Factura electrónica</option>
-                </select>
+                <div className="relative w-fit ml-auto">
+                  <select 
+                    value={selectedDte}
+                    onChange={(e) => setSelectedDte(e.target.value)}
+                    className="px-3 py-2 border rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 appearance-none pr-8 cursor-pointer"
+                  >
+                      <option value="boleta_manual">Boleta manual</option>
+                      <option value="boleta">Boleta electrónica</option>
+                      <option value="factura">Factura electrónica</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 items-center mb-3">
@@ -518,7 +525,7 @@ const Dashboard: React.FC = () => {
             />
           )}
 
-          <nav className={`flex justify-around items-center h-16 bg-white border-t mt-auto ${showPaymentModal ? 'hidden' : ''}`}>
+          <nav className={`flex justify-around items-center h-16 bg-white border-t mt-auto mb-4 ${showPaymentModal ? 'hidden' : ''}`}>
             {TABS.map(tab => (
               <button
                 key={tab.id}
