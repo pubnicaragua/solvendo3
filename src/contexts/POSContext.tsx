@@ -813,7 +813,6 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!empresaId) return;
     setLoading(true);
     try {
-      // Cargar promociones desde Supabase
 
       if (error) {
         console.error('Error loading promociones', error);
