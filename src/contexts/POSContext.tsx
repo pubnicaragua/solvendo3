@@ -812,7 +812,6 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const loadPromociones = useCallback(async () => {  
     if (!empresaId) return;
     setLoading(true);
-    try {
 
       if (error) {
         console.error('Error loading promociones', error);
