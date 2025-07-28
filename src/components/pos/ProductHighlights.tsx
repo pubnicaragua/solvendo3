@@ -3,9 +3,14 @@ import { Star, DollarSign, Plus, Info } from 'lucide-react';
 import { usePOS } from '../../contexts/POSContext';
 
 export default function ProductHighlights() {
-  const { productos = [], addToCart } = usePOS();
+  const { productos = [], addToCart, loadProductos } = usePOS();
   const [showInfo, setShowInfo] = useState<Record<string, boolean>>({});
   const [showPrice, setShowPrice] = useState<Record<string, boolean>>({});
+
+  // Load products when component mounts
+  React.useEffect(() => {
+    loadProductos()
+  }, [loadProductos])
 
   const destacados = productos.filter(p => p.destacado);
 

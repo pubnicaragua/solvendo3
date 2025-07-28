@@ -9,11 +9,16 @@ interface ProductsPanelProps {
 }  
   
 const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm = '' }) => {  
-  const { productos, loading } = usePOS()  
+  const { productos, loading, loadProductos } = usePOS()  
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [localSearch, setLocalSearch] = useState('')
   const [showPrice, setShowPrice] = useState<Record<string, boolean>>({})
   const [showInfo, setShowInfo] = useState<Record<string, boolean>>({})
+  
+  // Load products when component mounts
+  React.useEffect(() => {
+    loadProductos()
+  }, [loadProductos])
   
   const formatPrice = (price: number) => {  
     return new Intl.NumberFormat('es-CL', {  
