@@ -40,7 +40,7 @@ export default function ClientsPanel({ onClientSelected, clientSearchTerm = '' }
     }
   }, [clientSearchTerm]);
 
-  const filtered = clientes.filter(c =>
+  const filtered = (clientes || []).filter(c =>
     c.razon_social.toLowerCase().includes(search.toLowerCase())
   )
 
@@ -68,9 +68,9 @@ export default function ClientsPanel({ onClientSelected, clientSearchTerm = '' }
       ciudad: form.ciudad
     })
     setLoading(false)
-    if (res.success && res.cliente) {
-      selectClient(res.cliente)
-      onClientSelected()
+    if (res.success && res.data) {
+      selectClient(res.data)
+      onClientSelected(res.data)
     }
   }
 

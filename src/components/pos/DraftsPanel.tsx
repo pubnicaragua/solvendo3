@@ -3,7 +3,13 @@ import React, { useEffect, useState } from 'react'
 import { Search, Check, Trash2 } from 'lucide-react'
 import { usePOS } from '../../contexts/POSContext'
 
-export default function DraftsPanel() {
+interface DraftsPanelProps {
+  borradores?: any[];
+  onLoad?: (id: string) => void;
+  onDelete?: (id: string) => void;
+}
+
+export default function DraftsPanel({ borradores = [], onLoad, onDelete }: DraftsPanelProps) {
   const { borradores = [], loadBorradores, loadDraft, deleteDraft } = usePOS()
   const [search, setSearch] = useState('')
 
@@ -11,7 +17,7 @@ export default function DraftsPanel() {
     loadBorradores()
   }, [loadBorradores])
 
-  const filtered = borradores.filter(d =>
+  const filtered = (borradores || []).filter(d =>
     d.nombre.toLowerCase().includes(search.toLowerCase())
   )
 
@@ -46,14 +52,14 @@ export default function DraftsPanel() {
             </span>
             <div className="flex items-center space-x-2">
               <button
-                onClick={() => loadDraft(d.id)}
+                onClick={() => onLoad ? onLoad(d.id) : loadDraft(d.id)}
                 className="text-green-600 p-1 hover:bg-green-50 rounded"
                 title="Cargar"
               >
                 <Check className="w-4 h-4" />
               </button>
               <button
-                onClick={() => deleteDraft(d.id)}
+                onClick={() => onDelete ? onDelete(d.id) : deleteDraft(d.id)}
                 className="text-red-600 p-1 hover:bg-red-50 rounded"
                 title="Eliminar"
               >
