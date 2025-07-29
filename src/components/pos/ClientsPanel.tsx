@@ -56,8 +56,6 @@ export default function ClientsPanel({ onClientSelected, clientSearchTerm = '' }
     }
     setLoading(true)
     const res = await crearCliente({
-      tipo_cliente: form.tipo,
-      cliente_extranjero: form.extranjero==='Sí',
       rut: form.rut,
       razon_social: form.razon_social,
       giro: form.giro,
@@ -69,6 +67,19 @@ export default function ClientsPanel({ onClientSelected, clientSearchTerm = '' }
     })
     setLoading(false)
     if (res.success && res.data) {
+      setIsCreating(false)
+      setForm({
+        tipo: 'Persona',
+        extranjero: 'No',
+        rut: '',
+        razon_social: '',
+        giro: '',
+        nombres: '',
+        apellidos: '',
+        direccion: '',
+        comuna: '',
+        ciudad: ''
+      })
       selectClient(res.data)
       onClientSelected(res.data)
     }

@@ -255,10 +255,8 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         .select('*')  
         .eq('empresa_id', empresaId)  
         .eq('activo', true)
+        .eq('activo', true)
         .order('nombre', { ascending: true });
-
-      console.log('Productos cargados desde Supabase:', data);
-      console.log('Error al cargar productos:', error);
   
       if (error) {  
         console.error('Error loading productos', error);  
@@ -270,7 +268,6 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           precio: validatePositiveNumber(p.precio),
           stock: validatePositiveNumber(p.stock || 0)
         }));
-        console.log('Productos procesados:', productosConPreciosCorrectos);
         setProductos(productosConPreciosCorrectos);  
       }  
     } catch (error) {  

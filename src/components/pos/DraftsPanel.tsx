@@ -10,14 +10,15 @@ interface DraftsPanelProps {
 }
 
 export default function DraftsPanel({ borradores = [], onLoad, onDelete }: DraftsPanelProps) {
-  const { borradores = [], loadBorradores, loadDraft, deleteDraft } = usePOS()
+  const { borradores: contextBorradores, loadBorradores, loadDraft, deleteDraft } = usePOS()
   const [search, setSearch] = useState('')
 
   useEffect(() => {
     loadBorradores()
   }, [loadBorradores])
 
-  const filtered = (borradores || []).filter(d =>
+  const draftsToUse = borradores.length > 0 ? borradores : (contextBorradores || [])
+  const filtered = draftsToUse.filter(d =>
     d.nombre.toLowerCase().includes(search.toLowerCase())
   )
 
