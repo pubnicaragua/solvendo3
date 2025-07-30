@@ -146,53 +146,55 @@ export const ClientModal: React.FC<ClientModalProps> = ({
             {/* Campos condicionales */}
             {clientType === 'empresa' ? (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Razón Social *</label>
-                    <input
-                      type="text"
-                      value={newClient.razon_social}
-                      onChange={(e) => setNewClient(prev => ({ ...prev, razon_social: e.target.value }))}
-                      placeholder="Razón Social o Nombre de Empresa"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Giro</label>
-                    <input
-                      type="text"
-                      value={newClient.giro}
-                      onChange={(e) => setNewClient(prev => ({ ...prev, giro: e.target.value }))}
-                      placeholder="Giro comercial"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Razón Social *</label>
+                  <input
+                    type="text"
+                    value={newClient.razon_social}
+                    onChange={(e) => setNewClient(prev => ({ ...prev, razon_social: e.target.value }))}
+                    placeholder="Razón Social o Nombre de Empresa"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Giro</label>
+                  <input
+                    type="text"
+                    value={newClient.giro}
+                    onChange={(e) => setNewClient(prev => ({ ...prev, giro: e.target.value }))}
+                    placeholder="Giro comercial"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
                 </div>
               </>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombres *</label>
-                    <input
-                      type="text"
-                      value={newClient.nombres}
-                      onChange={(e) => setNewClient(prev => ({ ...prev, nombres: e.target.value }))}
-                      placeholder="Nombres de la persona"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Apellidos *</label>
-                    <input
-                      type="text"
-                      value={newClient.apellidos}
-                      onChange={(e) => setNewClient(prev => ({ ...prev, apellidos: e.target.value }))}
-                      placeholder="Apellidos de la persona"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombres *</label>
+                  <input
+                    type="text"
+                    value={newClient.nombres}
+                    onChange={(e) => setNewClient(prev => ({ ...prev, nombres: e.target.value }))}
+                    placeholder="Nombres de la persona"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Apellidos *</label>
+                  <input
+                    type="text"
+                    value={newClient.apellidos}
+                    onChange={(e) => setNewClient(prev => ({ ...prev, apellidos: e.target.value }))}
+                    placeholder="Apellidos de la persona"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                {/* Para personas, usar nombres + apellidos como razón social */}
+                <input
+                  type="hidden"
+                  value={`${newClient.nombres} ${newClient.apellidos}`.trim()}
+                  onChange={(e) => setNewClient(prev => ({ ...prev, razon_social: e.target.value }))}
+                />
                 
               </>
             )}
@@ -240,14 +242,14 @@ export const ClientModal: React.FC<ClientModalProps> = ({
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+            className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handleCreateClient}
             disabled={loading || (clientType === 'empresa' && (!newClient.razon_social || !newClient.rut)) || (clientType === 'persona' && (!newClient.nombres || !newClient.apellidos || !newClient.rut))}
-            className="px-8 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Guardando...' : 'Guardar cliente'}
           </button>

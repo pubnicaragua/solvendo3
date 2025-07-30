@@ -56,14 +56,21 @@ const Dashboard: React.FC = () => {
   const [selectedTerminal, setSelectedTerminal] = useState<string>('terminal_principal')
   const [selectedClient, setSelectedClient] = useState<any>(null)
   const [montoRecibido, setMontoRecibido] = useState<number>(0)
-  const [descuentoGlobal, setDescuentoGlobal] = useState<number>(0)
+  const [descuentosEnabled, setDescuentosEnabled] = useState<boolean>(false)
+  const [descuentoPorcentaje, setDescuentoPorcentaje] = useState<number>(0)
+  const [cuponCodigo, setCuponCodigo] = useState<string>('')
+  const [cuponDescuento, setCuponDescuento] = useState<number>(0)
+  const [cuponValido, setCuponValido] = useState<boolean>(false)
   const [enviarSII, setEnviarSII] = useState(false)
   const [loading, setLoading] = useState(false)
   
   // Estados para opciones de entrega
   const [despacho, setDespacho] = useState(false)
-  const [documentos, setDocumentos] = useState(false)
   const [cupon, setCupon] = useState(false)
+  
+  // Estados para búsquedas separadas
+  const [productSearchTerm, setProductSearchTerm] = useState('')
+  const [clientSearchTermMain, setClientSearchTermMain] = useState('')
 
   useEffect(() => {
     loadBorradores()
@@ -359,13 +366,61 @@ const Dashboard: React.FC = () => {
   )
   
   // Solo mostrar productos si hay término de búsqueda
-  const shouldShowProducts = searchTerm.length > 0
+  const shouldShowProducts = productSearchTerm.length > 0
 
   // Calcular total con descuento
-  const totalConDescuento = selectedMethod === 'efectivo' 
-    ? Math.round(total * (1 - (descuentoGlobal / 100)))
-    : total * (1 - (descuentoGlobal / 100))
+  let totalConDescuento = total
+  
+  if (descuentosEnabled && descuentoPorcentaje > 0) {
+    totalConDescuento = total * (1 - (descuentoPorcentaje / 100))
+  }
+  
+  if (cuponValido && cuponDescuento > 0) {
+    totalConDescuento = totalConDescuento - cuponDescuento
+  }
+  
+  // Solo redondear cuando es efectivo
+  if (selectedMethod === 'efectivo') {
+    totalConDescuento = Math.round(totalConDescuento)
+  }
+  
   const vuelto = selectedMethod === 'efectivo' ? Math.max(0, montoRecibido - totalConDescuento) : 0
+
+  // Validar cupón
+  const validarCupon = async (codigo: string) => {
+    if (!codigo.trim()) {
+      setCuponValido(false)
+      setCuponDescuento(0)
+      return
+    }
+    
+    // Simular validación de cupón
+    const cuponesValidos = {
+      'DESC10': 1000,
+      'SAVE20': 2000,
+      'PROMO15': 1500
+    }
+    
+    if (cuponesValidos[codigo.toUpperCase()]) {
+      setCuponValido(true)
+      setCuponDescuento(cuponesValidos[codigo.toUpperCase()])
+      toast.success(`Cupón aplicado: $${cuponesValidos[codigo.toUpperCase()]} de descuento`)
+    } else {
+      setCuponValido(false)
+      setCuponDescuento(0)
+      toast.error('Cupón no válido')
+    }
+  }
+
+  // Buscar clientes
+  const buscarClientes = (termino: string) => {
+    if (!termino.trim()) return []
+    
+    return clientes.filter(cliente => 
+      cliente.razon_social.toLowerCase().includes(termino.toLowerCase()) ||
+      cliente.rut?.toLowerCase().includes(termino.toLowerCase())
+    )
+  }
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -384,9 +439,9 @@ const Dashboard: React.FC = () => {
             <input
               type="text"
               placeholder="Buscar productos..."
-              value={searchTerm}
+              value={productSearchTerm}
               onChange={e => {
-                setSearchTerm(e.target.value)
+                setProductSearchTerm(e.target.value)
                 setShowSearchResults(e.target.value.length > 0)
               }}
               className="w-full pl-12 pr-4 py-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500"
@@ -419,7 +474,9 @@ const Dashboard: React.FC = () => {
             ))}
             
             {/* Mostrar productos filtrados para agregar */}
-            {shouldShowProducts && filteredProducts.map(p => {
+            {shouldShowProducts && productos.filter(p =>
+              p.nombre.toLowerCase().includes(productSearchTerm.toLowerCase())
+            ).map(p => {
               const item = carrito.find(i=>i.id===p.id)
               if (item) return null // No mostrar si ya está en el carrito
               return (
@@ -471,16 +528,25 @@ const Dashboard: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-4 items-center mb-3">
-                <div className="relative">
-                    <input
-                        type="text"
-                        placeholder="Cliente"
-                        value={currentCliente ? `${currentCliente.nombre} ${currentCliente.apellidos}` : clientSearchTerm}
-                        onChange={e=>setClientSearchTerm(e.target.value)}
-                        className="w-full pl-4 pr-10 py-2 border rounded-lg bg-gray-100 focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
-                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                </div>
+              <div className="relative flex-grow min-w-[180px] max-w-[250px]">
+                <input
+                  type="text"
+                  placeholder="Buscar cliente"
+                  value={clientSearchTermMain}
+                  onChange={e => {
+                    setClientSearchTermMain(e.target.value)
+                    // Buscar y seleccionar cliente automáticamente
+                    const clientesEncontrados = buscarClientes(e.target.value)
+                    if (clientesEncontrados.length === 1) {
+                      selectClient(clientesEncontrados[0])
+                    } else if (e.target.value === '') {
+                      selectClient(null)
+                    }
+                  }}
+                  className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4"/>
+              </div>
                 <div className="flex items-center justify-end">
                     <span className="text-lg font-semibold mr-2">Total</span>
                     <div className="bg-gray-100 p-2 rounded-lg text-right min-w-[100px]">
@@ -550,14 +616,14 @@ const Dashboard: React.FC = () => {
               )}
             </div>
           )}
-          {activeTab==='productos' && <ProductsPanel onAddToCart={addToCart} searchTerm={searchTerm} />}
+          {activeTab==='productos' && <ProductsPanel onAddToCart={addToCart} searchTerm={productSearchTerm} />}
           {activeTab==='clientes' && (
             <ClientsPanel 
               onClientSelected={(cliente) => {
                 selectClient(cliente);
-                setClientSearchTerm(cliente ? cliente.razon_social : '');
+                setClientSearchTermMain(cliente ? cliente.razon_social : '');
               }} 
-              clientSearchTerm={clientSearchTerm} 
+              clientSearchTerm="" 
             />
           )}
 
@@ -606,16 +672,15 @@ const Dashboard: React.FC = () => {
                     onChange={(e) => setSelectedDte(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="boleta_manual">Boleta manual</option>
+                    <option value="boleta">Boleta manual</option>
                     <option value="boleta">Boleta electrónica</option>
                     <option value="factura">Factura electrónica</option>
                   </select>
                 </div>
                 
                 <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2">
-                    <Package className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm text-blue-600">Entrega inmediata</span>
+                  <div className="text-sm text-gray-600">
+                    ✓ Entrega inmediata
                   </div>
                   <div className="flex items-center gap-2">
                     <Truck 
@@ -626,18 +691,25 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Descuento Global */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Descuento global (%)</label>
-                  <input
-                    type="number"
-                    value={descuentoGlobal}
-                    onChange={(e) => setDescuentoGlobal(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    min="0"
-                    max="100"
-                    step="0.1"
-                  />
+                {/* Descuentos */}
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={descuentosEnabled}
+                      onChange={() => setDescuentosEnabled(!descuentosEnabled)}
+                      className="rounded border-gray-300 text-blue-600"
+                    />
+                    <Percent className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm">Descuentos</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Plus 
+                      className={`w-4 h-4 ${cupon ? 'text-blue-600' : 'text-gray-400'} cursor-pointer`}
+                      onClick={() => setCupon(!cupon)}
+                    />
+                    <span className={`text-sm ${cupon ? 'text-blue-600' : 'text-gray-600'} cursor-pointer`} onClick={() => setCupon(!cupon)}>Agregar cupón</span>
+                  </div>
                 </div>
 
                 {/* Selección de Cliente para Factura */}
@@ -687,51 +759,17 @@ const Dashboard: React.FC = () => {
                   </div>
                 )}
 
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={documentos}
-                      onChange={() => setDocumentos(!documentos)}
-                      className="rounded border-gray-300 text-blue-600"
-                    />
-                    <Percent className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm">Descuentos</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Plus 
-                      className={`w-4 h-4 ${cupon ? 'text-blue-600' : 'text-gray-400'} cursor-pointer`}
-                      onClick={() => setCupon(!cupon)}
-                    />
-                    <span className={`text-sm ${cupon ? 'text-blue-600' : 'text-gray-600'} cursor-pointer`} onClick={() => setCupon(!cupon)}>Agregar cupón</span>
-                  </div>
-                </div>
                 
                 {/* Conditional sections */}
-                {despacho && (
-                  <div className="mt-4 p-3 bg-green-50 rounded-lg">
-                    <h5 className="text-sm font-medium text-green-800 mb-2">Configuración de Despacho</h5>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="text"
-                        placeholder="Dirección de entrega"
-                        className="px-3 py-2 border border-green-300 rounded-lg text-sm"
-                      />
-                      <input
-                        type="date"
-                        className="px-3 py-2 border border-green-300 rounded-lg text-sm"
-                      />
-                    </div>
-                  </div>
-                )}
-                
-                {documentos && (
+                {descuentosEnabled && (
                   <div className="mt-4 p-3 bg-purple-50 rounded-lg">
                     <h5 className="text-sm font-medium text-purple-800 mb-2">Descuentos</h5>
                     <div className="space-y-2">
                       <input
                         type="number"
                         placeholder="Porcentaje de descuento"
+                        value={descuentoPorcentaje || ''}
+                        onChange={(e) => setDescuentoPorcentaje(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
                         className="w-full px-3 py-2 border border-purple-300 rounded-lg text-sm"
                         min="0"
                         max="100"
@@ -747,11 +785,38 @@ const Dashboard: React.FC = () => {
                       <input
                         type="text"
                         placeholder="Código del cupón"
+                        value={cuponCodigo}
+                        onChange={(e) => setCuponCodigo(e.target.value.toUpperCase())}
                         className="flex-1 px-3 py-2 border border-orange-300 rounded-lg text-sm"
                       />
-                      <button className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-700">
+                      <button 
+                        onClick={() => validarCupon(cuponCodigo)}
+                        className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-700"
+                      >
                         Aplicar
                       </button>
+                    </div>
+                    {cuponValido && (
+                      <div className="mt-2 text-sm text-green-600">
+                        ✓ Cupón válido: ${cuponDescuento} de descuento
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {despacho && (
+                  <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                    <h5 className="text-sm font-medium text-green-800 mb-2">Configuración de Despacho</h5>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Dirección de entrega"
+                        className="px-3 py-2 border border-green-300 rounded-lg text-sm"
+                      />
+                      <input
+                        type="date"
+                        className="px-3 py-2 border border-green-300 rounded-lg text-sm"
+                      />
                     </div>
                   </div>
                 )}
@@ -808,7 +873,8 @@ const Dashboard: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Monto recibido</label>
                     <input
                       type="number"
-                      value={montoRecibido === 0 ? '' : montoRecibido}
+                      value={montoRecibido || ''}
+                      placeholder="Ingrese el monto recibido"
                       onChange={(e) => {
                         const value = e.target.value;
                         if (value === '') {
@@ -817,7 +883,6 @@ const Dashboard: React.FC = () => {
                           setMontoRecibido(Math.max(0, parseFloat(value) || 0));
                         }
                       }}
-                      placeholder="Ingrese el monto recibido"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                       min="0"
                       step="1"
@@ -833,17 +898,23 @@ const Dashboard: React.FC = () => {
                     <span className="text-sm">Total a pagar</span>
                     <span className="font-semibold">{fmt(totalConDescuento)}</span>
                   </div>
-                  {descuentoGlobal > 0 && (
+                  {(descuentosEnabled && descuentoPorcentaje > 0) && (
                     <>
                       <div className="flex justify-between">
                         <span className="text-sm">Subtotal</span>
                         <span>{fmt(total)}</span>
                       </div>
                       <div className="flex justify-between text-red-600">
-                        <span className="text-sm">Descuento ({descuentoGlobal}%)</span>
-                        <span>-{fmt(total * (descuentoGlobal / 100))}</span>
+                        <span className="text-sm">Descuento ({descuentoPorcentaje}%)</span>
+                        <span>-{fmt(total * (descuentoPorcentaje / 100))}</span>
                       </div>
                     </>
+                  )}
+                  {cuponValido && cuponDescuento > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span className="text-sm">Cupón ({cuponCodigo})</span>
+                      <span>-{fmt(cuponDescuento)}</span>
+                    </div>
                   )}
                   {selectedMethod === 'efectivo' && (
                     <>
@@ -899,11 +970,21 @@ const Dashboard: React.FC = () => {
                 <input
                   type="email"
                   placeholder="Email"
+                  id="emailInput"
                   defaultValue={selectedClient?.email || ''}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
-                  onClick={() => toast.success('Documento enviado por email')}
+                  onClick={() => {
+                    const emailInput = document.getElementById('emailInput') as HTMLInputElement
+                    const email = emailInput?.value
+                    if (email && email.includes('@')) {
+                      // Simular envío de email
+                      toast.success(`Documento enviado a ${email}`)
+                    } else {
+                      toast.error('Ingrese un email válido')
+                    }
+                  }}
                   className="bg-blue-600 text-white px-4 py-2 rounded-r-lg hover:bg-blue-700"
                 >
                   Enviar
