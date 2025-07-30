@@ -56,15 +56,14 @@ const Dashboard: React.FC = () => {
   const [selectedTerminal, setSelectedTerminal] = useState<string>('terminal_principal')
   const [selectedClient, setSelectedClient] = useState<any>(null)
   const [montoRecibido, setMontoRecibido] = useState<number>(0)
+  const [descuentoGlobal, setDescuentoGlobal] = useState<number>(0)
   const [enviarSII, setEnviarSII] = useState(false)
   const [loading, setLoading] = useState(false)
   
   // Estados para opciones de entrega
-  const [envioInmediato, setEnvioInmediato] = useState(true)
   const [despacho, setDespacho] = useState(false)
   const [documentos, setDocumentos] = useState(false)
   const [cupon, setCupon] = useState(false)
-  const [descuentos, setDescuentos] = useState(false)
 
   useEffect(() => {
     loadBorradores()
@@ -128,6 +127,18 @@ const Dashboard: React.FC = () => {
       return
     }
 
+    // Validar cliente para factura electrónica
+    if (selectedDte === 'factura' && !selectedClient) {
+      toast.error('Debe seleccionar un cliente para factura electrónica')
+      return
+    }
+
+    // Validar monto recibido para efectivo
+    if (selectedMethod === 'efectivo' && montoRecibido < totalConDescuento) {
+      toast.error('El monto recibido debe ser mayor o igual al total')
+      return
+    }
+
     setLoading(true)
     
     try {
@@ -139,11 +150,23 @@ const Dashboard: React.FC = () => {
         setShowPaymentModal(false)
         setShowPrintDialog(true)
       } else {
-        toast.error(result.error || 'Error al procesar la venta')
+        let errorMessage = 'Error al procesar la venta'
+        if (result.error) {
+          if (result.error.includes('caja')) {
+            errorMessage = 'La caja está cerrada. Debe abrir la caja para procesar ventas.'
+          } else if (result.error.includes('cliente')) {
+            errorMessage = 'Debe seleccionar un cliente válido para este tipo de documento.'
+          } else if (result.error.includes('stock')) {
+            errorMessage = 'No hay suficiente stock para algunos productos.'
+          } else {
+            errorMessage = result.error
+          }
+        }
+        toast.error(errorMessage)
       }
     } catch (error) {
       console.error('Error processing payment:', error)
-      toast.error('Error al procesar el pago')
+      toast.error('Error inesperado al procesar el pago. Intente nuevamente.')
     } finally {
       setLoading(false)
     }
@@ -252,13 +275,19 @@ const Dashboard: React.FC = () => {
         <span>Subtotal:</span>
         <span>${fmt(total)}</span>
       </div>
+      ${descuentoGlobal > 0 ? `
+        <div class="total-line" style="color: red;">
+          <span>Descuento (${descuentoGlobal}%):</span>
+          <span>-${fmt(total * (descuentoGlobal / 100))}</span>
+        </div>
+      ` : ''}
       <div class="total-line">
         <span>Descuentos:</span>
         <span>$0</span>
       </div>
       <div class="total-line grand-total">
         <span>TOTAL:</span>
-        <span>${fmt(total)}</span>
+        <span>${fmt(totalConDescuento)}</span>
       </div>
       ${selectedMethod === 'efectivo' ? `
         <div class="total-line">
@@ -267,7 +296,7 @@ const Dashboard: React.FC = () => {
         </div>
         <div class="total-line">
           <span>Vuelto:</span>
-          <span>${fmt(Math.max(0, montoRecibido - total))}</span>
+          <span>${fmt(vuelto)}</span>
         </div>
       ` : ''}
     </div>
@@ -331,6 +360,10 @@ const Dashboard: React.FC = () => {
   
   // Solo mostrar productos si hay término de búsqueda
   const shouldShowProducts = searchTerm.length > 0
+
+  // Calcular total con descuento
+  const totalConDescuento = total * (1 - (descuentoGlobal / 100))
+  const vuelto = selectedMethod === 'efectivo' ? Math.max(0, montoRecibido - totalConDescuento) : 0
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -579,14 +612,8 @@ const Dashboard: React.FC = () => {
                 
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-2">
-                    <div 
-                      className={`w-4 h-4 ${envioInmediato ? 'bg-blue-600' : 'border border-gray-300'} rounded-full flex items-center justify-center cursor-pointer`}
-                      onClick={() => setEnvioInmediato(!envioInmediato)}
-                    >
-                      {envioInmediato && <div className="w-2 h-2 bg-white rounded-full"></div>}
-                    </div>
                     <Package className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm">Entrega inmediata</span>
+                    <span className="text-sm text-blue-600">Entrega inmediata</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Truck 
@@ -597,6 +624,67 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
                 
+                {/* Descuento Global */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Descuento global (%)</label>
+                  <input
+                    type="number"
+                    value={descuentoGlobal}
+                    onChange={(e) => setDescuentoGlobal(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                  />
+                </div>
+
+                {/* Selección de Cliente para Factura */}
+                {selectedDte === 'factura' && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Cliente (requerido)</label>
+                    {selectedClient ? (
+                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-blue-900">
+                              {selectedClient.razon_social}
+                            </p>
+                            <p className="text-xs text-blue-700">RUT: {selectedClient.rut}</p>
+                          </div>
+                          <button
+                            onClick={() => setSelectedClient(null)}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            Cambiar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <select
+                          onChange={(e) => {
+                            const clienteId = e.target.value;
+                            if (clienteId) {
+                              const cliente = clientes.find(c => c.id === clienteId);
+                              if (cliente) {
+                                setSelectedClient(cliente);
+                              }
+                            }
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        >
+                          <option value="">Seleccionar cliente existente</option>
+                          {clientes.map(cliente => (
+                            <option key={cliente.id} value={cliente.id}>
+                              {cliente.razon_social} - {cliente.rut}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-2">
                     <input
@@ -618,17 +706,6 @@ const Dashboard: React.FC = () => {
                 </div>
                 
                 {/* Conditional sections */}
-                {envioInmediato && (
-                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                    <h5 className="text-sm font-medium text-blue-800 mb-2">Configuración de Entrega Inmediata</h5>
-                    <input
-                      type="text"
-                      placeholder="Instrucciones especiales"
-                      className="w-full px-3 py-2 border border-blue-300 rounded-lg text-sm"
-                    />
-                  </div>
-                )}
-                
                 {despacho && (
                   <div className="mt-4 p-3 bg-green-50 rounded-lg">
                     <h5 className="text-sm font-medium text-green-800 mb-2">Configuración de Despacho</h5>
@@ -729,8 +806,16 @@ const Dashboard: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Monto recibido</label>
                     <input
                       type="number"
-                      value={montoRecibido}
-                      onChange={(e) => setMontoRecibido(Math.max(0, parseFloat(e.target.value) || 0))}
+                      value={montoRecibido === 0 ? '' : montoRecibido}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '') {
+                          setMontoRecibido(0);
+                        } else {
+                          setMontoRecibido(Math.max(0, parseFloat(value) || 0));
+                        }
+                      }}
+                      placeholder="Ingrese el monto recibido"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                       min="0"
                       step="1"
@@ -744,8 +829,20 @@ const Dashboard: React.FC = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm">Total a pagar</span>
-                    <span className="font-semibold">{fmt(total)}</span>
+                    <span className="font-semibold">{fmt(totalConDescuento)}</span>
                   </div>
+                  {descuentoGlobal > 0 && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Subtotal</span>
+                        <span>{fmt(total)}</span>
+                      </div>
+                      <div className="flex justify-between text-red-600">
+                        <span className="text-sm">Descuento ({descuentoGlobal}%)</span>
+                        <span>-{fmt(total * (descuentoGlobal / 100))}</span>
+                      </div>
+                    </>
+                  )}
                   {selectedMethod === 'efectivo' && (
                     <>
                       <div className="flex justify-between">
@@ -754,7 +851,7 @@ const Dashboard: React.FC = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm">Vuelto</span>
-                        <span>{fmt(Math.max(0, montoRecibido - total))}</span>
+                        <span>{fmt(vuelto)}</span>
                       </div>
                     </>
                   )}
@@ -764,7 +861,7 @@ const Dashboard: React.FC = () => {
               {/* Action Button */}
               <button
                 onClick={handlePaymentComplete}
-                disabled={loading || carrito.length === 0 || (selectedMethod === 'efectivo' && montoRecibido < total)}
+                disabled={loading || carrito.length === 0 || (selectedMethod === 'efectivo' && montoRecibido < totalConDescuento) || (selectedDte === 'factura' && !selectedClient)}
                 className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? 'Procesando...' : 'Confirmar pago'}

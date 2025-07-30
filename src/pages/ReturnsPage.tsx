@@ -51,6 +51,11 @@ export const ReturnsPage: React.FC = () => {
     tipoReembolso: 'efectivo',
     cuentaTarjeta: ''
   });
+  const [tipoReembolsoData, setTipoReembolsoData] = useState({
+    tipoCuenta: '',
+    numeroCuenta: '',
+    nombreBanco: ''
+  })
   const [showMotivoInput, setShowMotivoInput] = useState(false);
   const [motivoDevolucion, setMotivoDevolucion] = useState('');
   const [showBoletaModal, setShowBoletaModal] = useState(false);
@@ -594,17 +599,12 @@ export const ReturnsPage: React.FC = () => {
                 <input
                   type="text"
                   value={clienteDevolucion.rut}
-                  onChange={(e) => {
-                    setClienteDevolucion(prev => ({ ...prev, cuentaTarjeta: e.target.value }));
-                    setShowMotivoInput(true);
-                  }}
+                  onChange={(e) => setClienteDevolucion(prev => ({ ...prev, rut: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   placeholder="12.345.678-9"
                 />
               </div>
               
-            
-            {showMotivoInput && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Motivo de devolución *</label>
                 <textarea
@@ -614,7 +614,7 @@ export const ReturnsPage: React.FC = () => {
                   placeholder="Ingrese el motivo de la devolución..."
                 />
               </div>
-            )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Correo electrónico *</label>
                 <div className="flex items-center gap-2">
@@ -645,15 +645,48 @@ export const ReturnsPage: React.FC = () => {
               </div>
               
               {clienteDevolucion.tipoReembolso === 'bancario' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Cuenta/Tarjeta *</label>
-                  <input
-                    type="text"
-                    value={clienteDevolucion.cuentaTarjeta}
-                    onChange={(e) => setClienteDevolucion(prev => ({ ...prev, cuentaTarjeta: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Número de cuenta o tarjeta"
-                  />
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de cuenta *</label>
+                    <select
+                      value={tipoReembolsoData.tipoCuenta}
+                      onChange={(e) => setTipoReembolsoData(prev => ({ ...prev, tipoCuenta: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    >
+                      <option value="">Seleccionar tipo</option>
+                      <option value="corriente">Cuenta Corriente</option>
+                      <option value="ahorro">Cuenta de Ahorro</option>
+                      <option value="vista">Cuenta Vista</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Número de cuenta *</label>
+                    <input
+                      type="text"
+                      value={tipoReembolsoData.numeroCuenta}
+                      onChange={(e) => setTipoReembolsoData(prev => ({ ...prev, numeroCuenta: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Número de cuenta"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del banco *</label>
+                    <select
+                      value={tipoReembolsoData.nombreBanco}
+                      onChange={(e) => setTipoReembolsoData(prev => ({ ...prev, nombreBanco: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    >
+                      <option value="">Seleccionar banco</option>
+                      <option value="banco_chile">Banco de Chile</option>
+                      <option value="banco_estado">Banco Estado</option>
+                      <option value="santander">Santander</option>
+                      <option value="bci">BCI</option>
+                      <option value="scotiabank">Scotiabank</option>
+                      <option value="itau">Itaú</option>
+                      <option value="security">Security</option>
+                      <option value="falabella">Falabella</option>
+                    </select>
+                  </div>
                 </div>
               )}
             </div>

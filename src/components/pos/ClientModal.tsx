@@ -95,14 +95,6 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                   checked={clientType === 'empresa'}
                   onChange={(e) => {
                     setClientType(e.target.value as 'empresa');
-                    setNewClient(prev => ({
-                        ...prev,
-                        nombres: '', // Limpiar campos de persona
-                        apellidos: '',
-                        // Opcional: limpiar campos de empresa si se asume que no persisten
-                        // razon_social: '', 
-                        // giro: '', 
-                    }));
                   }}
                   className="text-blue-600"
                 />
@@ -116,14 +108,6 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                   checked={clientType === 'persona'}
                   onChange={(e) => {
                     setClientType(e.target.value as 'persona');
-                    setNewClient(prev => ({
-                        ...prev,
-                        razon_social: '', // Limpiar campos de empresa
-                        giro: '',
-                        // Opcional: limpiar campos de persona si se asume que no persisten
-                        // nombres: '', 
-                        // apellidos: '',
-                    }));
                   }}
                   className="text-blue-600"
                 />
@@ -133,14 +117,14 @@ export const ClientModal: React.FC<ClientModalProps> = ({
           </div>
 
           {/* Campos del formulario */}
-          <div className="space-y-4 mb-6">
+          <div className="grid grid-cols-1 gap-4 mb-6">
             {/* Cliente Extranjero */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Cliente Extranjero</label>
               <select 
                 value={newClient.clienteExtranjero}
                 onChange={(e) => setNewClient(prev => ({ ...prev, clienteExtranjero: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="No">No</option>
                 <option value="Sí">Sí</option>
@@ -155,14 +139,14 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                 value={newClient.rut}
                 onChange={(e) => setNewClient(prev => ({ ...prev, rut: e.target.value }))}
                 placeholder="Ej: 12.345.678-9"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             
             {/* Campos condicionales */}
             {clientType === 'empresa' ? (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Razón Social *</label>
                     <input
@@ -170,7 +154,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                       value={newClient.razon_social}
                       onChange={(e) => setNewClient(prev => ({ ...prev, razon_social: e.target.value }))}
                       placeholder="Razón Social o Nombre de Empresa"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -180,14 +164,14 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                       value={newClient.giro}
                       onChange={(e) => setNewClient(prev => ({ ...prev, giro: e.target.value }))}
                       placeholder="Giro comercial"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                 </div>
               </>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Nombres *</label>
                     <input
@@ -195,7 +179,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                       value={newClient.nombres}
                       onChange={(e) => setNewClient(prev => ({ ...prev, nombres: e.target.value }))}
                       placeholder="Nombres de la persona"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -205,7 +189,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                       value={newClient.apellidos}
                       onChange={(e) => setNewClient(prev => ({ ...prev, apellidos: e.target.value }))}
                       placeholder="Apellidos de la persona"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -214,7 +198,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
             )}
 
             {/* Teléfono y Email */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
                 <input
@@ -222,7 +206,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                   value={newClient.telefono}
                   onChange={(e) => setNewClient(prev => ({ ...prev, telefono: e.target.value }))}
                   placeholder="Ej: +56912345678"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <div>
@@ -232,7 +216,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                   value={newClient.email}
                   onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))}
                   placeholder="Ej: correo@ejemplo.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -245,25 +229,25 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                 value={newClient.direccion}
                 onChange={(e) => setNewClient(prev => ({ ...prev, direccion: e.target.value }))}
                 placeholder="Dirección completa"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             
           </div>
         </div>
 
-        <div className="p-6 border-t border-gray-200 flex gap-4 justify-end flex-shrink-0" style={{ marginTop: '-20px' }}>
+        <div className="p-6 border-t border-gray-200 flex gap-4 justify-end flex-shrink-0">
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-8 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+            className="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handleCreateClient}
             disabled={loading || (clientType === 'empresa' && (!newClient.razon_social || !newClient.rut)) || (clientType === 'persona' && (!newClient.nombres || !newClient.apellidos || !newClient.rut))}
-            className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-8 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Guardando...' : 'Guardar cliente'}
           </button>
