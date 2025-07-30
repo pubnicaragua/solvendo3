@@ -70,7 +70,6 @@ export const LoginPage: React.FC = () => {
             onFocus={() => setEmailFocused(true)}
             onBlur={() => setEmailFocused(false)}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base peer"
-            placeholder=" "
           />
           <label
             htmlFor="email"
@@ -92,7 +91,6 @@ export const LoginPage: React.FC = () => {
             onFocus={() => setPasswordFocused(true)}
             onBlur={() => setPasswordFocused(false)}
             className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-lg bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base peer"
-            placeholder=" "
           />
           <label
             htmlFor="password"

@@ -63,6 +63,7 @@ const Dashboard: React.FC = () => {
   const [cuponValido, setCuponValido] = useState<boolean>(false)
   const [enviarSII, setEnviarSII] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [despacho, setDespacho] = useState(false)
   
   // Estados para opciones de entrega
   const [tipoEntrega, setTipoEntrega] = useState<'inmediata' | 'despacho'>('inmediata')
