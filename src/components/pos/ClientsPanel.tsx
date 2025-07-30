@@ -8,14 +8,14 @@ interface Props {
   clientSearchTerm?: string
 }
 
-export default function ClientsPanel({ onClientSelected, clientSearchTerm = '' }: Props) {
+export default function ClientsPanel({ onClientSelected }: Props) {
   const {
     clientes, loadClientes,
     currentCliente, selectClient,
     crearCliente
   } = usePOS()
 
-  const [search, setSearch] = useState('')
+  const [clientsPanelSearch, setClientsPanelSearch] = useState('')
   const [isCreating, setIsCreating] = useState(false)
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
@@ -33,15 +33,9 @@ export default function ClientsPanel({ onClientSelected, clientSearchTerm = '' }
 
   useEffect(() => { loadClientes() }, [loadClientes])
 
-  // Sincronizar el término de búsqueda externo con el estado local
-  useEffect(() => {
-    if (clientSearchTerm) {
-      setSearch(clientSearchTerm);
-    }
-  }, [clientSearchTerm]);
 
   const filtered = (clientes || []).filter(c =>
-    c.razon_social.toLowerCase().includes(search.toLowerCase())
+    c.razon_social.toLowerCase().includes(clientsPanelSearch.toLowerCase())
   )
 
   const pick = (c:any) => {
@@ -131,8 +125,8 @@ export default function ClientsPanel({ onClientSelected, clientSearchTerm = '' }
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
         <input
-          value={search}
-          onChange={e=>setSearch(e.target.value)}
+          value={clientsPanelSearch}
+          onChange={e=>setClientsPanelSearch(e.target.value)}
           placeholder="Buscar cliente..."
           className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
         />
@@ -158,7 +152,7 @@ export default function ClientsPanel({ onClientSelected, clientSearchTerm = '' }
         ))}
         {!filtered.length && (
           <li className="text-gray-500 text-center py-4">
-            {search ? 'Sin resultados' : 'Aquí aparecerán tus clientes'}
+            {clientsPanelSearch ? 'Sin resultados' : 'Aquí aparecerán tus clientes'}
           </li>
         )}
       </ul>

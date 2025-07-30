@@ -5,13 +5,13 @@ import { Producto, usePOS } from '../../contexts/POSContext'
   
 interface ProductsPanelProps {  
   onAddToCart: (producto: Producto) => void  
-  searchTerm?: string  
+  searchTerm?: string
 }  
   
 const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm = '' }) => {  
   const { productos, loading, loadProductos } = usePOS()  
   const [selectedFilter, setSelectedFilter] = useState('all')
-  const [localSearch, setLocalSearch] = useState('')
+  const [productsLocalSearch, setProductsLocalSearch] = useState('')
   const [showPrice, setShowPrice] = useState<Record<string, boolean>>({})
   const [showInfo, setShowInfo] = useState<Record<string, boolean>>({})
   
@@ -30,7 +30,7 @@ const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm =
   }  
   
   // Usar búsqueda local o externa
-  const currentSearch = localSearch || searchTerm
+  const currentSearch = productsLocalSearch || searchTerm
   
   const filteredProducts = productos.filter(p => {  
     const matchesSearch = currentSearch ?   
@@ -158,9 +158,9 @@ const ProductsPanel: React.FC<ProductsPanelProps> = ({ onAddToCart, searchTerm =
       {/* Search bar at bottom */}
       <div className="relative mt-6">  
         <input
-          value={localSearch}
+          value={productsLocalSearch}
           onChange={(e) => {
-            setLocalSearch(e.target.value)
+            setProductsLocalSearch(e.target.value)
           }}
           type="text"
           placeholder="Buscar productos..."
