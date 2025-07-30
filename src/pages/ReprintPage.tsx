@@ -112,24 +112,21 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   }
 
   const handleSearch = () => {
+    if (!searchFolio.trim()) {
+      toast.error('Ingrese un número de folio para buscar');
+      return;
+    }
+    
     const found = docs.find(d =>
       d.folio.toString().toLowerCase().includes(searchFolio.toLowerCase())
     );
     
     if (found) {
       setSelectedDoc(found);
-      toast.success('Documento encontrado');
+      toast.success(`Documento ${found.folio} encontrado`);
     } else {
-      // Si no se encuentra, crear un documento de ejemplo
-      const exampleDoc = {
-        id: 'example-doc-' + Date.now(),
-        folio: searchFolio || '12345',
-        tipo: 'Boleta manual (no válida al SII)',
-        total: 204,
-        fecha: new Date().toISOString()
-      };
-      setSelectedDoc(exampleDoc);
-      toast.success('Documento encontrado (ejemplo)');
+      toast.error(`No se encontró el documento con folio ${searchFolio}`);
+      setSelectedDoc(null);
     }
   }
 
@@ -293,6 +290,12 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                   >+</button>
                   <span className="text-sm text-gray-600 ml-3">Copias</span>
                 </div>
+                <button
+                  onClick={() => setSelectedDoc(null)}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Volver
+                </button>
                 <button
                   onClick={handlePrint}
                   className="flex-1 h-12 bg-blue-600 text-white rounded-2xl font-semibold hover:bg-blue-700 transition"

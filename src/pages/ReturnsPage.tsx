@@ -46,7 +46,7 @@ export const ReturnsPage: React.FC = () => {
   const [showClienteForm, setShowClienteForm] = useState(false);
   const [clienteDevolucion, setClienteDevolucion] = useState<ClienteDevolucion>({
     nombre: '',
-    rut: '',
+    rut: '12.345.678-9',
     correo: '',
     tipoReembolso: 'efectivo',
     cuentaTarjeta: ''
@@ -602,6 +602,7 @@ export const ReturnsPage: React.FC = () => {
                   onChange={(e) => setClienteDevolucion(prev => ({ ...prev, rut: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   placeholder="12.345.678-9"
+                  disabled={false}
                 />
               </div>
               

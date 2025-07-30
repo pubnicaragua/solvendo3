@@ -40,7 +40,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const [showClientSelection, setShowClientSelection] = useState(false);
   const [showClientModal, setShowClientModal] = useState(false);
   const [clientError, setClientError] = useState(false);
-  const [clientSearchTerm, setClientSearchTerm] = useState('');
+  const [deliveryClientSearchTerm, setDeliveryClientSearchTerm] = useState('');
 
   const [despachoData, setDespachoData] = useState({
     fecha: new Date().toISOString().split('T')[0], 
@@ -377,7 +377,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const handleCancelDespacho = () => {
     clearCart();
     setSelectedClient(null);
-    setClientSearchTerm('');
+    setDeliveryClientSearchTerm('');
     setProductSearch('');
     setDocSearch('');
     setDespachoData({
@@ -397,42 +397,39 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const handleConfirm = async () => {
     if (!selectedClient) {
       setClientError(true);
+      toast.error('Debe seleccionar un cliente para el despacho');
       return;
     }
     if (carrito.length === 0) {
       toast.error('No hay productos para despachar');
       return;
     }
-    if (!selectedCaja || !selectedSucursal) {
-      toast.error('Debe seleccionar una caja y sucursal');
-      return;
-    }
 
     try {
+      const despachoData = {
+        empresa_id: empresaId,
+        usuario_id: user?.id,
+        cliente_id: selectedClient.id,
+        destinatario: despachoData.destinatario,
+        direccion: despachoData.direccion,
+        comuna: despachoData.comuna,
+        ciudad: despachoData.ciudad,
+        region: despachoData.region,
+        tipo: despachoData.tipo,
+        numero_documento: despachoData.numDocumento,
+        total,
+        fecha: new Date().toISOString()
+      };
+      
       const { data: despacho, error } = await supabase
         .from('despachos')
-        .insert([
-          {
-            empresa_id: empresaId,
-            usuario_id: user?.id,
-            cliente_id: selectedClient.id,
-            destinatario: despachoData.destinatario,
-            direccion: despachoData.direccion,
-            comuna: despachoData.comuna,
-            ciudad: despachoData.ciudad,
-            region: despachoData.region,
-            tipo: despachoData.tipo,
-            numero_documento: despachoData.numDocumento,
-            total,
-            fecha: new Date().toISOString()
-          }
-        ])
+        .insert([despachoData])
         .select()
         .single();
 
       if (error) {
         console.error('Error al crear despacho:', error);
-        toast.error('Error al crear despacho: ' + error.message);
+        toast.error('Error al crear despacho. Verifique los datos e intente nuevamente.');
         return;
       }
 
@@ -443,19 +440,22 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         precio: item.precio
       }));
 
-      const { error: itemsError } = await supabase
-        .from('despachos_items')
-        .insert(detalles);
+      if (detalles.length > 0) {
+        const { error: itemsError } = await supabase
+          .from('despachos_items')
+          .insert(detalles);
 
-      if (itemsError) {
-        console.error('Error al insertar detalles del despacho:', itemsError);
-        toast.error('Error al insertar detalles del despacho: ' + itemsError.message);
-        return;
+        if (itemsError) {
+          console.error('Error al insertar detalles del despacho:', itemsError);
+          toast.error('Error al insertar detalles del despacho.');
+          return;
+        }
       }
 
       toast.success('Despacho creado exitosamente.');
       clearCart();
       setSelectedClient(null);
+      setDeliveryClientSearchTerm('');
       setDespachoData({
         fecha: new Date().toISOString().split('T')[0],
         tipo: 'Guía de despacho manual',
@@ -469,7 +469,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       onClose();
     } catch (error) {
       console.error('Error general en el despacho:', error);
-      toast.error('Ocurrió un error inesperado al despachar.');
+      toast.error('Error inesperado. Intente nuevamente.');
     }
   };
 
@@ -573,9 +573,9 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               <input
                 type="text"
                 placeholder="Cliente"
-                value={clientSearchTerm}
+                value={deliveryClientSearchTerm}
                 onChange={(e) => {
-                  setClientSearchTerm(e.target.value);
+                  setDeliveryClientSearchTerm(e.target.value);
                   if (!e.target.value) {
                     setSelectedClient(null);
                   } else {
@@ -619,12 +619,12 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             
             <ul className="space-y-2 max-h-60 overflow-y-auto">
               {clientes.filter(c => 
-                c.razon_social.toLowerCase().includes(clientSearchTerm.toLowerCase())
+                c.razon_social.toLowerCase().includes(deliveryClientSearchTerm.toLowerCase())
               ).map(c => (
                 <li key={c.id}
                   onClick={() => {
                     setSelectedClient(c);
-                    setClientSearchTerm(c.razon_social);
+                    setDeliveryClientSearchTerm(c.razon_social);
                     selectClient(c);
                   }}
                   className={`p-3 border rounded hover:bg-gray-50 cursor-pointer flex justify-between items-center ${
@@ -643,10 +643,10 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 </li>
               ))}
               {clientes.filter(c => 
-                c.razon_social.toLowerCase().includes(clientSearchTerm.toLowerCase())
+                c.razon_social.toLowerCase().includes(deliveryClientSearchTerm.toLowerCase())
               ).length === 0 && (
                 <li className="text-gray-500 text-center py-4">
-                  {clientSearchTerm ? 'Sin resultados' : 'Aquí aparecerán tus clientes'}
+                  {deliveryClientSearchTerm ? 'Sin resultados' : 'Aquí aparecerán tus clientes'}
                 </li>
               )}
             </ul>

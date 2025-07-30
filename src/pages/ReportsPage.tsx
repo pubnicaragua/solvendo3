@@ -318,8 +318,8 @@ export const ReportsPage: React.FC = () => {
             [
               { label: 'Ventas totales', value: data.ventasTotales, format: 'currency' },
               { label: 'Margen', value: data.margen, format: 'currency' },
-              { label: 'Unidades vendidas', value: data.unidadesVendidas, format: 'number' },
-              { label: 'N° de ventas', value: data.numeroVentas, format: 'number' },
+              { label: 'Unidades vendidas', value: data.unidadesVendidas, format: 'units' },
+              { label: 'N° de ventas', value: data.numeroVentas, format: 'units' },
               { label: 'Ticket promedio', value: data.ticketPromedio, format: 'currency' }
             ].map((kpi, idx) => (
               <div
@@ -336,8 +336,8 @@ export const ReportsPage: React.FC = () => {
                   <span className="text-2xl font-semibold text-gray-900">
                     {typeof kpi.value === 'number' && !isNaN(kpi.value) ? (
                       kpi.format === 'currency' ? formatPrice(kpi.value) : 
-                      kpi.format === 'number' ? kpi.value.toLocaleString('es-CL') :
-                      formatPrice(kpi.value)
+                      kpi.format === 'units' ? kpi.value.toLocaleString('es-CL') :
+                      kpi.format === 'number' ? kpi.value.toLocaleString('es-CL') : formatPrice(kpi.value)
                     ) : 'N/A'}
                   </span>
                   <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-lg">
@@ -528,12 +528,26 @@ export const ReportsPage: React.FC = () => {
               </label>
               <div className="space-y-2 text-sm">
                 {Object.entries(cajeros).map(([key, val]) => (
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="rounded text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <span className="text-gray-800">Con poco movimiento</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="rounded text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <span className="text-gray-800">Con mucho movimiento</span>
+                  </label>
                   <label key={key} className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={val}
                       onChange={e =>
-                        setCajeros(prev => ({ ...prev, [key]: e.target.checked }))
+                    <span className="text-gray-800">Productos destacados</span>
                       }
                       className="rounded text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
@@ -544,7 +558,7 @@ export const ReportsPage: React.FC = () => {
             </div>
 
             {/* Filtros adicionales */}
-            <div>
+                    <span className="text-gray-800">Sin stock</span>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Productos
               </label>
