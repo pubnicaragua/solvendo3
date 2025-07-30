@@ -316,11 +316,11 @@ export const ReportsPage: React.FC = () => {
             </div>
           ) : (
             [
-              { label: 'Ventas totales', value: data.ventasTotales },
-              { label: 'Margen', value: data.margen },
-              { label: 'Unidades vendidas', value: data.unidadesVendidas },
-              { label: 'N° de ventas', value: data.numeroVentas },
-              { label: 'Ticket promedio', value: data.ticketPromedio }
+              { label: 'Ventas totales', value: data.ventasTotales, format: 'currency' },
+              { label: 'Margen', value: data.margen, format: 'currency' },
+              { label: 'Unidades vendidas', value: data.unidadesVendidas, format: 'number' },
+              { label: 'N° de ventas', value: data.numeroVentas, format: 'number' },
+              { label: 'Ticket promedio', value: data.ticketPromedio, format: 'currency' }
             ].map((kpi, idx) => (
               <div
                 key={idx}
@@ -334,9 +334,11 @@ export const ReportsPage: React.FC = () => {
                 </div>
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-2xl font-semibold text-gray-900">
-                    {typeof kpi.value === 'number' && !isNaN(kpi.value)
-                      ? formatPrice(kpi.value)
-                      : 'N/A'}
+                    {typeof kpi.value === 'number' && !isNaN(kpi.value) ? (
+                      kpi.format === 'currency' ? formatPrice(kpi.value) : 
+                      kpi.format === 'number' ? kpi.value.toLocaleString('es-CL') :
+                      formatPrice(kpi.value)
+                    ) : 'N/A'}
                   </span>
                   <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-lg">
                     +100%
@@ -538,6 +540,29 @@ export const ReportsPage: React.FC = () => {
                     <span className="text-gray-800">{key.toUpperCase()}</span>
                   </label>
                 ))}
+              </div>
+            </div>
+
+            {/* Filtros adicionales */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Productos
+              </label>
+              <div className="space-y-2 text-sm">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="rounded text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="text-gray-800">Con poco movimiento</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="rounded text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="text-gray-800">Con mucho movimiento</span>
+                </label>
               </div>
             </div>
           </div>
