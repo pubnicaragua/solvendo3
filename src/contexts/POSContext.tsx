@@ -574,11 +574,25 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!user || !empresaId || !sucursalId || carrito.length === 0) {  
       return { success: false, error: 'Datos incompletos para procesar la venta.' };  
     }  
+    
+    // Validar cliente para factura
+    if (tipoDte === 'factura' && !clienteId) {
+      return { success: false, error: 'Debe seleccionar un cliente para factura electrónica' };
+    }
       
     try {  
       // Generar folio local
       const timestamp = Date.now();
-      const folio = `V${timestamp}`;
+      let folio: string;
+      
+      // Generar folio según tipo de documento
+      if (tipoDte === 'boleta') {
+        folio = `${timestamp}`;
+      } else if (tipoDte === 'factura') {
+        folio = `F${timestamp}`;
+      } else {
+        folio = `V${timestamp}`;
+      }
 
       // Insertar la venta directamente
       const { data: venta, error } = await supabase
@@ -602,8 +616,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       if (error || !venta) {
         console.error("Error al crear la venta:", error);
-        toast.error('Error al registrar la venta.');
-        return { success: false, error: error?.message };
+        return { success: false, error: 'Error al registrar la venta en la base de datos' };
       }
 
       // Insertar los items de la venta

@@ -53,6 +53,12 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     numDocumento: ''
   });
 
+  // Estados para cajas y sucursales dinámicas
+  const [cajas, setCajas] = useState<any[]>([]);
+  const [sucursales, setSucursales] = useState<any[]>([]);
+  const [selectedCaja, setSelectedCaja] = useState<string>('');
+  const [selectedSucursal, setSelectedSucursal] = useState<string>('');
+
   // Sincronizar con el cliente seleccionado en el contexto
   useEffect(() => {
     if (currentCliente) {
@@ -68,6 +74,47 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       }));
     }
   }, [currentCliente]);
+
+  // Cargar cajas y sucursales
+  useEffect(() => {
+    const loadCajasYSucursales = async () => {
+      if (!empresaId) return;
+      
+      try {
+        // Cargar cajas
+        const { data: cajasData, error: cajasError } = await supabase
+          .from('cajas')
+          .select('*')
+          .eq('empresa_id', empresaId)
+          .eq('activo', true);
+          
+        if (!cajasError && cajasData) {
+          setCajas(cajasData);
+          if (cajasData.length > 0) {
+            setSelectedCaja(cajasData[0].id);
+          }
+        }
+        
+        // Cargar sucursales
+        const { data: sucursalesData, error: sucursalesError } = await supabase
+          .from('sucursales')
+          .select('*')
+          .eq('empresa_id', empresaId)
+          .eq('activo', true);
+          
+        if (!sucursalesError && sucursalesData) {
+          setSucursales(sucursalesData);
+          if (sucursalesData.length > 0) {
+            setSelectedSucursal(sucursalesData[0].id);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading cajas y sucursales:', error);
+      }
+    };
+    
+    loadCajasYSucursales();
+  }, [empresaId]);
 
   useEffect(() => {
     if (!empresaId) {
@@ -356,6 +403,10 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       toast.error('No hay productos para despachar');
       return;
     }
+    if (!selectedCaja || !selectedSucursal) {
+      toast.error('Debe seleccionar una caja y sucursal');
+      return;
+    }
 
     try {
       const { data: despacho, error } = await supabase
@@ -372,7 +423,8 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             region: despachoData.region,
             tipo: despachoData.tipo,
             numero_documento: despachoData.numDocumento,
-            total
+            total,
+            fecha: new Date().toISOString()
           }
         ])
         .select()
@@ -628,6 +680,58 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   <p className="text-sm">No hay documentos disponibles</p>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Delivery Form */}
+          <div className="space-y-4">
+            {/* Selección de Caja y Sucursal */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Caja</label>
+                <select
+                  value={selectedCaja}
+                  onChange={(e) => setSelectedCaja(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                >
+                  <option value="">Seleccionar caja</option>
+                  {cajas.map(caja => (
+                    <option key={caja.id} value={caja.id}>
+                      {caja.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Sucursal</label>
+                <select
+                  value={selectedSucursal}
+                  onChange={(e) => setSelectedSucursal(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                >
+                  <option value="">Seleccionar sucursal</option>
+                  {sucursales.map(sucursal => (
+                    <option key={sucursal.id} value={sucursal.id}>
+                      {sucursal.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    value={despachoData.fecha}
+                    onChange={(e) => setDespachoData(prev => ({ ...prev, fecha: e.target.value }))}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  />
+                  <Calendar className="w-4 h-4 text-gray-400" />
+                </div>
+              </div>
             </div>
           </div>
         </aside>
