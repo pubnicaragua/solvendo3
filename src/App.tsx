@@ -18,6 +18,7 @@ import { BarcodePage } from './pages/BarcodePage'
 import { CustomerHistoryPage } from './pages/CustomerHistoryPage'
 import { PromotionsPage } from './pages/PromotionsPage'
 import { BillingPage } from './pages/BillingPage'
+import { StatusPOSPage } from './pages/StatusPOSPage'
 import { POSLayout } from './components/pos/POSLayout'
 import { LoginPage } from './components/auth/LoginPage'
 
@@ -65,6 +66,7 @@ const AppRoutes: React.FC = () => {
             <Route path="/historial-cliente" element={<CustomerHistoryPage onClose={() => {}} />} />
             <Route path="/promociones" element={<PromotionsPage onClose={() => {}} />} />
             <Route path="/facturacion" element={<BillingPage onClose={() => {}} />} />
+            <Route path="/protect/status-pos" element={<StatusPOSPage />} />
             {/* Redirige a dashboard si intenta acceder a una ruta inexistente estando autenticado */}
             <Route path="*" element={<Navigate to="/" replace />} /> 
           </Routes>

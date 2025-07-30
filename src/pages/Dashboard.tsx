@@ -362,7 +362,9 @@ const Dashboard: React.FC = () => {
   const shouldShowProducts = searchTerm.length > 0
 
   // Calcular total con descuento
-  const totalConDescuento = total * (1 - (descuentoGlobal / 100))
+  const totalConDescuento = selectedMethod === 'efectivo' 
+    ? Math.round(total * (1 - (descuentoGlobal / 100)))
+    : total * (1 - (descuentoGlobal / 100))
   const vuelto = selectedMethod === 'efectivo' ? Math.max(0, montoRecibido - totalConDescuento) : 0
 
   return (
