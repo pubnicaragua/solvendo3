@@ -528,26 +528,12 @@ export const ReportsPage: React.FC = () => {
               </label>
               <div className="space-y-2 text-sm">
                 {Object.entries(cajeros).map(([key, val]) => (
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="rounded text-blue-600 focus:ring-blue-500 border-gray-300"
-                    />
-                    <span className="text-gray-800">Con poco movimiento</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="rounded text-blue-600 focus:ring-blue-500 border-gray-300"
-                    />
-                    <span className="text-gray-800">Con mucho movimiento</span>
-                  </label>
                   <label key={key} className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={val}
                       onChange={e =>
-                    <span className="text-gray-800">Productos destacados</span>
+                        setCajeros(prev => ({ ...prev, [key]: e.target.checked }))
                       }
                       className="rounded text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
@@ -558,7 +544,7 @@ export const ReportsPage: React.FC = () => {
             </div>
 
             {/* Filtros adicionales */}
-                    <span className="text-gray-800">Sin stock</span>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Productos
               </label>
