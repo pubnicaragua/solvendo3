@@ -57,7 +57,7 @@ const Dashboard: React.FC = () => {
   const [selectedClient, setSelectedClient] = useState<any>(null)
   const [montoRecibido, setMontoRecibido] = useState<number>(0)
   const [descuentosEnabled, setDescuentosEnabled] = useState<boolean>(false)
-  const [descuentoPorcentaje, setDescuentoPorcentaje] = useState<number>(0)
+  const [descuentoPorcentaje, setDescuentoPorcentaje] = useState<string>('')
   const [cuponCodigo, setCuponCodigo] = useState<string>('')
   const [cuponDescuento, setCuponDescuento] = useState<number>(0)
   const [cuponValido, setCuponValido] = useState<boolean>(false)
@@ -65,7 +65,7 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(false)
   
   // Estados para opciones de entrega
-  const [despacho, setDespacho] = useState(false)
+  const [tipoEntrega, setTipoEntrega] = useState<'inmediata' | 'despacho'>('inmediata')
   const [cupon, setCupon] = useState(false)
   
   // Estados para búsquedas separadas

@@ -7,7 +7,8 @@ import {
   X as XIcon,
   FileText,
   Check,
-  Truck
+  Truck,
+  Calendar
 } from 'lucide-react';
 import { HeaderWithMenu } from '../components/common/HeaderWithMenu';
 import { useAuth } from '../contexts/AuthContext';
