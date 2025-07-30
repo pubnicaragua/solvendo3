@@ -72,6 +72,7 @@ export const StatusPOSPage: React.FC = () => {
   
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [refreshInterval, setRefreshInterval] = useState(5000) // 5 seconds
+  const [systemWarnings, setSystemWarnings] = useState<string[]>([])
 
   // Add log entry
   const addLog = useCallback((level: LogEntry['level'], component: string, message: string, details?: any) => {
@@ -184,6 +185,65 @@ export const StatusPOSPage: React.FC = () => {
     }))
   }, [status])
 
+  // System health checks and warnings
+  const checkSystemHealth = useCallback(() => {
+    const warnings: string[] = []
+    
+    // Check for hardcoded values
+    if (user?.rut === '78.168.951-3') {
+      warnings.push('⚠️ Usuario hardcoded detectado (RUT: 78.168.951-3)')
+    }
+    
+    // Check database connection
+    if (status.database !== 'connected') {
+      warnings.push('🔴 Base de datos desconectada')
+    }
+    
+    // Check if products are loading properly
+    if (productos.length === 0) {
+      warnings.push('⚠️ No hay productos cargados')
+    }
+    
+    // Check if cash register is closed
+    if (!cajaAbierta) {
+      warnings.push('⚠️ Caja registradora cerrada')
+    }
+    
+    // Check for low memory
+    if (metrics.memoryUsage > 100) {
+      warnings.push('⚠️ Alto uso de memoria detectado')
+    }
+    
+    // Check for slow database response
+    if (metrics.dbResponseTime > 2000) {
+      warnings.push('⚠️ Respuesta lenta de base de datos')
+    }
+    
+    // Check for missing environment variables
+    if (!import.meta.env.VITE_SUPABASE_URL) {
+      warnings.push('🔴 Variable VITE_SUPABASE_URL no configurada')
+    }
+    
+    // Check for broken navigation links
+    const brokenLinks = [
+      '/protect/status-pos',
+      '/movimiento',
+      '/reimprimir',
+      '/reportes',
+      '/despacho',
+      '/cierre',
+      '/devolucion'
+    ]
+    
+    brokenLinks.forEach(link => {
+      // This is a simplified check - in a real app you'd test actual navigation
+      if (window.location.pathname === link && !document.querySelector('[data-testid="page-content"]')) {
+        warnings.push(`🔗 Posible enlace roto: ${link}`)
+      }
+    })
+    
+    setSystemWarnings(warnings)
+  }, [user, status, productos, cajaAbierta, metrics])
   // Run all checks
   const runAllChecks = useCallback(async () => {
     const startTime = Date.now()
@@ -216,13 +276,15 @@ export const StatusPOSPage: React.FC = () => {
     if (autoRefresh) {
       const interval = setInterval(runAllChecks, refreshInterval)
       return () => clearInterval(interval)
+        checkSystemHealth()
     }
-  }, [autoRefresh, refreshInterval, runAllChecks])
+  }, [autoRefresh, refreshInterval, runAllChecks, checkSystemHealth])
 
   // Initial load
   useEffect(() => {
     runAllChecks()
-  }, [runAllChecks])
+    checkSystemHealth()
+  }, [runAllChecks, checkSystemHealth])
 
   const getStatusIcon = (statusValue: string) => {
     switch (statusValue) {
@@ -421,6 +483,23 @@ export const StatusPOSPage: React.FC = () => {
                   </div>
                 )
               })}
+              
+              {/* System Warnings Section */}
+              {systemWarnings.length > 0 && (
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <h4 className="text-sm font-semibold text-yellow-800 mb-2 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    Advertencias del Sistema
+                  </h4>
+                  <div className="space-y-1">
+                    {systemWarnings.map((warning, index) => (
+                      <div key={index} className="text-xs text-yellow-700">
+                        {warning}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

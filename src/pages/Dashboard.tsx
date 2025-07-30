@@ -681,14 +681,22 @@ const Dashboard: React.FC = () => {
                 
                 <div className="flex items-center gap-6">
                   <div className="text-sm text-gray-600">
-                    ✓ Entrega inmediata
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={tipoEntrega === 'inmediata'}
+                        onChange={(e) => setTipoEntrega(e.target.checked ? 'inmediata' : 'despacho')}
+                        className="rounded border-gray-300 text-blue-600"
+                      />
+                      <span>Entrega inmediata</span>
+                    </label>
                   </div>
                   <div className="flex items-center gap-2">
                     <Truck 
-                      className={`w-4 h-4 ${despacho ? 'text-blue-600' : 'text-gray-400'} cursor-pointer`}
-                      onClick={() => setDespacho(!despacho)}
+                      className={`w-4 h-4 ${tipoEntrega === 'despacho' ? 'text-blue-600' : 'text-gray-400'} cursor-pointer`}
+                      onClick={() => setTipoEntrega(tipoEntrega === 'despacho' ? 'inmediata' : 'despacho')}
                     />
-                    <span className={`text-sm ${despacho ? 'text-blue-600' : 'text-gray-600'} cursor-pointer`} onClick={() => setDespacho(!despacho)}>Despacho</span>
+                    <span className={`text-sm ${tipoEntrega === 'despacho' ? 'text-blue-600' : 'text-gray-600'} cursor-pointer`} onClick={() => setTipoEntrega(tipoEntrega === 'despacho' ? 'inmediata' : 'despacho')}>Despacho</span>
                   </div>
                 </div>
                 
@@ -805,7 +813,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 )}
                 
-                {despacho && (
+                {tipoEntrega === 'despacho' && (
                   <div className="mt-4 p-3 bg-green-50 rounded-lg">
                     <h5 className="text-sm font-medium text-green-800 mb-2">Configuración de Despacho</h5>
                     <div className="grid grid-cols-2 gap-2">
