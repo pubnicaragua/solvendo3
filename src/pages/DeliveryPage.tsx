@@ -79,7 +79,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   // Cargar cajas y sucursales
   useEffect(() => {
     const loadCajasYSucursales = async () => {
-      if (!empresaId) return;
+      if (!empresaId) {
         // Datos de ejemplo si no hay empresaId
         setCajas([
           { id: 'caja1', nombre: 'Caja Principal' },
@@ -91,6 +91,8 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         ]);
         setSelectedCaja('caja1');
         setSelectedSucursal('sucursal1');
+        return;
+      }
       
       try {
         // Cargar cajas
@@ -122,6 +124,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         }
       } catch (error) {
         console.error('Error loading cajas y sucursales:', error);
+      }
     };
     
     loadCajasYSucursales();
@@ -417,7 +420,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     }
 
     try {
-      const despachoData = {
+      const despachoDataToSend = {
         empresa_id: empresaId,
         usuario_id: user?.id,
         cliente_id: selectedClient.id,
@@ -434,7 +437,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       
       const { data: despacho, error } = await supabase
         .from('despachos')
-        .insert([despachoData])
+        .insert([despachoDataToSend])
         .select()
         .single();
 
@@ -442,7 +445,6 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         console.error('Error al crear despacho:', error);
         toast.error('Error al crear despacho. Verifique los datos e intente nuevamente.');
         return;
-      }
       }
 
       const detalles = carrito.map((item) => ({
@@ -461,32 +463,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           console.error('Error al insertar detalles del despacho:', itemsError);
           toast.error('Error al insertar detalles del despacho.');
           return;
-        } else {
-          // Fallback a datos de ejemplo
-          setCajas([
-            { id: 'caja1', nombre: 'Caja Principal' },
-            { id: 'caja2', nombre: 'Caja Secundaria' }
-        } else {
-          // Fallback a datos de ejemplo
-          setSucursales([
-            { id: 'sucursal1', nombre: 'Sucursal Principal' },
-            { id: 'sucursal2', nombre: 'Sucursal Centro' }
-          ]);
-          setSelectedSucursal('sucursal1');
-          ]);
-          setSelectedCaja('caja1');
         }
-        // Fallback a datos de ejemplo en caso de error
-        setCajas([
-          { id: 'caja1', nombre: 'Caja Principal' },
-          { id: 'caja2', nombre: 'Caja Secundaria' }
-        ]);
-        setSucursales([
-          { id: 'sucursal1', nombre: 'Sucursal Principal' },
-          { id: 'sucursal2', nombre: 'Sucursal Centro' }
-        ]);
-        setSelectedCaja('caja1');
-        setSelectedSucursal('sucursal1');
       }
 
       toast.success('Despacho creado exitosamente.');
@@ -513,6 +490,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const handleSelectClient = () => {
     setShowClientModal(true);
   };
+  
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
       <HeaderWithMenu
