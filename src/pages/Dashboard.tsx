@@ -379,8 +379,8 @@ const Dashboard: React.FC = () => {
     totalConDescuento = totalConDescuento - cuponDescuento
   }
   
-  // Solo redondear cuando es efectivo
-  if (selectedMethod === 'tarjeta') {
+  // Solo redondear cuando es tarjeta
+  if (selectedMethod === 'tarjeta' && totalConDescuento > 0) {
     totalConDescuento = Math.round(totalConDescuento)
   }
   
@@ -545,9 +545,9 @@ const Dashboard: React.FC = () => {
                     onChange={(e) => setSelectedDte(e.target.value)}
                     className="px-3 py-2 border rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 appearance-none pr-8 cursor-pointer"
                   >
-                      <option value="boleta_manual">Boleta manual</option>
                       <option value="boleta">Boleta electrónica</option>
                       <option value="factura">Factura electrónica</option>
+                      <option value="boleta_manual">Boleta manual</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -557,17 +557,7 @@ const Dashboard: React.FC = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 items-center mb-3">
-              <div className="relative flex-grow min-w-[180px] max-w-[250px]">
-                <input
-                  type="text"
-                  placeholder="Buscar cliente"
-                  value={clientSearchTermMain}
-                  onChange={e => handleClientSearch(e.target.value)}
-                  className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4"/>
-              </div>
+            <div className="grid grid-cols-1 gap-4 items-center mb-3">
                 <div className="flex items-center justify-end">
                     <span className="text-lg font-semibold mr-2">Total</span>
                     <div className="bg-gray-100 p-2 rounded-lg text-right min-w-[100px]">
@@ -588,7 +578,7 @@ const Dashboard: React.FC = () => {
                 disabled={carrito.length===0}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded font-semibold text-base disabled:opacity-50"
               >
-                Pagar {fmt(total)}
+                Pagar
               </button>
             </div>
           </div>
@@ -692,10 +682,9 @@ const Dashboard: React.FC = () => {
                     onChange={(e) => setSelectedDte(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="boleta_manual">Boleta manual</option>
-                    <option value="boleta">Boleta manual</option>
                     <option value="boleta">Boleta electrónica</option>
                     <option value="factura">Factura electrónica</option>
+                    <option value="boleta_manual">Boleta manual</option>
                   </select>
                 </div>
                 

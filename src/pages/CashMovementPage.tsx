@@ -26,6 +26,32 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({ onClose })
   const [movements, setMovements] = useState<Movement[]>([])
   const [loading, setLoading] = useState(false)
 
+  // Cargar cajas desde API
+  useEffect(() => {
+    const loadCajas = async () => {
+      if (!empresaId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('cajas')
+          .select('*')
+          .eq('empresa_id', empresaId)
+          .eq('activo', true);
+          
+        if (error) throw error;
+        // Usar datos reales si están disponibles
+        if (data && data.length > 0) {
+          setCaja(data[0].nombre);
+        }
+      } catch (error) {
+        console.error('Error loading cajas:', error);
+        // Mantener valor por defecto si hay error
+      }
+    };
+    
+    loadCajas();
+  }, [empresaId]);
+
   useEffect(() => {
     loadMovements()
   }, [fecha])
@@ -111,6 +137,7 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({ onClose })
             >
               <option>Caja N°1</option>
               <option>Caja N°2</option>
+              <option>Caja Principal</option>
             </select>
 
             {/* Fecha movimiento */}

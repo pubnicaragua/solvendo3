@@ -965,7 +965,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!empresaId) return false;
     
     try {
-      const siiService = SIIService.getInstance();
+      // Buscar cupón en promociones cargadas
       await siiService.loadConfig(empresaId);
       
       const xml = await siiService.generarDTE({
@@ -992,7 +992,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const success = await siiService.enviarDTE(documentoId);
       
       if (success) {
-        toast.success('DTE enviado al SII correctamente');
+        toast.success(`Cupón aplicado: ${cuponEncontrado.nombre}`)
       } else {
         toast.error('Error al enviar DTE al SII');
       }

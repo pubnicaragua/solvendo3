@@ -720,55 +720,8 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           </div>
 
           {/* Delivery Form */}
-          <div className="space-y-4">
-            {/* Selección de Caja y Sucursal */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Caja</label>
-                <select
-                  value={selectedCaja}
-                  onChange={(e) => setSelectedCaja(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                >
-                  <option value="">Seleccionar caja</option>
-                  {cajas.map(caja => (
-                    <option key={caja.id} value={caja.id}>
-                      {caja.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Sucursal</label>
-                <select
-                  value={selectedSucursal}
-                  onChange={(e) => setSelectedSucursal(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                >
-                  <option value="">Seleccionar sucursal</option>
-                  {sucursales.map(sucursal => (
-                    <option key={sucursal.id} value={sucursal.id}>
-                      {sucursal.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="date"
-                    value={despachoData.fecha}
-                    onChange={(e) => setDespachoData(prev => ({ ...prev, fecha: e.target.value }))}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  />
-                  <Calendar className="w-4 h-4 text-gray-400" />
-                </div>
-              </div>
-            </div>
+          <div className="text-center text-gray-500 py-4">
+            <p className="text-sm">Configuración de despacho simplificada</p>
           </div>
         </aside>
       </div>
@@ -781,9 +734,9 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             </p>
             <button
               onClick={() => setClientError(false)}
-              className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded font-semibold text-base disabled:opacity-50"
             >
-              Entendido
+              Despachar
             </button>
           </div>
         </div>

@@ -53,6 +53,8 @@ export const ReturnsPage: React.FC = () => {
     tipoReembolso: 'efectivo',
     cuentaTarjeta: ''
   });
+  const [productSearchResults, setProductSearchResults] = useState<any[]>([]);
+  const [clientSearchResults, setClientSearchResults] = useState<any[]>([]);
   const [tipoReembolsoData, setTipoReembolsoData] = useState({
     tipoCuenta: '',
     numeroCuenta: '',
@@ -67,6 +69,9 @@ export const ReturnsPage: React.FC = () => {
   
   // Cargar datos de ejemplo al inicializar
   useEffect(() => {
+    loadClientes();
+    loadProductos();
+    
     const exampleItems: VentaItem[] = [
       {
         id: 'example-item-1',
@@ -90,7 +95,7 @@ export const ReturnsPage: React.FC = () => {
       'example-item-1': 1,
       'example-item-2': 1
     });
-  }, []);
+  }, [loadClientes, loadProductos]);
 
   // Total calculado de los ítems seleccionados para devolución
   const total = Object.entries(selectedItems).reduce((sum, [id, qty]) => {
@@ -101,6 +106,36 @@ export const ReturnsPage: React.FC = () => {
   // Formateador de moneda
   const formatPrice = (n: number) =>
     new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(n);
+
+  // Función para buscar productos
+  const handleProductSearch = (termino: string) => {
+    setSearchTerm(termino);
+    if (!termino.trim()) {
+      setProductSearchResults([]);
+      return;
+    }
+    
+    const productosEncontrados = productos.filter(producto => 
+      producto.nombre.toLowerCase().includes(termino.toLowerCase()) ||
+      producto.codigo?.toLowerCase().includes(termino.toLowerCase())
+    );
+    setProductSearchResults(productosEncontrados);
+  };
+
+  // Función para buscar clientes
+  const handleClientSearchReturns = (termino: string) => {
+    setClientSearchTerm(termino);
+    if (!termino.trim()) {
+      setClientSearchResults([]);
+      return;
+    }
+    
+    const clientesEncontrados = clientes.filter(cliente => 
+      cliente.razon_social.toLowerCase().includes(termino.toLowerCase()) ||
+      cliente.rut?.toLowerCase().includes(termino.toLowerCase())
+    );
+    setClientSearchResults(clientesEncontrados);
+  };
 
   // Buscar venta y cargar ítems
   const handleSearchFolio = async () => {
@@ -401,7 +436,7 @@ export const ReturnsPage: React.FC = () => {
               type="text"
               placeholder="Ingresa aquí el producto o servicio"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleProductSearch(e.target.value)}
               className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
             />
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5"/>
@@ -480,7 +515,7 @@ export const ReturnsPage: React.FC = () => {
                   type="text"
                   placeholder="Buscar cliente"
                   value={clienteSearch}
-                  onChange={e => setClienteSearch(e.target.value)}
+                  onChange={e => handleClientSearchReturns(e.target.value)}
                   className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4"/>
