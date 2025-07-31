@@ -288,7 +288,10 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                   <span className="text-sm text-gray-600 ml-3">Copias</span>
                 </div>
                 <button
-                  onClick={() => setSelectedDoc(null)}
+                  onClick={() => {
+                    setSelectedDoc(null);
+                    setSearchFolio('');
+                  }}
                   className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Volver

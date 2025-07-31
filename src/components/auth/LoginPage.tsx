@@ -69,14 +69,13 @@ export const LoginPage: React.FC = () => {
             onChange={(e) => setEmail(e.target.value)}
             onFocus={() => setEmailFocused(true)}
             onBlur={() => setEmailFocused(false)}
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base peer"
-            style={{ color: '#1f2937' }}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base peer"
           />
           <label
             htmlFor="email"
             className={`
-              absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none transition-all duration-300 ease-in-out
-              ${(emailFocused || email) ? 'top-0 text-xs text-blue-600 bg-white px-1 -translate-y-0' : 'text-base'}
+              absolute left-4 transition-all duration-300 ease-in-out pointer-events-none
+              ${(emailFocused || email) ? 'top-0 text-xs text-blue-600 bg-white px-1 -translate-y-1/2' : 'top-1/2 -translate-y-1/2 text-base text-gray-500'}
             `}
           >
             RUT
@@ -91,14 +90,13 @@ export const LoginPage: React.FC = () => {
             onChange={(e) => setPassword(e.target.value)}
             onFocus={() => setPasswordFocused(true)}
             onBlur={() => setPasswordFocused(false)}
-            className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-lg bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base peer"
-            style={{ color: '#1f2937' }}
+            className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base peer"
           />
           <label
             htmlFor="password"
             className={`
-              absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none transition-all duration-300 ease-in-out
-              ${(passwordFocused || password) ? 'top-0 text-xs text-blue-600 bg-white px-1 -translate-y-0' : 'text-base'}
+              absolute left-4 transition-all duration-300 ease-in-out pointer-events-none
+              ${(passwordFocused || password) ? 'top-0 text-xs text-blue-600 bg-white px-1 -translate-y-1/2' : 'top-1/2 -translate-y-1/2 text-base text-gray-500'}
             `}
           >
             Contraseña

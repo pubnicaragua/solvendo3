@@ -102,11 +102,16 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           .eq('empresa_id', empresaId)
           .eq('activo', true);
           
-        if (!cajasError && cajasData) {
+        if (!cajasError && cajasData && cajasData.length > 0) {
           setCajas(cajasData);
-          if (cajasData.length > 0) {
-            setSelectedCaja(cajasData[0].id);
-          }
+          setSelectedCaja(cajasData[0].id);
+        } else {
+          // Fallback a datos de ejemplo
+          setCajas([
+            { id: 'caja1', nombre: 'Caja Principal' },
+            { id: 'caja2', nombre: 'Caja Secundaria' }
+          ]);
+          setSelectedCaja('caja1');
         }
         
         // Cargar sucursales
@@ -116,14 +121,30 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           .eq('empresa_id', empresaId)
           .eq('activo', true);
           
-        if (!sucursalesError && sucursalesData) {
+        if (!sucursalesError && sucursalesData && sucursalesData.length > 0) {
           setSucursales(sucursalesData);
-          if (sucursalesData.length > 0) {
-            setSelectedSucursal(sucursalesData[0].id);
-          }
+          setSelectedSucursal(sucursalesData[0].id);
+        } else {
+          // Fallback a datos de ejemplo
+          setSucursales([
+            { id: 'sucursal1', nombre: 'Sucursal Principal' },
+            { id: 'sucursal2', nombre: 'Sucursal Centro' }
+          ]);
+          setSelectedSucursal('sucursal1');
         }
       } catch (error) {
         console.error('Error loading cajas y sucursales:', error);
+        // Fallback a datos de ejemplo en caso de error
+        setCajas([
+          { id: 'caja1', nombre: 'Caja Principal' },
+          { id: 'caja2', nombre: 'Caja Secundaria' }
+        ]);
+        setSucursales([
+          { id: 'sucursal1', nombre: 'Sucursal Principal' },
+          { id: 'sucursal2', nombre: 'Sucursal Centro' }
+        ]);
+        setSelectedCaja('caja1');
+        setSelectedSucursal('sucursal1');
       }
     };
     
