@@ -687,12 +687,12 @@ const Dashboard: React.FC = () => {
               {/* Document Type Selection */}
               <div className="space-y-4">
                 <div className="mb-4">
-                  <option value="boleta_manual">Boleta manual</option>
-                  <option value="boleta">Boleta electrónica</option>
+                  <select
                     value={selectedDte}
                     onChange={(e) => setSelectedDte(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
+                    <option value="boleta_manual">Boleta manual</option>
                     <option value="boleta">Boleta manual</option>
                     <option value="boleta">Boleta electrónica</option>
                     <option value="factura">Factura electrónica</option>
