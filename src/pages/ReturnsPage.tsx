@@ -398,6 +398,8 @@ export const ReturnsPage: React.FC = () => {
             <input
               type="text"
               placeholder="Ingresa aquí el producto o servicio"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
             />
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5"/>
@@ -527,6 +529,8 @@ export const ReturnsPage: React.FC = () => {
               <input
                 type="text"
                 placeholder="Ingresa aquí el número de folio"
+                value={clientSearchTerm}
+                onChange={(e) => setClientSearchTermMain(e.target.value)}
                 value={folioInput}
                 onChange={e => setFolioInput(e.target.value)}
                 onKeyPress={(e) => {

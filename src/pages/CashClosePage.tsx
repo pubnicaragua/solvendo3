@@ -276,7 +276,7 @@ export const CashClosePage: React.FC = () => {
   const isLoading = contextLoading || isClosing;
 
   // Formateo de fechas y horas para el display
-  const fechaApertura = currentAperturaCaja ? new Date(currentAperturaCaja.fecha_apertura).toLocaleDateString('es-CL') : new Date().toLocaleDateString('es-CL');
+  const fechaApertura = new Date().toLocaleDateString('es-CL');
   const horaCierrePropuesta = new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
 
   // Nombre de la caja (ejemplo, podrías tener una tabla de cajas con nombres)

@@ -117,17 +117,6 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       return;
     }
     
-    const found = docs.find(d =>
-      d.folio.toString().toLowerCase().includes(searchFolio.toLowerCase())
-    );
-    
-    if (found) {
-      setSelectedDoc(found);
-      toast.success(`Documento ${found.folio} encontrado`);
-    } else {
-      toast.error(`No se encontró el documento con folio ${searchFolio}`);
-      setSelectedDoc(null);
-    }
   }
 
   const formatPrice = (n: number) =>

@@ -80,6 +80,17 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   useEffect(() => {
     const loadCajasYSucursales = async () => {
       if (!empresaId) return;
+        // Datos de ejemplo si no hay empresaId
+        setCajas([
+          { id: 'caja1', nombre: 'Caja Principal' },
+          { id: 'caja2', nombre: 'Caja Secundaria' }
+        ]);
+        setSucursales([
+          { id: 'sucursal1', nombre: 'Sucursal Principal' },
+          { id: 'sucursal2', nombre: 'Sucursal Centro' }
+        ]);
+        setSelectedCaja('caja1');
+        setSelectedSucursal('sucursal1');
       
       try {
         // Cargar cajas
@@ -111,7 +122,6 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         }
       } catch (error) {
         console.error('Error loading cajas y sucursales:', error);
-      }
     };
     
     loadCajasYSucursales();
@@ -433,6 +443,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         toast.error('Error al crear despacho. Verifique los datos e intente nuevamente.');
         return;
       }
+      }
 
       const detalles = carrito.map((item) => ({
         despacho_id: despacho.id,
@@ -450,7 +461,32 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           console.error('Error al insertar detalles del despacho:', itemsError);
           toast.error('Error al insertar detalles del despacho.');
           return;
+        } else {
+          // Fallback a datos de ejemplo
+          setCajas([
+            { id: 'caja1', nombre: 'Caja Principal' },
+            { id: 'caja2', nombre: 'Caja Secundaria' }
+        } else {
+          // Fallback a datos de ejemplo
+          setSucursales([
+            { id: 'sucursal1', nombre: 'Sucursal Principal' },
+            { id: 'sucursal2', nombre: 'Sucursal Centro' }
+          ]);
+          setSelectedSucursal('sucursal1');
+          ]);
+          setSelectedCaja('caja1');
         }
+        // Fallback a datos de ejemplo en caso de error
+        setCajas([
+          { id: 'caja1', nombre: 'Caja Principal' },
+          { id: 'caja2', nombre: 'Caja Secundaria' }
+        ]);
+        setSucursales([
+          { id: 'sucursal1', nombre: 'Sucursal Principal' },
+          { id: 'sucursal2', nombre: 'Sucursal Centro' }
+        ]);
+        setSelectedCaja('caja1');
+        setSelectedSucursal('sucursal1');
       }
 
       toast.success('Despacho creado exitosamente.');

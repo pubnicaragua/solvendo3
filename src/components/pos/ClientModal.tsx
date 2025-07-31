@@ -43,6 +43,11 @@ export const ClientModal: React.FC<ClientModalProps> = ({
   if (!isOpen) return null;
 
   const handleCreateClient = async () => {
+    // Para personas, usar nombres + apellidos como razón social
+    if (clientType === 'persona') {
+      newClient.razon_social = `${newClient.nombres} ${newClient.apellidos}`.trim();
+    }
+    
     // Basic validation based on client type
     if (clientType === 'empresa') {
       if (!newClient.razon_social || !newClient.rut) {
@@ -189,13 +194,6 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-                {/* Para personas, usar nombres + apellidos como razón social */}
-                <input
-                  type="hidden"
-                  value={`${newClient.nombres} ${newClient.apellidos}`.trim()}
-                  onChange={(e) => setNewClient(prev => ({ ...prev, razon_social: e.target.value }))}
-                />
-                
               </>
             )}
 
@@ -242,14 +240,14 @@ export const ClientModal: React.FC<ClientModalProps> = ({
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+            className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handleCreateClient}
             disabled={loading || (clientType === 'empresa' && (!newClient.razon_social || !newClient.rut)) || (clientType === 'persona' && (!newClient.nombres || !newClient.apellidos || !newClient.rut))}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Guardando...' : 'Guardar cliente'}
           </button>

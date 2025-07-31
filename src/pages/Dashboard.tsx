@@ -63,7 +63,6 @@ const Dashboard: React.FC = () => {
   const [cuponValido, setCuponValido] = useState<boolean>(false)
   const [enviarSII, setEnviarSII] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [despacho, setDespacho] = useState(false)
   
   // Estados para opciones de entrega
   const [tipoEntrega, setTipoEntrega] = useState<'inmediata' | 'despacho'>('inmediata')
@@ -381,7 +380,7 @@ const Dashboard: React.FC = () => {
   }
   
   // Solo redondear cuando es efectivo
-  if (selectedMethod === 'efectivo') {
+  if (selectedMethod === 'tarjeta') {
     totalConDescuento = Math.round(totalConDescuento)
   }
   
@@ -395,21 +394,32 @@ const Dashboard: React.FC = () => {
       return
     }
     
-    // Simular validación de cupón
-    const cuponesValidos = {
-      'DESC10': 1000,
-      'SAVE20': 2000,
-      'PROMO15': 1500
-    }
-    
-    if (cuponesValidos[codigo.toUpperCase()]) {
-      setCuponValido(true)
-      setCuponDescuento(cuponesValidos[codigo.toUpperCase()])
-      toast.success(`Cupón aplicado: $${cuponesValidos[codigo.toUpperCase()]} de descuento`)
-    } else {
+    try {
+      // Buscar cupón en promociones
+      const cuponEncontrado = promociones.find(p => 
+        p.nombre.toLowerCase().includes(codigo.toLowerCase()) && p.activo
+      )
+      
+      if (cuponEncontrado) {
+        let descuento = 0
+        if (cuponEncontrado.tipo === 'descuento_monto') {
+          descuento = cuponEncontrado.valor || 0
+        } else if (cuponEncontrado.tipo === 'descuento_porcentaje') {
+          descuento = total * ((cuponEncontrado.valor || 0) / 100)
+        }
+        
+        setCuponValido(true)
+        setCuponDescuento(descuento)
+        toast.success(`Cupón aplicado: ${cuponEncontrado.nombre} - $${descuento} de descuento`)
+      } else {
+        setCuponValido(false)
+        setCuponDescuento(0)
+        toast.error('Cupón no válido')
+      }
+    } catch (error) {
       setCuponValido(false)
       setCuponDescuento(0)
-      toast.error('Cupón no válido')
+      toast.error('Error al validar cupón')
     }
   }
 
@@ -421,6 +431,28 @@ const Dashboard: React.FC = () => {
       cliente.razon_social.toLowerCase().includes(termino.toLowerCase()) ||
       cliente.rut?.toLowerCase().includes(termino.toLowerCase())
     )
+  }
+
+  // Función para manejar búsqueda de clientes
+  const handleClientSearch = (termino: string) => {
+    setClientSearchTermMain(termino)
+    
+    if (!termino.trim()) {
+      selectClient(null)
+      return
+    }
+    
+    const clientesEncontrados = buscarClientes(termino)
+    if (clientesEncontrados.length === 1) {
+      selectClient(clientesEncontrados[0])
+      toast.success(`Cliente seleccionado: ${clientesEncontrados[0].razon_social}`)
+    } else if (clientesEncontrados.length === 0) {
+      selectClient(null)
+      toast.info('No se encontraron clientes')
+    } else {
+      selectClient(null)
+      toast.info(`Se encontraron ${clientesEncontrados.length} clientes`)
+    }
   }
 
   return (
@@ -516,7 +548,7 @@ const Dashboard: React.FC = () => {
                     onChange={(e) => setSelectedDte(e.target.value)}
                     className="px-3 py-2 border rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 appearance-none pr-8 cursor-pointer"
                   >
-                      <option value="boleta_manual">Boleta manual</option>
+                      <option value="boleta">Boleta manual</option>
                       <option value="boleta">Boleta electrónica</option>
                       <option value="factura">Factura electrónica</option>
                   </select>
@@ -534,16 +566,7 @@ const Dashboard: React.FC = () => {
                   type="text"
                   placeholder="Buscar cliente"
                   value={clientSearchTermMain}
-                  onChange={e => {
-                    setClientSearchTermMain(e.target.value)
-                    // Buscar y seleccionar cliente automáticamente
-                    const clientesEncontrados = buscarClientes(e.target.value)
-                    if (clientesEncontrados.length === 1) {
-                      selectClient(clientesEncontrados[0])
-                    } else if (e.target.value === '') {
-                      selectClient(null)
-                    }
-                  }}
+                  onChange={e => handleClientSearch(e.target.value)}
                   className="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4"/>
@@ -680,23 +703,29 @@ const Dashboard: React.FC = () => {
                 </div>
                 
                 <div className="flex items-center gap-6">
-                  <div className="text-sm text-gray-600">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={tipoEntrega === 'inmediata'}
-                        onChange={(e) => setTipoEntrega(e.target.checked ? 'inmediata' : 'despacho')}
-                        className="rounded border-gray-300 text-blue-600"
-                      />
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setTipoEntrega('inmediata')}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                        tipoEntrega === 'inmediata' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                      </svg>
                       <span>Entrega inmediata</span>
-                    </label>
+                    </button>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Truck 
-                      className={`w-4 h-4 ${tipoEntrega === 'despacho' ? 'text-blue-600' : 'text-gray-400'} cursor-pointer`}
+                    <button
                       onClick={() => setTipoEntrega(tipoEntrega === 'despacho' ? 'inmediata' : 'despacho')}
-                    />
-                    <span className={`text-sm ${tipoEntrega === 'despacho' ? 'text-blue-600' : 'text-gray-600'} cursor-pointer`} onClick={() => setTipoEntrega(tipoEntrega === 'despacho' ? 'inmediata' : 'despacho')}>Despacho</span>
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                        tipoEntrega === 'despacho' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <Truck className="w-4 h-4" />
+                      <span>Despacho</span>
+                    </button>
                   </div>
                 </div>
                 

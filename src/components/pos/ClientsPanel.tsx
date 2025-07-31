@@ -41,7 +41,6 @@ export default function ClientsPanel({ onClientSelected }: Props) {
   const pick = (c:any) => {
     selectClient(c)
     onClientSelected(c)
-    toast.success(`Cliente ${c.razon_social} seleccionado`)
   }
 
   const save = async () => {
