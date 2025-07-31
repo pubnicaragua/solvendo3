@@ -35,6 +35,7 @@ interface ClienteDevolucion {
 export const ReturnsPage: React.FC = () => {
   const [folio, setFolio] = useState('');
   const [folioInput, setFolioInput] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const { empresaId, user } = useAuth();
   const [ventaItems, setVentaItems] = useState<VentaItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<Record<string, number>>({});

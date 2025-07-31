@@ -23,6 +23,7 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null)
   const [copies, setCopies] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
 
   // Obtener datos del usuario y empresa del contexto de autenticación
   const { user, empresaId } = useAuth();
@@ -117,6 +118,13 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       return;
     }
     
+    const foundDoc = docs.find(doc => doc.folio.includes(searchFolio));
+    if (foundDoc) {
+      setSelectedDoc(foundDoc);
+      toast.success('Documento encontrado');
+    } else {
+      toast.error('No se encontró el documento');
+    }
   }
 
   const formatPrice = (n: number) =>
@@ -171,7 +179,7 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       
       // Limpiar selección para permitir nueva selección
       setSelectedDoc(null);
-      setSearchTerm('');
+      setSearchFolio('');
     } catch (error) {
       console.error('Error en impresión:', error);
       toast.error('Error al imprimir documento');

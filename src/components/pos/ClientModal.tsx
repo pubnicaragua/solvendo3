@@ -232,22 +232,44 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-            
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Comuna</label>
+                <input
+                  type="text"
+                  value={newClient.comuna}
+                  onChange={(e) => setNewClient(prev => ({ ...prev, comuna: e.target.value }))}
+                  placeholder="Comuna"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Ciudad</label>
+                <input
+                  type="text"
+                  value={newClient.ciudad}
+                  onChange={(e) => setNewClient(prev => ({ ...prev, ciudad: e.target.value }))}
+                  placeholder="Ciudad"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="p-6 border-t border-gray-200 flex gap-4 justify-end flex-shrink-0">
+        <div className="p-6 border-t border-gray-200 flex gap-4 justify-end flex-shrink-0 mt-2">
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+            className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handleCreateClient}
             disabled={loading || (clientType === 'empresa' && (!newClient.razon_social || !newClient.rut)) || (clientType === 'persona' && (!newClient.nombres || !newClient.apellidos || !newClient.rut))}
-            className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Guardando...' : 'Guardar cliente'}
           </button>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Search, Star, FileText, Gift, User, Filter, Package,
+  Search, Star, FileText, Gift, User, Filter, Package, ShoppingBag,
   Plus, Minus, X as XIcon, Percent, DollarSign, CreditCard, Truck
 } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -65,7 +65,7 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(false)
   
   // Estados para opciones de entrega
-  const [tipoEntrega, setTipoEntrega] = useState<'inmediata' | 'despacho'>('inmediata')
+  const [tipoEntrega, setTipoEntrega] = useState<'inmediata' | 'despacho' | null>(null)
   const [cupon, setCupon] = useState(false)
   
   // Estados para búsquedas separadas
@@ -445,13 +445,10 @@ const Dashboard: React.FC = () => {
     const clientesEncontrados = buscarClientes(termino)
     if (clientesEncontrados.length === 1) {
       selectClient(clientesEncontrados[0])
-      toast.success(`Cliente seleccionado: ${clientesEncontrados[0].razon_social}`)
     } else if (clientesEncontrados.length === 0) {
       selectClient(null)
-      toast.info('No se encontraron clientes')
     } else {
       selectClient(null)
-      toast.info(`Se encontraron ${clientesEncontrados.length} clientes`)
     }
   }
 
@@ -548,7 +545,7 @@ const Dashboard: React.FC = () => {
                     onChange={(e) => setSelectedDte(e.target.value)}
                     className="px-3 py-2 border rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 appearance-none pr-8 cursor-pointer"
                   >
-                      <option value="boleta">Boleta manual</option>
+                      <option value="boleta_manual">Boleta manual</option>
                       <option value="boleta">Boleta electrónica</option>
                       <option value="factura">Factura electrónica</option>
                   </select>
@@ -690,8 +687,8 @@ const Dashboard: React.FC = () => {
               {/* Document Type Selection */}
               <div className="space-y-4">
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de documento</label>
-                  <select
+                  <option value="boleta_manual">Boleta manual</option>
+                  <option value="boleta">Boleta electrónica</option>
                     value={selectedDte}
                     onChange={(e) => setSelectedDte(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -705,20 +702,18 @@ const Dashboard: React.FC = () => {
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setTipoEntrega('inmediata')}
+                      onClick={() => setTipoEntrega(tipoEntrega === 'inmediata' ? null : 'inmediata')}
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
                         tipoEntrega === 'inmediata' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                      </svg>
+                      <Package className="w-4 h-4" />
                       <span>Entrega inmediata</span>
                     </button>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setTipoEntrega(tipoEntrega === 'despacho' ? 'inmediata' : 'despacho')}
+                      onClick={() => setTipoEntrega(tipoEntrega === 'despacho' ? null : 'despacho')}
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
                         tipoEntrega === 'despacho' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
@@ -729,25 +724,26 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Descuentos */}
+                {/* Descuentos y Cupones */}
                 <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={descuentosEnabled}
-                      onChange={() => setDescuentosEnabled(!descuentosEnabled)}
-                      className="rounded border-gray-300 text-blue-600"
-                    />
-                    <Percent className="w-4 h-4 text-gray-600" />
+                  <button
+                    onClick={() => setDescuentosEnabled(!descuentosEnabled)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                      descuentosEnabled ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    <Percent className="w-4 h-4" />
                     <span className="text-sm">Descuentos</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Plus 
-                      className={`w-4 h-4 ${cupon ? 'text-blue-600' : 'text-gray-400'} cursor-pointer`}
-                      onClick={() => setCupon(!cupon)}
-                    />
-                    <span className={`text-sm ${cupon ? 'text-blue-600' : 'text-gray-600'} cursor-pointer`} onClick={() => setCupon(!cupon)}>Agregar cupón</span>
-                  </div>
+                  </button>
+                  <button
+                    onClick={() => setCupon(!cupon)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                      cupon ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="text-sm">Agregar cupón</span>
+                  </button>
                 </div>
 
                 {/* Selección de Cliente para Factura */}
@@ -842,22 +838,6 @@ const Dashboard: React.FC = () => {
                   </div>
                 )}
                 
-                {tipoEntrega === 'despacho' && (
-                  <div className="mt-4 p-3 bg-green-50 rounded-lg">
-                    <h5 className="text-sm font-medium text-green-800 mb-2">Configuración de Despacho</h5>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="text"
-                        placeholder="Dirección de entrega"
-                        className="px-3 py-2 border border-green-300 rounded-lg text-sm"
-                      />
-                      <input
-                        type="date"
-                        className="px-3 py-2 border border-green-300 rounded-lg text-sm"
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
               
               {/* Payment Methods */}
