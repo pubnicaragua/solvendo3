@@ -258,7 +258,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
           </div>
         </div>
 
-        <div className="p-6 border-t border-gray-200 flex gap-4 justify-end flex-shrink-0 mt-2">
+        <div className="p-6 border-t border-gray-200 flex gap-4 justify-end flex-shrink-0 mt-6">
           <button
             onClick={onClose}
             disabled={loading}

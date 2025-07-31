@@ -36,6 +36,7 @@ export const ReturnsPage: React.FC = () => {
   const [folio, setFolio] = useState('');
   const [folioInput, setFolioInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [clientSearchTerm, setClientSearchTerm] = useState('');
   const { empresaId, user } = useAuth();
   const [ventaItems, setVentaItems] = useState<VentaItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<Record<string, number>>({});
@@ -530,8 +531,6 @@ export const ReturnsPage: React.FC = () => {
               <input
                 type="text"
                 placeholder="Ingresa aquí el número de folio"
-                value={clientSearchTerm}
-                onChange={(e) => setClientSearchTermMain(e.target.value)}
                 value={folioInput}
                 onChange={e => setFolioInput(e.target.value)}
                 onKeyPress={(e) => {
