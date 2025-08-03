@@ -1,78 +1,127 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { usePOS } from '../contexts/POSContext'
-import { useAuth } from '../contexts/AuthContext'
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { usePOS } from "../contexts/POSContext";
+import { useAuth } from "../contexts/AuthContext";
 import {
-  Search, Star, FileText, Gift, User, Plus, Minus, X as XIcon, 
-  Percent, DollarSign, CreditCard, Truck, Package
-} from 'lucide-react'
-import toast from 'react-hot-toast'
-import ProductHighlights from '../components/pos/ProductHighlights'
-import DraftsPanel       from '../components/pos/DraftsPanel'
-import ProductsPanel     from '../components/pos/ProductsPanel'
-import ClientsPanel      from '../components/pos/ClientsPanel'
-import { ReceiptModal}       from '../components/pos/ReceiptModal'
-import { DraftSaveModal}     from '../components/pos/DraftSaveModal'
+  Search,
+  Star,
+  FileText,
+  Gift,
+  User,
+  Plus,
+  Minus,
+  X as XIcon,
+  Percent,
+  DollarSign,
+  CreditCard,
+  Truck,
+  Package,
+} from "lucide-react";
+import toast from "react-hot-toast";
+import ProductHighlights from "../components/pos/ProductHighlights";
+import DraftsPanel from "../components/pos/DraftsPanel";
+import ProductsPanel from "../components/pos/ProductsPanel";
+import ClientsPanel from "../components/pos/ClientsPanel";
+import { ReceiptModal } from "../components/pos/ReceiptModal";
+import { DraftSaveModal } from "../components/pos/DraftSaveModal";
 
 // Importamos el nuevo componente HeaderWithMenu
-import { HeaderWithMenu } from '../components/common/HeaderWithMenu' 
+import { HeaderWithMenu } from "../components/common/HeaderWithMenu";
 // Logo ya no es necesario importarlo directamente aquí, si HeaderWithMenu lo usa internamente
-// import { Logo }          from '../components/common/Logo' 
+// import { Logo }          from '../components/common/Logo'
 
-type TabId = 'destacado' | 'borradores' | 'productos' | 'clientes'
+type TabId = "destacado" | "borradores" | "productos" | "clientes";
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
-  { id: 'destacado' as TabId,  label: 'Destacado',  icon: <Star className="w-5 h-5" /> },
-  { id: 'borradores' as TabId, label: 'Borradores', icon: <FileText className="w-5 h-5" /> },
-  { id: 'promociones' as TabId, label: 'Promociones', icon: <Percent className="w-5 h-5" /> },
-  { id: 'productos' as TabId,  label: 'Productos',  icon: <Gift className="w-5 h-5" /> },
-  { id: 'clientes' as TabId,   label: 'Clientes',   icon: <User className="w-5 h-5" /> },
-]
+  {
+    id: "destacado" as TabId,
+    label: "Destacado",
+    icon: <Star className="w-5 h-5" />,
+  },
+  {
+    id: "borradores" as TabId,
+    label: "Borradores",
+    icon: <FileText className="w-5 h-5" />,
+  },
+  {
+    id: "promociones" as TabId,
+    label: "Promociones",
+    icon: <Percent className="w-5 h-5" />,
+  },
+  {
+    id: "productos" as TabId,
+    label: "Productos",
+    icon: <Gift className="w-5 h-5" />,
+  },
+  {
+    id: "clientes" as TabId,
+    label: "Clientes",
+    icon: <User className="w-5 h-5" />,
+  },
+];
 
 const Dashboard: React.FC = () => {
   // toggleSidebar y user se obtienen de sus respectivos contextos y se pasan a HeaderWithMenu
-  const { user } = useAuth()
+  const { user } = useAuth();
 
   const {
-    productos, carrito, total,
-    addToCart, updateQuantity, removeFromCart, clearCart,
-    borradores, loadBorradores, saveDraft, loadDraft, deleteDraft, 
-    promociones, loadPromociones,
-    loadClientes, procesarVenta, loadProductos, clientes, currentCliente, selectClient
-  } = usePOS()
-  
+    productos,
+    carrito,
+    total,
+    addToCart,
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+    borradores,
+    loadBorradores,
+    saveDraft,
+    loadDraft,
+    deleteDraft,
+    promociones,
+    loadPromociones,
+    loadClientes,
+    procesarVenta,
+    loadProductos,
+    clientes,
+    currentCliente,
+    selectClient,
+  } = usePOS();
+
   // Alias for selectClient to avoid naming conflicts
   const handleSelectClient = selectClient;
 
-  const [activeTab, setActiveTab] = useState<TabId>('destacado')
-  const [showDraftModal, setShowDraftModal] = useState(false)
-  const [draftName, setDraftName] = useState('')
-  const [showReceipt, setShowReceipt] = useState(false)
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [showPrintDialog, setShowPrintDialog] = useState(false)
-  const [showClientModal, setShowClientModal] = useState(false)
-  
+  const [activeTab, setActiveTab] = useState<TabId>("destacado");
+  const [showDraftModal, setShowDraftModal] = useState(false);
+  const [draftName, setDraftName] = useState("");
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
+  const [showClientModal, setShowClientModal] = useState(false);
+
   // Estados del panel de pago
-  const [selectedMethod, setSelectedMethod] = useState<string>('efectivo')
-  const [selectedDte, setSelectedDte] = useState<string>('boleta')
-  const [selectedTerminal, setSelectedTerminal] = useState<string>('terminal_principal')
-  const [montoRecibido, setMontoRecibido] = useState<number>(0)
-  
+  const [selectedMethod, setSelectedMethod] = useState<string>("efectivo");
+  const [selectedDte, setSelectedDte] = useState<string>("boleta");
+  const [selectedTerminal, setSelectedTerminal] =
+    useState<string>("terminal_principal");
+  const [montoRecibido, setMontoRecibido] = useState<number>(0);
+
   // Estados para opciones de entrega
-  const [tipoEntrega, setTipoEntrega] = useState<'inmediata' | 'despacho' | null>(null)
-  const [cupon, setCupon] = useState(false)
-  
+  const [tipoEntrega, setTipoEntrega] = useState<
+    "inmediata" | "despacho" | null
+  >(null);
+  const [cupon, setCupon] = useState(false);
+
   // Estados para búsquedas
-  const [productSearchTerm, setProductSearchTerm] = useState('')
-  const [clientSearchTermMain, setClientSearchTermMain] = useState('')
-  
+  const [productSearchTerm, setProductSearchTerm] = useState("");
+  const [clientSearchTermMain, setClientSearchTermMain] = useState("");
+
   // Estados para descuentos y cupones
-  const [descuentosEnabled, setDescuentosEnabled] = useState<boolean>(false)
-  const [descuentoPorcentaje, setDescuentoPorcentaje] = useState<string>('')
-  const [cuponCodigo, setCuponCodigo] = useState<string>('')
-  const [cuponDescuento, setCuponDescuento] = useState<number>(0)
-  const [cuponValido, setCuponValido] = useState<boolean>(false)
-  const [enviarSII, setEnviarSII] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [descuentosEnabled, setDescuentosEnabled] = useState<boolean>(false);
+  const [descuentoPorcentaje, setDescuentoPorcentaje] = useState<string>("");
+  const [cuponCodigo, setCuponCodigo] = useState<string>("");
+  const [cuponDescuento, setCuponDescuento] = useState<number>(0);
+  const [cuponValido, setCuponValido] = useState<boolean>(false);
+  const [enviarSII, setEnviarSII] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -82,24 +131,24 @@ const Dashboard: React.FC = () => {
           loadClientes(),
           loadProductos(),
           loadBorradores(),
-          loadPromociones()
-        ])
+          loadPromociones(),
+        ]);
       } catch (error) {
-        console.error('Error al cargar datos iniciales:', error)
+        console.error("Error al cargar datos iniciales:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    
-    setLoading(true)
-    fetchInitialData()
-  }, [loadClientes, loadProductos, loadBorradores, loadPromociones])
-  
+    };
+
+    setLoading(true);
+    fetchInitialData();
+  }, [loadClientes, loadProductos, loadBorradores, loadPromociones]);
+
   // Handle client selection from dropdown
   const handleClientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const clienteId = e.target.value;
     if (clienteId) {
-      const cliente = clientes.find(c => c.id === clienteId);
+      const cliente = clientes.find((c) => c.id === clienteId);
       if (cliente) {
         handleSelectClient(cliente);
       }
@@ -107,136 +156,142 @@ const Dashboard: React.FC = () => {
       handleSelectClient(null);
     }
   };
-  
+
   // Calcular monto de descuento (sin redondear)
   let montoDescuento = 0;
-  
+
   // Aplicar descuento porcentual si está habilitado
   if (descuentosEnabled && descuentoPorcentaje) {
     montoDescuento = total * (parseFloat(descuentoPorcentaje) / 100);
   }
-  
+
   // Aplicar descuento por cupón si es válido (se suma al descuento porcentual si existe)
   if (cuponValido && cuponDescuento > 0) {
     montoDescuento += cuponDescuento;
   }
-  
+
   // Calcular total con descuento (sin redondear)
   const totalConDescuento = Math.max(0, total - montoDescuento);
-  
+
   // Redondear SOLO para pago en efectivo (a múltiplo de 10 más cercano)
-  const totalAPagar = selectedMethod === 'efectivo' 
-    ? Math.round(totalConDescuento / 10) * 10 
-    : totalConDescuento;
-    
+  const totalAPagar =
+    selectedMethod === "efectivo"
+      ? Math.round(totalConDescuento / 10) * 10
+      : totalConDescuento;
+
   // Calcular vuelto solo para pago en efectivo
   const montoRecibidoNum = Number(montoRecibido) || 0;
-  const vuelto = selectedMethod === 'efectivo' 
-    ? Math.max(0, montoRecibidoNum - totalAPagar)
-    : 0;
-  
-
+  const vuelto =
+    selectedMethod === "efectivo"
+      ? Math.max(0, montoRecibidoNum - totalAPagar)
+      : 0;
 
   useEffect(() => {
-    loadBorradores()
-    loadPromociones()
-    loadClientes()
-    loadProductos()
-  },[loadBorradores, loadPromociones, loadClientes, loadProductos])
+    loadBorradores();
+    loadPromociones();
+    loadClientes();
+    loadProductos();
+  }, [loadBorradores, loadPromociones, loadClientes, loadProductos]);
 
   const fmt = (n: number, showDecimals: boolean = false) =>
-    new Intl.NumberFormat('es-CL', { 
-      style: 'currency', 
-      currency: 'CLP',
+    new Intl.NumberFormat("es-CL", {
+      style: "currency",
+      currency: "CLP",
       minimumFractionDigits: showDecimals ? 1 : 0,
-      maximumFractionDigits: showDecimals ? 1 : 0
-    }).format(Math.max(0, Number(n) || 0))
+      maximumFractionDigits: showDecimals ? 1 : 0,
+    }).format(Math.max(0, Number(n) || 0));
 
   const handleSaveDraft = async () => {
-    if (!draftName.trim() || carrito.length===0) return
-    setShowDraftModal(false)
-    const success = await saveDraft(draftName)
+    if (!draftName.trim() || carrito.length === 0) return;
+    setShowDraftModal(false);
+    const success = await saveDraft(draftName);
     if (success) {
-      toast.success('Borrador guardado')
-      setDraftName('')
-      loadBorradores()
+      toast.success("Borrador guardado");
+      setDraftName("");
+      loadBorradores();
     }
-  }
-  const handleLoadDraft = async (id:string) => {
-    const success = await loadDraft(id)
+  };
+  const handleLoadDraft = async (id: string) => {
+    const success = await loadDraft(id);
     if (success) {
-      toast.success('Borrador cargado')
+      toast.success("Borrador cargado");
     }
-    setActiveTab('destacado')
-  }
-  const handleDeleteDraft = async (id:string) => {
-    if (confirm('¿Eliminar borrador?')) {
-      const success = await deleteDraft(id)
+    setActiveTab("destacado");
+  };
+  const handleDeleteDraft = async (id: string) => {
+    if (confirm("¿Eliminar borrador?")) {
+      const success = await deleteDraft(id);
       if (success) {
-        toast.success('Borrador eliminado')
-        loadBorradores()
+        toast.success("Borrador eliminado");
+        loadBorradores();
       }
     }
-  }
+  };
 
   const startPayment = () => {
     if (carrito.length === 0) {
-      toast.error('El carrito está vacío')
-      return
+      toast.error("El carrito está vacío");
+      return;
     }
-    setShowPaymentModal(true)
-  }
+    setShowPaymentModal(true);
+  };
 
   const handlePaymentComplete = async () => {
     if (carrito.length === 0) {
-      toast.error('No hay productos en el carrito')
-      return
+      toast.error("No hay productos en el carrito");
+      return;
     }
 
     // Validar cliente para factura electrónica
-    if (selectedDte === 'factura' && !currentCliente) {
-      toast.error('Debe seleccionar un cliente para factura electrónica')
-      return
+    if (selectedDte === "factura" && !currentCliente) {
+      toast.error("Debe seleccionar un cliente para factura electrónica");
+      return;
     }
 
     // Validar monto recibido para efectivo
-    if (selectedMethod === 'efectivo' && montoRecibido < totalConDescuento) {
-      toast.error('El monto recibido debe ser mayor o igual al total')
-      return
+    if (selectedMethod === "efectivo" && montoRecibido < totalConDescuento) {
+      toast.error("El monto recibido debe ser mayor o igual al total");
+      return;
     }
 
-    setLoading(true)
-    
+    setLoading(true);
+
     try {
       // Procesar la venta
-      const result = await procesarVenta(selectedMethod, selectedDte as 'boleta' | 'factura' | 'nota_credito', selectedClient?.id);
-      
+      const result = await procesarVenta(
+        selectedMethod,
+        selectedDte as "boleta" | "factura" | "nota_credito",
+        currentCliente?.id || null // Usamos currentCliente en lugar de selectedClient
+      );
+
       if (result.success) {
         // Mostrar diálogo de impresión
-        setShowPaymentModal(false)
-        setShowPrintDialog(true)
+        setShowPaymentModal(false);
+        setShowPrintDialog(true);
       } else {
-        let errorMessage = 'Error al procesar la venta'
+        let errorMessage = "Error al procesar la venta";
         if (result.error) {
-          if (result.error.includes('caja')) {
-            errorMessage = 'La caja está cerrada. Debe abrir la caja para procesar ventas.'
-          } else if (result.error.includes('cliente')) {
-            errorMessage = 'Debe seleccionar un cliente válido para este tipo de documento.'
-          } else if (result.error.includes('stock')) {
-            errorMessage = 'No hay suficiente stock para algunos productos.'
+          if (result.error.includes("caja")) {
+            errorMessage =
+              "La caja está cerrada. Debe abrir la caja para procesar ventas.";
+          } else if (result.error.includes("cliente")) {
+            errorMessage =
+              "Debe seleccionar un cliente válido para este tipo de documento.";
+          } else if (result.error.includes("stock")) {
+            errorMessage = "No hay suficiente stock para algunos productos.";
           } else {
-            errorMessage = result.error
+            errorMessage = result.error;
           }
         }
-        toast.error(errorMessage)
+        toast.error(errorMessage);
       }
     } catch (error) {
-      console.error('Error processing payment:', error)
-      toast.error('Error inesperado al procesar el pago. Intente nuevamente.')
+      console.error("Error processing payment:", error);
+      toast.error("Error inesperado al procesar el pago. Intente nuevamente.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handlePrintReceipt = () => {
     try {
@@ -319,45 +374,76 @@ const Dashboard: React.FC = () => {
     
     <div class="document-type">${selectedDte.toUpperCase()}</div>
     <div class="info"><strong>Folio:</strong> V${Date.now()}</div>
-    <div class="info"><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-CL')}</div>
-    <div class="info"><strong>Hora:</strong> ${new Date().toLocaleTimeString('es-CL')}</div>
-    <div class="info"><strong>Cajero:</strong> ${user?.nombre || 'Usuario'}</div>
-    <div class="info"><strong>Cliente:</strong> ${selectedClient?.razon_social || 'Consumidor Final'}</div>
-    <div class="info"><strong>RUT:</strong> ${selectedClient?.rut || '66.666.666-6'}</div>
+    <div class="info"><strong>Fecha:</strong> ${new Date().toLocaleDateString(
+      "es-CL"
+    )}</div>
+    <div class="info"><strong>Hora:</strong> ${new Date().toLocaleTimeString(
+      "es-CL"
+    )}</div>
+    <div class="info"><strong>Cajero:</strong> ${
+      user?.nombre || "Usuario"
+    }</div>
+    <div class="info"><strong>Cliente:</strong> ${
+      selectedClient?.razon_social || "Consumidor Final"
+    }</div>
+    <div class="info"><strong>RUT:</strong> ${
+      selectedClient?.rut || "66.666.666-6"
+    }</div>
     <div class="info"><strong>Método:</strong> ${selectedMethod}</div>
     
     <div style="border-top: 1px dashed #000; margin: 15px 0; padding-top: 10px;">
       <div style="font-weight: bold; margin-bottom: 10px;">PRODUCTOS:</div>
-      ${carrito.map(item => `
+      ${carrito
+        .map(
+          (item) => `
         <div style="margin: 5px 0; display: flex; justify-content: space-between;">
           <span>${item.nombre} x${item.quantity}</span>
           <span>${fmt(item.precio * item.quantity)}</span>
         </div>
-      `).join('')}
+      `
+        )
+        .join("")}
     </div>
     
     <div class="totales">
       <div class="total-line">
         <span>Total a pagar:</span>
-        <span>${fmt(selectedMethod === 'efectivo' ? Math.round(totalConDescuento / 10) * 10 : totalConDescuento)}</span>
+        <span>${fmt(
+          selectedMethod === "efectivo"
+            ? Math.round(totalConDescuento / 10) * 10
+            : totalConDescuento
+        )}</span>
       </div>
       <div class="total-line" style="margin-top: 10px; border-top: 1px dashed #ddd; padding-top: 5px;">
         <span>Subtotal:</span>
         <span>${fmt(total)}</span>
       </div>
-      ${descuentosEnabled && parseFloat(descuentoPorcentaje) > 0 ? `
+      ${
+        descuentosEnabled && parseFloat(descuentoPorcentaje) > 0
+          ? `
         <div class="total-line" style="color: red;">
           <span>Descuento (${descuentoPorcentaje}%):</span>
-          <span>-${fmt(total * (parseFloat(descuentoPorcentaje) / 100), true)}</span>
+          <span>-${fmt(
+            total * (parseFloat(descuentoPorcentaje) / 100),
+            true
+          )}</span>
         </div>
-      ` : ''}
-      ${cuponValido && cuponDescuento > 0 ? `
+      `
+          : ""
+      }
+      ${
+        cuponValido && cuponDescuento > 0
+          ? `
         <div class="total-line" style="color: red;">
           <span>Descuento por cupón:</span>
           <span>-${fmt(cuponDescuento, true)}</span>
         </div>
-      ` : ''}
-      ${selectedMethod === 'efectivo' ? `
+      `
+          : ""
+      }
+      ${
+        selectedMethod === "efectivo"
+          ? `
         <div class="total-line">
           <span>Monto recibido:</span>
           <span>${fmt(montoRecibido)}</span>
@@ -366,7 +452,9 @@ const Dashboard: React.FC = () => {
           <span>Vuelto:</span>
           <span>${fmt(vuelto)}</span>
         </div>
-      ` : ''}
+      `
+          : ""
+      }
     </div>
     
     <div class="footer">
@@ -376,58 +464,61 @@ const Dashboard: React.FC = () => {
   </div>
 </body>
 </html>`;
-      
+
       // Create blob and download link for PDF
-      const blob = new Blob([pdfContent], { type: 'text/html' });
+      const blob = new Blob([pdfContent], { type: "text/html" });
       const url = URL.createObjectURL(blob);
-      
+
       // Create download link
-      const downloadLink = document.createElement('a');
+      const downloadLink = document.createElement("a");
       downloadLink.href = url;
       downloadLink.download = `boleta_${Date.now()}.html`;
-      downloadLink.style.display = 'none';
+      downloadLink.style.display = "none";
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
       URL.revokeObjectURL(url);
-      
+
       // Open print window
-      const printWindow = window.open('', '_blank', 'width=400,height=600');
+      const printWindow = window.open("", "_blank", "width=400,height=600");
       if (printWindow) {
-        printWindow.document.write(pdfContent + `
+        printWindow.document.write(
+          pdfContent +
+            `
           <script>
             window.onload = function() { 
               window.print(); 
               setTimeout(function() { window.close(); }, 1000); 
             }
           </script>
-        `);
+        `
+        );
         printWindow.document.close();
       }
     } catch (error) {
-      console.error('Error al imprimir:', error);
-      toast.error('Error al generar el documento');
+      console.error("Error al imprimir:", error);
+      toast.error("Error al generar el documento");
     }
-    
+
     // Limpiar carrito y cerrar modal
     clearCart();
-    setShowPaymentModal(false)
-    setShowPrintDialog(false)
-    setActiveTab('destacado')
-  }
+    setShowPaymentModal(false);
+    setShowPrintDialog(false);
+    setActiveTab("destacado");
+  };
 
   const handleReceiptClose = () => {
-    setShowReceipt(false)
-    clearCart()
-    setActiveTab('destacado')
-  }
+    setShowReceipt(false);
+    clearCart();
+    setActiveTab("destacado");
+  };
 
-  const filteredProducts = productos.filter(p =>
+  const filteredProducts = productos.filter((p) =>
     p.nombre.toLowerCase().includes(productSearchTerm.toLowerCase())
-  )
-  
+  );
+
   // Solo mostrar productos si hay término de búsqueda
-  const shouldShowProducts = productSearchTerm.length > 0
+  const shouldShowProducts = productSearchTerm.length > 0;
 
   // El cálculo de totalConDescuento y vuelto se maneja en la parte superior del componente
   // Esta sección duplicada se elimina para evitar errores
@@ -435,75 +526,78 @@ const Dashboard: React.FC = () => {
   // Validar cupón
   const validarCupon = async (codigo: string) => {
     if (!codigo.trim()) {
-      setCuponValido(false)
-      setCuponDescuento(0)
-      return
+      setCuponValido(false);
+      setCuponDescuento(0);
+      return;
     }
-    
+
     try {
       // Buscar cupón en promociones
-      const cuponEncontrado = promociones.find(p => 
-        p.nombre.toLowerCase().includes(codigo.toLowerCase()) && p.activo
-      )
-      
+      const cuponEncontrado = promociones.find(
+        (p) => p.nombre.toLowerCase().includes(codigo.toLowerCase()) && p.activo
+      );
+
       if (cuponEncontrado) {
-        let descuento = 0
-        if (cuponEncontrado.tipo === 'descuento_monto') {
-          descuento = cuponEncontrado.valor || 0
-        } else if (cuponEncontrado.tipo === 'descuento_porcentaje') {
-          descuento = total * ((cuponEncontrado.valor || 0) / 100)
+        let descuento = 0;
+        if (cuponEncontrado.tipo === "descuento_monto") {
+          descuento = cuponEncontrado.valor || 0;
+        } else if (cuponEncontrado.tipo === "descuento_porcentaje") {
+          descuento = total * ((cuponEncontrado.valor || 0) / 100);
         }
-        
-        setCuponValido(true)
-        setCuponDescuento(descuento)
-        toast.success(`Cupón aplicado: ${cuponEncontrado.nombre} - $${descuento} de descuento`)
+
+        setCuponValido(true);
+        setCuponDescuento(descuento);
+        toast.success(
+          `Cupón aplicado: ${cuponEncontrado.nombre} - $${descuento} de descuento`
+        );
       } else {
-        setCuponValido(false)
-        setCuponDescuento(0)
-        toast.error('Cupón no válido')
+        setCuponValido(false);
+        setCuponDescuento(0);
+        toast.error("Cupón no válido");
       }
     } catch (error) {
-      setCuponValido(false)
-      setCuponDescuento(0)
-      toast.error('Error al validar cupón')
+      setCuponValido(false);
+      setCuponDescuento(0);
+      toast.error("Error al validar cupón");
     }
-  }
+  };
 
   // Buscar clientes
   const buscarClientes = (termino: string) => {
-    if (!termino.trim()) return []
-    
-    return clientes.filter(cliente => 
-      cliente.razon_social.toLowerCase().includes(termino.toLowerCase()) ||
-      cliente.rut?.toLowerCase().includes(termino.toLowerCase())
-    )
-  }
+    if (!termino.trim()) return [];
+
+    return clientes.filter(
+      (cliente) =>
+        cliente.razon_social.toLowerCase().includes(termino.toLowerCase()) ||
+        cliente.rut?.toLowerCase().includes(termino.toLowerCase())
+    );
+  };
 
   // Función para manejar búsqueda de clientes
   const handleClientSearch = (termino: string) => {
-    setClientSearchTermMain(termino)
-    
+    setClientSearchTermMain(termino);
+
     if (!termino.trim()) {
-      selectClient(null)
-      return
+      selectClient(null);
+      return;
     }
-    
-    const clientesEncontrados = buscarClientes(termino)
+
+    const clientesEncontrados = buscarClientes(termino);
     if (clientesEncontrados.length === 1) {
-      selectClient(clientesEncontrados[0])
+      selectClient(clientesEncontrados[0]);
     } else if (clientesEncontrados.length === 0) {
-      selectClient(null)
+      selectClient(null);
     } else {
-      selectClient(null)
+      selectClient(null);
     }
-  }
+  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Reemplazamos el <header> manual con el componente HeaderWithMenu */}
-      <HeaderWithMenu 
+      <HeaderWithMenu
         title="POS" // Título para el POS
-        userName={user?.nombre || 'Usuario'} // Nombre del usuario
+        userName={user?.nombre || "Usuario"} // Nombre del usuario
         userAvatarUrl={user?.avatar_url || undefined} // URL del avatar si existe en tu objeto user
         showClock={true} // Mostrar el reloj
       />
@@ -516,152 +610,216 @@ const Dashboard: React.FC = () => {
               type="text"
               placeholder="Buscar productos..."
               value={productSearchTerm}
-              onChange={e => {
-                setProductSearchTerm(e.target.value)
-                setShowSearchResults(e.target.value.length > 0)
+              onChange={(e) => {
+                setProductSearchTerm(e.target.value);
+                setShowSearchResults(e.target.value.length > 0);
               }}
               className="w-full pl-12 pr-4 py-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          
+
           <div className="flex-1 overflow-y-auto mb-6 space-y-4">
             {/* Mostrar productos del carrito siempre */}
-            {carrito.map(item => (
-              <div key={item.id} className="flex justify-between items-center py-4 border-b last:border-b-0">
-                <div className="flex-1"><h4 className="font-medium">{item.nombre}</h4></div>
+            {carrito.map((item) => (
+              <div
+                key={item.id}
+                className="flex justify-between items-center py-4 border-b last:border-b-0"
+              >
+                <div className="flex-1">
+                  <h4 className="font-medium">{item.nombre}</h4>
+                </div>
                 <div className="flex items-center space-x-2">
-                  <button onClick={()=>updateQuantity(item.id, Math.max(0, item.quantity-1))}
-                    className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
+                  <button
+                    onClick={() =>
+                      updateQuantity(item.id, Math.max(0, item.quantity - 1))
+                    }
+                    className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center"
+                  >
                     <Minus className="w-4 h-4" />
                   </button>
-                  <span className="w-8 text-center flex-shrink-0">{item.quantity}</span>
-                  <button onClick={()=>updateQuantity(item.id, item.quantity+1)}
-                    className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
+                  <span className="w-8 text-center flex-shrink-0">
+                    {item.quantity}
+                  </span>
+                  <button
+                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                    className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center"
+                  >
                     <Plus className="w-4 h-4" />
                   </button>
                 </div>
                 <div className="flex items-center space-x-4 ml-6">
-                  <span className="font-semibold">{fmt(item.precio * item.quantity)}</span>
-                  <button onClick={()=>removeFromCart(item.id)} className="text-gray-600 p-1 rounded-full hover:bg-gray-100">
+                  <span className="font-semibold">
+                    {fmt(item.precio * item.quantity)}
+                  </span>
+                  <button
+                    onClick={() => removeFromCart(item.id)}
+                    className="text-gray-600 p-1 rounded-full hover:bg-gray-100"
+                  >
                     <XIcon className="w-4 h-4" />
                   </button>
                 </div>
               </div>
             ))}
-            
+
             {/* Mostrar productos filtrados para agregar */}
-            {shouldShowProducts && productos.filter(p =>
-              p.nombre.toLowerCase().includes(productSearchTerm.toLowerCase())
-            ).map(p => {
-              const item = carrito.find(i=>i.id===p.id)
-              if (item) return null // No mostrar si ya está en el carrito
-              return (
-                <div key={p.id} className="flex justify-between items-center py-4 border-b last:border-b-0 bg-blue-50">
-                  <div className="flex-1"><h4 className="font-medium text-blue-800">{p.nombre}</h4></div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-blue-600">{fmt(p.precio)}</span>
-                    <button onClick={()=>addToCart(p)}
-                      className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center">
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-            
+            {shouldShowProducts &&
+              productos
+                .filter((p) =>
+                  p.nombre
+                    .toLowerCase()
+                    .includes(productSearchTerm.toLowerCase())
+                )
+                .map((p) => {
+                  const item = carrito.find((i) => i.id === p.id);
+                  if (item) return null; // No mostrar si ya está en el carrito
+                  return (
+                    <div
+                      key={p.id}
+                      className="flex justify-between items-center py-4 border-b last:border-b-0 bg-blue-50"
+                    >
+                      <div className="flex-1">
+                        <h4 className="font-medium text-blue-800">
+                          {p.nombre}
+                        </h4>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-blue-600">
+                          {fmt(p.precio)}
+                        </span>
+                        <button
+                          onClick={() => addToCart(p)}
+                          className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+
             {carrito.length === 0 && !shouldShowProducts && (
               <div className="flex-1 flex items-center justify-center text-gray-500">
                 <div className="text-center">
                   <Search className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                   <p className="text-lg">Busca productos para agregarlos</p>
-                  <p className="text-sm">Escribe el nombre o código del producto</p>
+                  <p className="text-sm">
+                    Escribe el nombre o código del producto
+                  </p>
                 </div>
               </div>
             )}
           </div>
-          
+
           <div className="border-t pt-4 flex flex-col">
             <div className="grid grid-cols-2 gap-4 items-center mb-2">
-                <span className="text-gray-600 text-sm">
-                    N° Líneas {carrito.length} / Tot. ítems {Math.max(0, carrito.reduce((s,i)=>s+Math.max(0, i.quantity||0),0))}
-                </span>
-                <div className="col-span-2">
-                  <div className="relative">
-                    <select
-                      className="w-full p-2 border rounded-md text-sm"
-                      value={currentCliente?.id || ''}
-                      onChange={(e) => {
-                        const cliente = clientes.find(c => c.id === e.target.value) || null;
-                        selectClient(cliente);
-                      }}
-                    >
-                      <option value="">Seleccionar cliente</option>
-                      {clientes.map((cliente) => (
-                        <option key={cliente.id} value={cliente.id}>
-                          {cliente.razon_social || `${cliente.nombres || ''} ${cliente.apellidos || ''}`.trim()}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      onClick={() => setShowClientModal(true)}
-                      className="absolute right-8 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800"
-                      title="Agregar cliente"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                    {currentCliente && (
-                      <button
-                        onClick={() => selectClient(null)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-red-500 hover:text-red-700"
-                        title="Quitar cliente"
-                      >
-                        <XIcon className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
+              <span className="text-gray-600 text-sm">
+                N° Líneas {carrito.length} / Tot. ítems{" "}
+                {Math.max(
+                  0,
+                  carrito.reduce((s, i) => s + Math.max(0, i.quantity || 0), 0)
+                )}
+              </span>
+              <div className="col-span-2">
+                <div className="relative">
+                  <select
+                    className="w-full p-2 border rounded-md text-sm"
+                    value={currentCliente?.id || ""}
+                    onChange={(e) => {
+                      const cliente =
+                        clientes.find((c) => c.id === e.target.value) || null;
+                      selectClient(cliente);
+                    }}
+                  >
+                    <option value="">Seleccionar cliente</option>
+                    {clientes.map((cliente) => (
+                      <option key={cliente.id} value={cliente.id}>
+                        {cliente.razon_social ||
+                          `${cliente.nombres || ""} ${
+                            cliente.apellidos || ""
+                          }`.trim()}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => setShowClientModal(true)}
+                    className="absolute right-8 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800"
+                    title="Agregar cliente"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
                   {currentCliente && (
-                    <div className="mt-1 text-xs text-gray-600 truncate">
-                      {currentCliente.rut ? `RUT: ${currentCliente.rut}` : ''}
-                      {currentCliente.direccion ? ` - ${currentCliente.direccion}` : ''}
-                    </div>
+                    <button
+                      onClick={() => selectClient(null)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-red-500 hover:text-red-700"
+                      title="Quitar cliente"
+                    >
+                      <XIcon className="w-4 h-4" />
+                    </button>
                   )}
                 </div>
-                <div className="relative w-fit ml-auto">
-                  <select 
+                {currentCliente && (
+                  <div className="mt-1 text-xs text-gray-600 truncate">
+                    {currentCliente.rut ? `RUT: ${currentCliente.rut}` : ""}
+                    {currentCliente.direccion
+                      ? ` - ${currentCliente.direccion}`
+                      : ""}
+                  </div>
+                )}
+              </div>
+              <div className="relative w-fit ml-auto">
+                {/* <select 
                     value={selectedDte}
                     onChange={(e) => setSelectedDte(e.target.value)}
                     className="px-3 py-2 border rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 appearance-none pr-8 cursor-pointer"
                   >
                       <option value="factura_manual">Factura Manual</option>
                       <option value="boleta">Boleta</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
+                  </select> */}
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
                 </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 items-center mb-3">
-                <div className="flex items-center justify-end">
-                    <span className="text-lg font-semibold mr-2">Total</span>
-                    <div className="bg-gray-100 p-2 rounded-lg text-right min-w-[100px]">
-                        <span className="text-xl font-bold">{fmt(total)}</span>
-                    </div>
+              <div className="flex items-center justify-end">
+                <span className="text-lg font-semibold mr-2">Total</span>
+                <div className="bg-gray-100 p-2 rounded-lg text-right min-w-[100px]">
+                  <span className="text-xl font-bold">{fmt(total)}</span>
                 </div>
+              </div>
             </div>
 
             <div className="mt-auto flex gap-2">
-              <button onClick={()=>clearCart()} className="flex-1 px-4 py-2 bg-gray-100 rounded flex items-center justify-center text-sm">
-                <XIcon className="w-4 h-4 mr-1" />Cancelar
+              <button
+                onClick={() => clearCart()}
+                className="flex-1 px-4 py-2 bg-gray-100 rounded flex items-center justify-center text-sm"
+              >
+                <XIcon className="w-4 h-4 mr-1" />
+                Cancelar
               </button>
-              <button onClick={()=>setShowDraftModal(true)} className="flex-1 px-4 py-2 bg-gray-100 rounded flex items-center justify-center text-sm">
-                <FileText className="w-4 h-4 mr-1" />Guardar borrador
+              <button
+                onClick={() => setShowDraftModal(true)}
+                className="flex-1 px-4 py-2 bg-gray-100 rounded flex items-center justify-center text-sm"
+              >
+                <FileText className="w-4 h-4 mr-1" />
+                Guardar borrador
               </button>
               <button
                 onClick={() => setShowPaymentModal(true)}
-                disabled={carrito.length===0}
+                disabled={carrito.length === 0}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded font-semibold text-base disabled:opacity-50"
               >
                 Pagar
@@ -670,38 +828,57 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <aside className={`flex-1 p-6 bg-gray-50 border-l flex flex-col overflow-y-auto ${showPaymentModal ? 'hidden' : ''}`}>
-          {activeTab==='destacado' && <ProductHighlights />}
-          {activeTab==='borradores' && (
+        <aside
+          className={`flex-1 p-6 bg-gray-50 border-l flex flex-col overflow-y-auto ${
+            showPaymentModal ? "hidden" : ""
+          }`}
+        >
+          {activeTab === "destacado" && <ProductHighlights />}
+          {activeTab === "borradores" && (
             <DraftsPanel
               borradores={borradores}
               onLoad={handleLoadDraft}
               onDelete={handleDeleteDraft}
             />
           )}
-          {activeTab==='promociones' && (
+          {activeTab === "promociones" && (
             <div className="space-y-6">
               <div className="flex items-center space-x-2 mb-4">
                 <Percent className="w-5 h-5 text-blue-600" />
-                <h3 className="text-blue-600 font-semibold text-lg">Promociones</h3>
+                <h3 className="text-blue-600 font-semibold text-lg">
+                  Promociones
+                </h3>
               </div>
-              
+
               {promociones.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No hay promociones disponibles</p>
+                <p className="text-gray-500 text-center py-4">
+                  No hay promociones disponibles
+                </p>
               ) : (
                 <div className="space-y-3">
-                  {promociones.map(promo => (
-                    <div key={promo.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                      <h4 className="font-medium text-gray-900">{promo.nombre}</h4>
-                      <p className="text-sm text-gray-600 mt-1">{promo.descripcion}</p>
+                  {promociones.map((promo) => (
+                    <div
+                      key={promo.id}
+                      className="bg-white p-4 rounded-lg shadow-sm border border-gray-200"
+                    >
+                      <h4 className="font-medium text-gray-900">
+                        {promo.nombre}
+                      </h4>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {promo.descripcion}
+                      </p>
                       <div className="flex justify-between items-center mt-2">
                         <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                          {promo.tipo === 'descuento_porcentaje' ? `${promo.valor}% descuento` : 
-                           promo.tipo === 'descuento_monto' ? `$${promo.valor} descuento` : 
-                           promo.tipo}
+                          {promo.tipo === "descuento_porcentaje"
+                            ? `${promo.valor}% descuento`
+                            : promo.tipo === "descuento_monto"
+                            ? `$${promo.valor} descuento`
+                            : promo.tipo}
                         </span>
-                        <button 
-                          onClick={() => toast('Seleccione un producto primero')}
+                        <button
+                          onClick={() =>
+                            toast("Seleccione un producto primero")
+                          }
                           className="text-sm text-blue-600 hover:text-blue-800"
                         >
                           Aplicar
@@ -713,26 +890,35 @@ const Dashboard: React.FC = () => {
               )}
             </div>
           )}
-          {activeTab==='productos' && <ProductsPanel onAddToCart={addToCart} searchTerm={productSearchTerm} />}
-          {activeTab==='clientes' && (
-            <ClientsPanel 
+          {activeTab === "productos" && (
+            <ProductsPanel
+              onAddToCart={addToCart}
+              searchTerm={productSearchTerm}
+            />
+          )}
+          {activeTab === "clientes" && (
+            <ClientsPanel
               onClientSelected={(cliente) => {
                 selectClient(cliente);
-                setClientSearchTermMain(cliente ? cliente.razon_social : '');
-              }} 
-              clientSearchTerm="" 
+                setClientSearchTermMain(cliente ? cliente.razon_social : "");
+              }}
+              clientSearchTerm=""
             />
           )}
 
-          <nav className={`flex justify-around items-center h-16 bg-white border-t mt-auto mb-4 ${showPaymentModal ? 'hidden' : ''}`}>
-            {TABS.map(tab => (
+          <nav
+            className={`flex justify-around items-center h-16 bg-white border-t mt-auto mb-4 ${
+              showPaymentModal ? "hidden" : ""
+            }`}
+          >
+            {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-colors ${
                   activeTab === tab.id
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    ? "text-blue-600 bg-blue-50"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                 }`}
               >
                 {tab.icon}
@@ -750,16 +936,21 @@ const Dashboard: React.FC = () => {
                 <DollarSign className="w-5 h-5 text-blue-600" />
                 <h3 className="text-xl font-semibold text-gray-900">Pagar</h3>
               </div>
-              <button onClick={() => setShowPaymentModal(false)} className="text-gray-400 hover:text-gray-600">
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
                 <XIcon className="w-6 h-6" />
               </button>
             </div>
-            
+
             <div className="space-y-6">
               <div className="mb-4">
-                <h4 className="text-lg font-semibold text-gray-900">Facturación</h4>
+                <h4 className="text-lg font-semibold text-gray-900">
+                  Facturación
+                </h4>
               </div>
-              
+
               {/* Document Type Selection */}
               <div className="space-y-4">
                 <div className="mb-4">
@@ -772,13 +963,19 @@ const Dashboard: React.FC = () => {
                     <option value="factura_manual">Factura Manual</option>
                   </select>
                 </div>
-                
+
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setTipoEntrega(tipoEntrega === 'inmediata' ? null : 'inmediata')}
+                      onClick={() =>
+                        setTipoEntrega(
+                          tipoEntrega === "inmediata" ? null : "inmediata"
+                        )
+                      }
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                        tipoEntrega === 'inmediata' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        tipoEntrega === "inmediata"
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}
                     >
                       <Package className="w-4 h-4" />
@@ -787,9 +984,15 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setTipoEntrega(tipoEntrega === 'despacho' ? null : 'despacho')}
+                      onClick={() =>
+                        setTipoEntrega(
+                          tipoEntrega === "despacho" ? null : "despacho"
+                        )
+                      }
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                        tipoEntrega === 'despacho' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        tipoEntrega === "despacho"
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}
                     >
                       <Truck className="w-4 h-4" />
@@ -797,13 +1000,15 @@ const Dashboard: React.FC = () => {
                     </button>
                   </div>
                 </div>
-                
+
                 {/* Descuentos y Cupones */}
                 <div className="flex items-center gap-6">
                   <button
                     onClick={() => setDescuentosEnabled(!descuentosEnabled)}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                      descuentosEnabled ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      descuentosEnabled
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                   >
                     <Percent className="w-4 h-4" />
@@ -812,7 +1017,9 @@ const Dashboard: React.FC = () => {
                   <button
                     onClick={() => setCupon(!cupon)}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                      cupon ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      cupon
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                   >
                     <Plus className="w-4 h-4" />
@@ -821,15 +1028,21 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Selección de Cliente para Factura */}
-                {selectedDte === 'factura' && (
+                {selectedDte === "factura" && (
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Cliente (requerido)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Cliente (requerido)
+                    </label>
                     {currentCliente ? (
                       <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-medium">{currentCliente.nombre} {currentCliente.apellidos}</p>
-                            <p className="text-xs text-blue-700">RUT: {currentCliente.rut}</p>
+                            <p className="font-medium">
+                              {currentCliente.nombre} {currentCliente.apellidos}
+                            </p>
+                            <p className="text-xs text-blue-700">
+                              RUT: {currentCliente.rut}
+                            </p>
                           </div>
                           <button
                             onClick={() => selectClient(null)}
@@ -843,11 +1056,13 @@ const Dashboard: React.FC = () => {
                       <div className="space-y-3">
                         <select
                           className="w-full p-2 border rounded-md text-sm"
-                          value={currentCliente?.id || ''}
+                          value={currentCliente?.id || ""}
                           onChange={handleClientChange}
                         >
-                          <option value="">Seleccionar cliente existente</option>
-                          {clientes.map(cliente => (
+                          <option value="">
+                            Seleccionar cliente existente
+                          </option>
+                          {clientes.map((cliente) => (
                             <option key={cliente.id} value={cliente.id}>
                               {cliente.razon_social} - {cliente.rut}
                             </option>
@@ -858,17 +1073,25 @@ const Dashboard: React.FC = () => {
                   </div>
                 )}
 
-                
                 {/* Conditional sections */}
                 {descuentosEnabled && (
                   <div className="mt-4 p-3 bg-purple-50 rounded-lg">
-                    <h5 className="text-sm font-medium text-purple-800 mb-2">Descuentos</h5>
+                    <h5 className="text-sm font-medium text-purple-800 mb-2">
+                      Descuentos
+                    </h5>
                     <div className="space-y-2">
                       <input
                         type="number"
                         placeholder="Porcentaje de descuento"
-                        value={descuentoPorcentaje || ''}
-                        onChange={(e) => setDescuentoPorcentaje(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+                        value={descuentoPorcentaje || ""}
+                        onChange={(e) =>
+                          setDescuentoPorcentaje(
+                            Math.min(
+                              100,
+                              Math.max(0, parseFloat(e.target.value) || 0)
+                            )
+                          )
+                        }
                         className="w-full px-3 py-2 border border-purple-300 rounded-lg text-sm"
                         min="0"
                         max="100"
@@ -876,19 +1099,23 @@ const Dashboard: React.FC = () => {
                     </div>
                   </div>
                 )}
-                
+
                 {cupon && (
                   <div className="mt-4 p-3 bg-orange-50 rounded-lg">
-                    <h5 className="text-sm font-medium text-orange-800 mb-2">Cupón de Descuento</h5>
+                    <h5 className="text-sm font-medium text-orange-800 mb-2">
+                      Cupón de Descuento
+                    </h5>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         placeholder="Código del cupón"
                         value={cuponCodigo}
-                        onChange={(e) => setCuponCodigo(e.target.value.toUpperCase())}
+                        onChange={(e) =>
+                          setCuponCodigo(e.target.value.toUpperCase())
+                        }
                         className="flex-1 px-3 py-2 border border-orange-300 rounded-lg text-sm"
                       />
-                      <button 
+                      <button
                         onClick={() => validarCupon(cuponCodigo)}
                         className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-700"
                       >
@@ -902,56 +1129,62 @@ const Dashboard: React.FC = () => {
                     )}
                   </div>
                 )}
-                
               </div>
-              
+
               {/* Payment Methods */}
               <div className="mb-6">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Métodos de pago</h4>
+                <h4 className="text-sm font-medium text-gray-700 mb-3">
+                  Métodos de pago
+                </h4>
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <button
-                    onClick={() => setSelectedMethod('efectivo')}
+                    onClick={() => setSelectedMethod("efectivo")}
                     className={`flex items-center gap-2 px-4 py-3 rounded-lg ${
-                      selectedMethod === 'efectivo' 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      selectedMethod === "efectivo"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     } transition-colors`}
                   >
                     <DollarSign className="w-5 h-5" />
                     <span>Efectivo</span>
                   </button>
-                  
+
                   <button
-                    onClick={() => setSelectedMethod('tarjeta')}
+                    onClick={() => setSelectedMethod("tarjeta")}
                     className={`flex items-center gap-2 px-4 py-3 rounded-lg ${
-                      selectedMethod === 'tarjeta' 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      selectedMethod === "tarjeta"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     } transition-colors`}
                   >
                     <CreditCard className="w-5 h-5" />
                     <span>Tarjeta</span>
                   </button>
                 </div>
-                
+
                 {/* No terminal selection for card payments */}
-                {selectedMethod === 'tarjeta' && (
+                {selectedMethod === "tarjeta" && (
                   <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-sm text-yellow-700">Seleccione el tipo de tarjeta al momento de pagar con el datáfono</p>
+                    <p className="text-sm text-yellow-700">
+                      Seleccione el tipo de tarjeta al momento de pagar con el
+                      datáfono
+                    </p>
                   </div>
                 )}
-                
+
                 {/* Cash Amount for Efectivo */}
-                {selectedMethod === 'efectivo' && (
+                {selectedMethod === "efectivo" && (
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Monto recibido</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Monto recibido
+                    </label>
                     <input
                       type="number"
-                      value={montoRecibido || ''}
+                      value={montoRecibido || ""}
                       placeholder="Ingrese el monto recibido"
                       onChange={(e) => {
                         const value = e.target.value;
-                        if (value === '') {
+                        if (value === "") {
                           setMontoRecibido(0);
                         } else {
                           setMontoRecibido(Math.max(0, parseFloat(value) || 0));
@@ -971,11 +1204,13 @@ const Dashboard: React.FC = () => {
                   {/* Mostrar el total a pagar (ya con redondeo si es efectivo) */}
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Total a pagar</span>
-                    <span className="font-semibold text-lg">{fmt(totalAPagar)}</span>
+                    <span className="font-semibold text-lg">
+                      {fmt(totalAPagar)}
+                    </span>
                   </div>
-                  
+
                   {/* Desglose del total */}
-                  {(descuentosEnabled && descuentoPorcentaje > 0) && (
+                  {descuentosEnabled && descuentoPorcentaje > 0 && (
                     <div className="border-t border-gray-200 pt-2 mt-2">
                       <div className="flex justify-between text-sm">
                         <span>Subtotal</span>
@@ -987,27 +1222,30 @@ const Dashboard: React.FC = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {cuponValido && cuponDescuento > 0 && (
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Cupón ({cuponCodigo})</span>
                       <span>-{fmt(cuponDescuento, true)}</span>
                     </div>
                   )}
-                  
+
                   {/* Aviso de redondeo solo para efectivo */}
-                  {selectedMethod === 'efectivo' && totalAPagar !== totalConDescuento && (
-                    <div className="text-xs text-gray-500 italic">
-                      * Redondeado al múltiplo de 10 más cercano
-                    </div>
-                  )}
-                  
+                  {selectedMethod === "efectivo" &&
+                    totalAPagar !== totalConDescuento && (
+                      <div className="text-xs text-gray-500 italic">
+                        * Redondeado al múltiplo de 10 más cercano
+                      </div>
+                    )}
+
                   {/* Monto recibido y vuelto solo para efectivo */}
-                  {selectedMethod === 'efectivo' && (
+                  {selectedMethod === "efectivo" && (
                     <div className="border-t border-gray-200 pt-2 mt-2 space-y-1">
                       <div className="flex justify-between">
                         <span className="text-sm">Monto recibido</span>
-                        <span className="font-medium">{fmt(montoRecibidoNum)}</span>
+                        <span className="font-medium">
+                          {fmt(montoRecibidoNum)}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm font-medium">Vuelto</span>
@@ -1021,12 +1259,19 @@ const Dashboard: React.FC = () => {
               {/* Action Button */}
               <button
                 onClick={handlePaymentComplete}
-                disabled={loading || carrito.length === 0 || 
-                  (selectedMethod === 'efectivo' && (montoRecibido || 0) < Math.round(totalConDescuento / 10) * 10) || 
-                  ((selectedDte === 'factura_manual' || selectedDte === 'factura') && !selectedClient)}
+                disabled={
+                  loading ||
+                  carrito.length === 0 ||
+                  (selectedMethod === "efectivo" &&
+                    (montoRecibido || 0) <
+                      Math.round(totalConDescuento / 10) * 10) ||
+                  ((selectedDte === "factura_manual" ||
+                    selectedDte === "factura") &&
+                    !currentCliente) // Cambiar selectedClient por currentCliente
+                }
                 className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {loading ? 'Procesando...' : 'Confirmar pago'}
+                {loading ? "Procesando..." : "Confirmar pago"}
               </button>
             </div>
           </aside>
@@ -1037,41 +1282,47 @@ const Dashboard: React.FC = () => {
         isOpen={showDraftModal}
         draftName={draftName}
         setDraftName={setDraftName}
-        onClose={()=>setShowDraftModal(false)}
+        onClose={() => setShowDraftModal(false)}
         onSave={handleSaveDraft}
       />
       <ReceiptModal
         isOpen={showReceipt}
         onClose={handleReceiptClose}
         onPrint={handleReceiptClose}
-        onSendEmail={()=>toast.success('Enviado por email')}
+        onSendEmail={() => toast.success("Enviado por email")}
       />
-      
+
       {/* Print Dialog */}
       {showPrintDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
             <div className="p-6 text-center">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Boleta generada</h3>
-              <p className="text-gray-600 mb-6">Enviar por correo electrónico (Opcional)</p>
-              
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Boleta generada
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Enviar por correo electrónico (Opcional)
+              </p>
+
               <div className="flex mb-4">
                 <input
                   type="email"
                   placeholder="Email"
                   id="emailInput"
-                  defaultValue={selectedClient?.email || ''}
+                  defaultValue={currentCliente?.email || ""} // Cambiar selectedClient por currentCliente
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
                   onClick={() => {
-                    const emailInput = document.getElementById('emailInput') as HTMLInputElement
-                    const email = emailInput?.value
-                    if (email && email.includes('@')) {
+                    const emailInput = document.getElementById(
+                      "emailInput"
+                    ) as HTMLInputElement;
+                    const email = emailInput?.value;
+                    if (email && email.includes("@")) {
                       // Simular envío de email
-                      toast.success(`Documento enviado a ${email}`)
+                      toast.success(`Documento enviado a ${email}`);
                     } else {
-                      toast.error('Ingrese un email válido')
+                      toast.error("Ingrese un email válido");
                     }
                   }}
                   className="bg-blue-600 text-white px-4 py-2 rounded-r-lg hover:bg-blue-700"
@@ -1079,7 +1330,7 @@ const Dashboard: React.FC = () => {
                   Enviar
                 </button>
               </div>
-              
+
               <button
                 onClick={handlePrintReceipt}
                 className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700"
@@ -1091,7 +1342,7 @@ const Dashboard: React.FC = () => {
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default Dashboard
+export default Dashboard;
