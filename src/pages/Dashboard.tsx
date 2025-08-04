@@ -100,8 +100,6 @@ const Dashboard: React.FC = () => {
   // Estados del panel de pago
   const [selectedMethod, setSelectedMethod] = useState<string>("efectivo");
   const [selectedDte, setSelectedDte] = useState<string>("boleta");
-  const [selectedTerminal, setSelectedTerminal] =
-    useState<string>("terminal_principal");
   const [montoRecibido, setMontoRecibido] = useState<number>(0);
 
   // Estados para opciones de entrega
@@ -120,7 +118,6 @@ const Dashboard: React.FC = () => {
   const [cuponCodigo, setCuponCodigo] = useState<string>("");
   const [cuponDescuento, setCuponDescuento] = useState<number>(0);
   const [cuponValido, setCuponValido] = useState<boolean>(false);
-  const [enviarSII, setEnviarSII] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Cargar datos iniciales
@@ -228,14 +225,6 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const startPayment = () => {
-    if (carrito.length === 0) {
-      toast.error("El carrito está vacío");
-      return;
-    }
-    setShowPaymentModal(true);
-  };
-
   const handlePaymentComplete = async () => {
     if (carrito.length === 0) {
       toast.error("No hay productos en el carrito");
@@ -257,18 +246,42 @@ const Dashboard: React.FC = () => {
     setLoading(true);
 
     try {
-      // Procesar la venta
+      // Primero verificar stock
+      const stockErrors = [];
+      for (const item of carrito) {
+        const producto = productos.find((p) => p.id === item.id);
+        if (producto && producto.stock < item.quantity) {
+          stockErrors.push({
+            producto: producto.nombre,
+            stockDisponible: producto.stock,
+          });
+        }
+      }
+
+      if (stockErrors.length > 0) {
+        let errorMessage = "Stock insuficiente para:\n";
+        stockErrors.forEach((error) => {
+          errorMessage += `- ${error.producto} (Disponible: ${error.stockDisponible})\n`;
+        });
+        toast.error(errorMessage, {
+          duration: 5000,
+          style: { whiteSpace: "pre-line" },
+        });
+        return;
+      }
+
+      // Si pasa la validación de stock, procesar la venta
       const result = await procesarVenta(
         selectedMethod,
         selectedDte as "boleta" | "factura" | "nota_credito",
-        currentCliente?.id || null // Usamos currentCliente en lugar de selectedClient
+        currentCliente?.id || null
       );
 
       if (result.success) {
-        // Mostrar diálogo de impresión
         setShowPaymentModal(false);
         setShowPrintDialog(true);
       } else {
+        // Manejar otros errores
         let errorMessage = "Error al procesar la venta";
         if (result.error) {
           if (result.error.includes("caja")) {
@@ -277,8 +290,6 @@ const Dashboard: React.FC = () => {
           } else if (result.error.includes("cliente")) {
             errorMessage =
               "Debe seleccionar un cliente válido para este tipo de documento.";
-          } else if (result.error.includes("stock")) {
-            errorMessage = "No hay suficiente stock para algunos productos.";
           } else {
             errorMessage = result.error;
           }
