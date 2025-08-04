@@ -42,21 +42,33 @@ export default function ClientsPanel({ onClientSelected }: Props) {
   };
 
   const save = async () => {
-    if (!form.razon_social.trim() || !form.rut.trim()) {
-      return toast.error("RUT y Razón social obligatorios");
+    if (form.tipo === "Persona") {
+      if (!form.nombres.trim() || !form.apellidos.trim() || !form.rut.trim()) {
+        return toast.error("RUT, Nombres y Apellidos son obligatorios");
+      }
+    } else {
+      // Empresa
+      if (!form.razon_social.trim() || !form.rut.trim()) {
+        return toast.error("RUT y Razón social son obligatorios");
+      }
     }
+
     setLoading(true);
     const res = await crearCliente({
-      rut: form.rut,
-      razon_social: form.razon_social,
-      giro: form.giro,
-      nombres: form.nombres,
-      apellidos: form.apellidos,
-      direccion: form.direccion,
-      comuna: form.comuna,
-      ciudad: form.ciudad,
+      rut: form.rut.trim(),
+      razon_social:
+        form.tipo === "Persona"
+          ? `${form.nombres.trim()} ${form.apellidos.trim()}`
+          : form.razon_social.trim(),
+      giro: form.giro.trim(),
+      nombres: form.nombres.trim(),
+      apellidos: form.apellidos.trim(),
+      direccion: form.direccion.trim(),
+      comuna: form.comuna.trim(),
+      ciudad: form.ciudad.trim(),
     });
     setLoading(false);
+
     if (res.success && res.data) {
       setIsCreating(false);
       setForm({
@@ -73,6 +85,8 @@ export default function ClientsPanel({ onClientSelected }: Props) {
       });
       selectClient(res.data);
       onClientSelected(res.data);
+    } else {
+      toast.error("Error al crear cliente");
     }
   };
 

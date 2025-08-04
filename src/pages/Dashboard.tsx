@@ -295,7 +295,9 @@ const Dashboard: React.FC = () => {
 
   const handlePrintReceipt = () => {
     try {
-      // Generate PDF content
+      if (!currentCliente && selectedDte === "factura") {
+        throw new Error("Cliente requerido para factura");
+      }
       const pdfContent = `
 <!DOCTYPE html>
 <html>
@@ -384,10 +386,10 @@ const Dashboard: React.FC = () => {
       user?.nombre || "Usuario"
     }</div>
     <div class="info"><strong>Cliente:</strong> ${
-      selectedClient?.razon_social || "Consumidor Final"
+      currentCliente?.razon_social || "Consumidor Final"
     }</div>
     <div class="info"><strong>RUT:</strong> ${
-      selectedClient?.rut || "66.666.666-6"
+      currentCliente?.rut || "66.666.666-6"
     }</div>
     <div class="info"><strong>Método:</strong> ${selectedMethod}</div>
     
