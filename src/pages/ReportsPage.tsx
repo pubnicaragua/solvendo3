@@ -50,7 +50,7 @@ interface CustomTooltipProps {
 }
 
 export const ReportsPage: React.FC = () => {
-  const { empresaId } = useAuth();
+  const { empresaId, user } = useAuth();
 
   // KPI state
   const [data, setData] = useState<ReportData>({
@@ -321,6 +321,7 @@ export const ReportsPage: React.FC = () => {
       <HeaderWithMenu
         title="Reportes"
         icon={<BarChart3 className="w-6 h-6 text-gray-600" />}
+        userName={user?.email}
       />
 
       <div className="flex-1 p-6 space-y-6 overflow-auto">
@@ -387,9 +388,9 @@ export const ReportsPage: React.FC = () => {
                         : formatPrice(kpi.value)
                       : "N/A"}
                   </span>
-                  <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-lg">
+                  {/* <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-lg">
                     +100%
-                  </span>
+                  </span> */}
                 </div>
               </div>
             ))

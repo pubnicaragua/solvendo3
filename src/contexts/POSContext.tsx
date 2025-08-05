@@ -758,12 +758,9 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
     try {
       setLoading(true);
 
-      // Obtener caja por defecto
-      const cajaId = await getDefaultCajaId();
-      if (!cajaId) {
-        toast.error("No se encontró una caja activa para esta sucursal.");
-        return false;
-      }
+      // Generar un ID único para la nueva caja
+      const timestamp = Date.now();
+      const cajaId = `caja_${user.id}_${timestamp}`;
 
       const { data, error } = await supabase
         .from("aperturas_caja")
@@ -771,6 +768,8 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
           monto_inicial: montoInicial,
           usuario_id: user.id,
           caja_id: cajaId,
+          empresa_id: empresaId,
+          sucursal_id: sucursalId,
           estado: "abierta",
         })
         .select()

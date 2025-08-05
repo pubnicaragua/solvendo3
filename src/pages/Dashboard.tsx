@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { usePOS } from "../contexts/POSContext";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -25,10 +24,7 @@ import ClientsPanel from "../components/pos/ClientsPanel";
 import { ReceiptModal } from "../components/pos/ReceiptModal";
 import { DraftSaveModal } from "../components/pos/DraftSaveModal";
 
-// Importamos el nuevo componente HeaderWithMenu
 import { HeaderWithMenu } from "../components/common/HeaderWithMenu";
-// Logo ya no es necesario importarlo directamente aquí, si HeaderWithMenu lo usa internamente
-// import { Logo }          from '../components/common/Logo'
 
 type TabId = "destacado" | "borradores" | "productos" | "clientes";
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
@@ -526,10 +522,6 @@ const Dashboard: React.FC = () => {
     setActiveTab("destacado");
   };
 
-  const filteredProducts = productos.filter((p) =>
-    p.nombre.toLowerCase().includes(productSearchTerm.toLowerCase())
-  );
-
   // Solo mostrar productos si hay término de búsqueda
   const shouldShowProducts = productSearchTerm.length > 0;
 
@@ -610,8 +602,8 @@ const Dashboard: React.FC = () => {
       {/* Reemplazamos el <header> manual con el componente HeaderWithMenu */}
       <HeaderWithMenu
         title="POS" // Título para el POS
-        userName={user?.nombre || "Usuario"} // Nombre del usuario
-        userAvatarUrl={user?.avatar_url || undefined} // URL del avatar si existe en tu objeto user
+        userName={user?.email || "Usuario"} // Nombre del usuario
+        userAvatarUrl={undefined} // URL del avatar si existe en tu objeto user
         showClock={true} // Mostrar el reloj
       />
 
