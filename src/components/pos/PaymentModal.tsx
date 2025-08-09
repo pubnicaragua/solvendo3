@@ -326,9 +326,12 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                   onChange={(e) => setSelectedTerminal(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                 >
-                  <option value="terminal_principal">Terminal Principal - SumUp</option>
-                  <option value="terminal_secundaria">Terminal Secundaria - SumUp</option>
-                  <option value="terminal_movil">Terminal Móvil - SumUp</option>
+                  <option value="terminal_principal">Terminal Principal - 
+                  Transbank</option>
+                  <option value="terminal_secundaria">Terminal Secundaria - 
+                  Transbank</option>
+                  <option value="terminal_movil">Terminal Móvil - 
+                  Transbank</option>
                 </select>
               </div>
             )}

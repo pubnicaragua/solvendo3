@@ -1,13 +1,11 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { FileText, Truck, Plus, Calendar, CreditCard, DollarSign, Percent } from 'lucide-react'
-import { HeaderWithMenu } from '../components/common/HeaderWithMenu'
-import { usePOS, Cliente } from '../contexts/POSContext'
-import { useAuth } from '../contexts/AuthContext'
-import { ClientModal } from '../components/pos/ClientModal'
-import toast from 'react-hot-toast'
-import { supabase } from '../lib/supabase'
-import { useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FileText, Plus, CreditCard, DollarSign, Percent, X, Truck } from 'lucide-react';
+import { HeaderWithMenu } from '../components/common/HeaderWithMenu';
+import { usePOS, Cliente } from '../contexts/POSContext';
+import { useAuth } from '../contexts/AuthContext';
+import { ClientModal } from '../components/pos/ClientModal';
+import toast from 'react-hot-toast';
 
 interface BillingPageProps {
   onClose?: () => void
@@ -19,12 +17,12 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
   const [billingData, setBillingData] = useState({
     tipoDte: 'boleta',
     metodoPago: 'efectivo',
-    envioInmediato: true,
+    descuentoGlobal: 0,
+    montoRecibido: 0,
+    envioInmediato: false,
     despacho: false,
     documentos: false,
-    cupon: false,
-    descuentoGlobal: 0,
-    montoRecibido: 0
+    cupon: false
   })
   const [loading, setLoading] = useState(false)
   const [showPrintDialog, setShowPrintDialog] = useState(false)
@@ -53,11 +51,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
       navigate('/');
     }
   }, [carrito, navigate]);
-  const handleClose = () => {
-    if (onClose) {
-      onClose()
-    }
-  }
+  // Removed unused handleClose function
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-CL', {
@@ -70,12 +64,13 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
 
   // Función para manejar la selección de cliente
   const handleClientSelect = (cliente: Cliente | null) => {
-    setSelectedClient(cliente)
+    setSelectedClient(cliente);
     if (cliente) {
       selectClient(cliente);
+      toast.success(`Cliente ${cliente.razon_social} seleccionado`);
     }
-    setShowClientModal(false)
-  }
+    setShowClientModal(false);
+  };
 
   // Función para confirmar el pago
   const handleConfirmPayment = async () => {
@@ -195,39 +190,76 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
     }
   }
 
-  const totalConDescuento = validatePositiveNumber(total * (1 - (validatePositiveNumber(billingData.descuentoGlobal) / 100)))
-  const vuelto = billingData.metodoPago === 'efectivo' 
-    ? Math.max(0, validatePositiveNumber(billingData.montoRecibido) - totalConDescuento)
-    : 0
+  // Calcular montos sin redondear
+  const totalSinDescuento = total;
+  // Aplicar descuento sin redondear
+  const montoDescuento = totalSinDescuento * (validatePositiveNumber(billingData.descuentoGlobal) / 100);
+  const totalConDescuento = totalSinDescuento - montoDescuento;
+
+  // Solo redondear el total a pagar si es pago en efectivo
+  const totalAPagar = billingData.metodoPago === 'efectivo' 
+    ? Math.round(totalConDescuento / 10) * 10 
+    : totalConDescuento;
+
+  // Calcular vuelto solo para pago en efectivo
+  const vuelto = billingData.metodoPago === 'efectivo'
+    ? Math.max(0, validatePositiveNumber(billingData.montoRecibido) - totalAPagar)
+    : 0;
 
   if (showPrintDialog) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Boleta generada</h3>
-            <p className="text-gray-600 mb-6">Enviar por correo electrónico (Opcional)</p>
-
-            <div className="flex mb-4">
-              <input
-                type="email"
-                placeholder="Email"
-                defaultValue={selectedClient?.email || ''}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                onClick={handleSendEmail}
-                className="bg-blue-600 text-white px-4 py-2 rounded-r-lg hover:bg-blue-700"
-              >
-                Enviar
-              </button>
-            </div>
-
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Venta Exitosa</h3>
+            <button 
+              onClick={() => setShowPrintDialog(false)}
+              className="text-gray-400 hover:text-gray-600"
+              aria-label="Cerrar"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <p className="text-gray-600 mb-6">El documento ha sido generado correctamente.</p>
+          <div className="flex mb-4">
+            <input
+              type="email"
+              placeholder="Email del cliente"
+              defaultValue={selectedClient?.email || ''}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              onClick={handleSendEmail}
+              className="bg-blue-600 text-white px-4 py-2 rounded-r-lg hover:bg-blue-700 transition-colors"
+            >
+              Enviar
+            </button>
+          </div>
+          <div className="space-y-2">
             <button
               onClick={handlePrint}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700"
+              className="w-full bg-gray-700 text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
             >
               Imprimir
+            </button>
+            <button
+              onClick={() => {
+                clearCart();
+                if (onClose) {
+                  onClose();
+                } else {
+                  navigate('/');
+                }
+              }}
+              className="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
+            >
+              Finalizar Venta
+            </button>
+            <button
+              onClick={() => setShowPrintDialog(false)}
+              className="w-full bg-transparent text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors border border-gray-300"
+            >
+              Volver a la facturación
             </button>
           </div>
         </div>
@@ -247,32 +279,58 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Facturación</h3>
               
-              {/* Document Type Selection */}
-              <div className="space-y-4 mb-6">
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2">
+              <div className="space-y-3 mb-6">
+                <h4 className="text-sm font-medium text-gray-700">Tipo de documento</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="flex items-center gap-2 p-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
                     <input
                       type="radio"
                       name="dte"
                       value="boleta"
                       checked={billingData.tipoDte === 'boleta'}
                       onChange={() => setBillingData(prev => ({ ...prev, tipoDte: 'boleta' }))}
-                      className="text-blue-600"
+                      className="text-blue-600 focus:ring-blue-500"
                     />
-                    <span>Boleta electrónica</span>
+                    <span>Boleta</span>
                   </label>
-                  
-                  <label className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 p-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50">
                     <input
                       type="radio"
                       name="dte"
-                      value="factura"
-                      checked={billingData.tipoDte === 'factura'}
-                      onChange={() => setBillingData(prev => ({ ...prev, tipoDte: 'factura' }))}
-                      className="text-blue-600"
+                      value="factura_manual"
+                      checked={billingData.tipoDte === 'factura_manual'}
+                      onChange={() => setBillingData(prev => ({ ...prev, tipoDte: 'factura_manual' }))}
+                      className="text-blue-600 focus:ring-blue-500"
                     />
-                    <span>Factura electrónica</span>
+                    <span>Factura Manual</span>
                   </label>
+                </div>
+                
+                {/* Sección de cliente */}
+                <div className="mt-4 mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-medium text-gray-700">Cliente</h4>
+                    <button
+                      type="button"
+                      onClick={() => setShowClientModal(true)}
+                      className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      {selectedClient ? 'Cambiar cliente' : 'Seleccionar cliente'}
+                    </button>
+                  </div>
+                  {selectedClient ? (
+                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                      <div className="font-medium text-sm">
+                        {selectedClient.razon_social || 
+                         (selectedClient.nombre || '') + ' ' + (selectedClient.apellidos || '').trim()}
+                      </div>
+                      <div className="text-xs text-gray-500">RUT: {selectedClient.rut}</div>
+                      {selectedClient.email && <div className="text-xs text-gray-500">Email: {selectedClient.email}</div>}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-500 italic">No se ha seleccionado un cliente</div>
+                  )}
                 </div>
                 
                 <div className="flex items-center gap-6">
@@ -312,7 +370,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
               </div>
 
               {/* Client Selection - Only for Factura */}
-              {(billingData.tipoDte === 'factura' || billingData.tipoDte === 'Factura electrónica') && (
+              {(billingData.tipoDte === 'factura' || billingData.tipoDte === 'factura_manual') && (
                 <div className="mb-6">
                   <h4 className="text-sm font-medium text-gray-700 mb-3">Cliente</h4>
                   {selectedClient ? (
@@ -386,43 +444,29 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
               {/* Payment Methods */}
               <div className="mb-6">
                 <h4 className="text-sm font-medium text-gray-700 mb-3">Métodos de pago</h4>
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <button
+                    type="button"
                     onClick={() => setBillingData(prev => ({ ...prev, metodoPago: 'efectivo' }))}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-lg ${
-                      billingData.metodoPago === 'efectivo' 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    } transition-colors`}
+                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors ${billingData.metodoPago === 'efectivo' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                   >
                     <DollarSign className="w-5 h-5" />
                     <span>Efectivo</span>
                   </button>
-                  
                   <button
+                    type="button"
                     onClick={() => setBillingData(prev => ({ ...prev, metodoPago: 'tarjeta' }))}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-lg ${
-                      billingData.metodoPago === 'tarjeta' 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    } transition-colors`}
+                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors ${billingData.metodoPago === 'tarjeta' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                   >
                     <CreditCard className="w-5 h-5" />
                     <span>Tarjeta</span>
                   </button>
-                  
-                  {/* Selector de POS para tarjeta */}
-                  {billingData.metodoPago === 'tarjeta' && (
-                    <div className="mt-3">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Terminal POS</label>
-                      <select className="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                        <option>Terminal Principal - SumUp</option>
-                        <option>Terminal Secundaria - SumUp</option>
-                        <option>Terminal Móvil - SumUp</option>
-                      </select>
-                    </div>
-                  )}
                 </div>
+                {billingData.metodoPago === 'tarjeta' && (
+                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-700">Seleccione el tipo de tarjeta al momento de pagar con el datáfono</p>
+                  </div>
+                )}
               </div>
 
               {/* Cash Amount - Only for Efectivo */}
