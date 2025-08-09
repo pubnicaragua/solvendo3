@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         data: { session },
       } = await supabase.auth.getSession();
       if (session?.user) {
-        await loadUserData(session.user.id); // Usar user.id en lugar de email
+        await loadUserData(session.user.id);
       }
       setLoading(false);
     };
@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session?.user) {
-        await loadUserData(session.user.id); // Usar user.id en lugar de email
+        await loadUserData(session.user.id);
       } else if (event === "SIGNED_OUT") {
         clearUserData();
       }
@@ -64,7 +64,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const loadUserData = async (authId: string) => {
     try {
-      // Primero obtener el usuario por auth_user_id
       const { data: userData, error: userError } = await supabase
         .from("usuarios")
         .select("*")
@@ -76,24 +75,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         throw new Error("Usuario no encontrado o inactivo");
       }
 
-      // Luego obtener los datos de empresa usando el ID del usuario (no auth_user_id)
       const { data: empresaData, error: empresaError } = await supabase
         .from("usuario_empresa")
         .select(
-          `  
-        empresa_id,  
-        sucursal_id,  
-        empresas (  
-          nombre,  
-          rut  
-        ),  
-        sucursales (  
-          nombre,  
-          direccion  
-        )  
-      `
+          `
+          empresa_id,
+          sucursal_id,
+          empresas (
+            nombre,
+            rut
+          ),
+          sucursales (
+            nombre,
+            direccion
+          )
+        `
         )
-        .eq("usuario_id", userData.id) // Usar userData.id, no authId
+        .eq("usuario_id", userData.id)
         .eq("activo", true)
         .single();
 
@@ -101,7 +99,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         throw new Error("Usuario sin empresa asignada");
       }
 
-      // Combinar los datos
       const userWithEmpresa = {
         ...userData,
         usuario_empresa: [empresaData],
@@ -112,7 +109,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setSucursalId(empresaData.sucursal_id);
       // setUserRole(empresaData.rol);
 
-      // Guardar en localStorage
       localStorage.setItem("pos_user", JSON.stringify(userWithEmpresa));
       localStorage.setItem("pos_empresa", empresaData.empresa_id);
       localStorage.setItem("pos_sucursal", empresaData.sucursal_id);
@@ -153,7 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       if (data.user) {
-        await loadUserData(data.user.id); // Usar user.id en lugar de email
+        await loadUserData(data.user.id);
         toast.success("Inicio de sesión exitoso");
         return { success: true };
       }
@@ -168,9 +164,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    clearUserData();
-    toast.success("Sesión cerrada");
+    try {
+      localStorage.clear();
+      setLoading(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast.error(`Error cerrando sesión: ${error.message}`);
+        return;
+      }
+      clearUserData();
+      toast.success("Sesión cerrada");
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      toast.error("Error al cerrar sesión");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const value = {

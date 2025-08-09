@@ -745,11 +745,26 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [user]);
 
-  const openCaja = async (montoInicial: number): Promise<boolean> => {
-    if (!user) {
-      toast.error("Usuario no autenticado.");
+  const openCaja = async (
+    montoInicial: number,
+    cajaId: string,
+    empresaId: string,
+    sucursalId: string,
+    userId: string
+  ): Promise<boolean> => {
+    console.log(montoInicial, cajaId, empresaId, sucursalId, userId);
+    if (!empresaId) {
+      toast.error("Empresa no definida.");
       return false;
     }
+    if (!cajaId) {
+      toast.error("Caja no seleccionada.");
+      return false;
+    }
+    // if (!sucursalId) {
+    //   toast.error("Sucursal no seleccionada.");
+    //   return false;
+    // }
     if (cajaAbierta) {
       toast.error("Ya tienes una caja abierta.");
       return false;
@@ -758,19 +773,20 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
     try {
       setLoading(true);
 
-      // Generar un ID único para la nueva caja
-      const timestamp = Date.now();
-      const cajaId = `caja_${user.id}_${timestamp}`;
+      const now = new Date().toISOString();
 
       const { data, error } = await supabase
-        .from("aperturas_caja")
+        .from("sesiones_caja")
         .insert({
-          monto_inicial: montoInicial,
-          usuario_id: user.id,
           caja_id: cajaId,
-          empresa_id: empresaId,
-          sucursal_id: sucursalId,
+          usuario_id: userId,
+          // empresa_id: empresaId,
+          // sucursal_id: sucursalId,
+          saldo_inicial: montoInicial,
           estado: "abierta",
+          abierta_en: now,
+          creada_en: now,
+          actualizada_en: now,
         })
         .select()
         .single();

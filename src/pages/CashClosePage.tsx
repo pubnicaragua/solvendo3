@@ -59,30 +59,52 @@ export const CashClosePage: React.FC = () => {
     loading: contextLoading,
   } = usePOS();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, empresaId, sucursalId } = useAuth();
 
+  // Local state
   const [isClosing, setIsClosing] = useState(false);
   const [ventas, setVentas] = useState<Venta[]>([]);
   const [movimientos, setMovimientos] = useState<MovimientoCaja[]>([]);
-  const [montoFinalInput, setMontoFinalInput] = useState("0");
-  const { empresaId } = useAuth();
-
+  const [montoFinalInput, setMontoFinalInput] = useState("");
   const [montoInicialApertura, setMontoInicialApertura] = useState("");
-  const [cajaIdApertura, setCajaIdApertura] = useState("caja_principal_001");
   const [filterType, setFilterType] = useState("all");
+  const [cajasDisponibles, setCajasDisponibles] = useState<
+    { id: string; nombre: string }[]
+  >([]);
+  const [cajaSeleccionada, setCajaSeleccionada] = useState<string>("");
 
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat("es-CL", {
-      style: "currency",
-      currency: "CLP",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    })
-      .format(Math.max(0, price || 0))
-      .replace("$", "") + "$";
-
+  // Cargar cajas disponibles de la empresa
   useEffect(() => {
-    if (!currentAperturaCaja) return;
+    if (!empresaId) return;
+
+    const fetchCajas = async () => {
+      const { data, error } = await supabase
+        .from("cajas")
+        .select("*")
+        .eq("empresa_id", empresaId)
+        .eq("activo", true);
+      if (error) {
+        toast.error("Error cargando cajas disponibles");
+        setCajasDisponibles([]);
+        return;
+      }
+      setCajasDisponibles(data ?? []);
+      if (data && data.length > 0 && !cajaSeleccionada) {
+        setCajaSeleccionada(data[0].id);
+      }
+    };
+
+    fetchCajas();
+  }, [empresaId, cajaSeleccionada]);
+
+  // Cargar ventas y movimientos asociados a la apertura de caja actual
+  useEffect(() => {
+    if (!currentAperturaCaja) {
+      setVentas([]);
+      setMovimientos([]);
+      setMontoFinalInput("");
+      return;
+    }
 
     const fetchData = async () => {
       try {
@@ -93,18 +115,10 @@ export const CashClosePage: React.FC = () => {
           .order("fecha", { ascending: true });
 
         if (ventasError) {
-          setVentas([
-            {
-              id: "1",
-              folio: "9",
-              tipo_dte: "boleta",
-              metodo_pago: "efectivo",
-              total: 204,
-              fecha: new Date().toISOString(),
-            },
-          ]);
+          toast.error("Error cargando ventas.");
+          setVentas([]);
         } else {
-          setVentas(ventasData as Venta[]);
+          setVentas((ventasData as Venta[]) ?? []);
         }
 
         const { data: movimientosData, error: movimientosError } =
@@ -115,27 +129,37 @@ export const CashClosePage: React.FC = () => {
             .order("created_at", { ascending: true });
 
         if (movimientosError) {
+          toast.error("Error cargando movimientos de caja.");
           setMovimientos([]);
         } else {
-          setMovimientos(movimientosData as MovimientoCaja[]);
+          setMovimientos((movimientosData as MovimientoCaja[]) ?? []);
+        }
+
+        // Inicializar monto final con el monto esperado si está vacío
+        if (!montoFinalInput) {
+          const montoEsperadoCalc =
+            (currentAperturaCaja?.monto_inicial || 0) +
+            (ventasData ?? [])
+              .filter((v: Venta) => v.metodo_pago.toLowerCase() === "efectivo")
+              .reduce((acc: number, v: Venta) => acc + v.total, 0) +
+            (movimientosData ?? [])
+              .filter((m: MovimientoCaja) => m.tipo === "ingreso")
+              .reduce((acc: number, m: MovimientoCaja) => acc + m.monto, 0) -
+            (movimientosData ?? [])
+              .filter((m: MovimientoCaja) => m.tipo === "retiro")
+              .reduce((acc: number, m: MovimientoCaja) => acc + m.monto, 0);
+          setMontoFinalInput(montoEsperadoCalc.toFixed(2));
         }
       } catch {
-        setVentas([
-          {
-            id: "1",
-            folio: "9",
-            tipo_dte: "boleta",
-            metodo_pago: "efectivo",
-            total: 204,
-            fecha: new Date().toISOString(),
-          },
-        ]);
+        toast.error("Error al cargar datos.");
+        setVentas([]);
         setMovimientos([]);
       }
     };
     fetchData();
-  }, [currentAperturaCaja]);
+  }, [currentAperturaCaja, montoFinalInput]);
 
+  // Cálculos resumen totales
   const {
     ventasEfectivo,
     ventasTarjeta,
@@ -144,41 +168,106 @@ export const CashClosePage: React.FC = () => {
     totalVentasNeto,
     montoEsperado,
   } = useMemo(() => {
-    const ventasEfectivo = ventas
+    const ventasEfectivoVal = ventas
       .filter((v) => v.metodo_pago.toLowerCase() === "efectivo")
       .reduce((acc, v) => acc + v.total, 0);
-    const ventasTarjeta = ventas
+    const ventasTarjetaVal = ventas
       .filter((v) => v.metodo_pago.toLowerCase() !== "efectivo")
       .reduce((acc, v) => acc + v.total, 0);
-    const totalVentasNeto = ventasEfectivo + ventasTarjeta;
-    const totalIngresos = movimientos
+    const totalVentasNetoVal = ventasEfectivoVal + ventasTarjetaVal;
+    const totalIngresosVal = movimientos
       .filter((m) => m.tipo === "ingreso")
       .reduce((acc, m) => acc + m.monto, 0);
-    const totalRetiros = movimientos
+    const totalRetirosVal = movimientos
       .filter((m) => m.tipo === "retiro")
       .reduce((acc, m) => acc + m.monto, 0);
-    const montoEsperado =
+    const montoEsperadoCalc =
       (currentAperturaCaja?.monto_inicial || 0) +
-      ventasEfectivo +
-      totalIngresos -
-      totalRetiros;
+      ventasEfectivoVal +
+      totalIngresosVal -
+      totalRetirosVal;
     return {
-      ventasEfectivo,
-      ventasTarjeta,
-      totalIngresos,
-      totalRetiros,
-      totalVentasNeto,
-      montoEsperado,
+      ventasEfectivo: ventasEfectivoVal,
+      ventasTarjeta: ventasTarjetaVal,
+      totalIngresos: totalIngresosVal,
+      totalRetiros: totalRetirosVal,
+      totalVentasNeto: totalVentasNetoVal,
+      montoEsperado: montoEsperadoCalc,
     };
   }, [ventas, movimientos, currentAperturaCaja]);
 
+  // Formatear moneda
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("es-CL", {
+      style: "currency",
+      currency: "CLP",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    })
+      .format(Math.max(0, price || 0))
+      .replace("$", "") + "$";
+
+  // Diferencia monto final vs esperado
   const diferencia = useMemo(() => {
     const montoFinalNum = Math.max(0, parseFloat(montoFinalInput) || 0);
     const montoEsperadoSafe = Math.max(0, montoEsperado || 0);
     return montoFinalNum - montoEsperadoSafe;
   }, [montoFinalInput, montoEsperado]);
 
+  // Abrir caja, validando usuario y campos
+  const handleOpenCash = async () => {
+    if (!user) {
+      toast.error("Usuario no autenticado. Por favor inicia sesión.");
+      return;
+    }
+    if (!empresaId) {
+      toast.error("Empresa no identificada.");
+      return;
+    }
+    if (!sucursalId) {
+      toast.error("Sucursal no identificada.");
+      return;
+    }
+    if (
+      montoInicialApertura === "" ||
+      isNaN(parseFloat(montoInicialApertura)) ||
+      parseFloat(montoInicialApertura) < 0
+    ) {
+      toast.error("Debes ingresar un monto inicial válido");
+      return;
+    }
+    if (!cajaSeleccionada) {
+      toast.error("Debes seleccionar una caja para abrir");
+      return;
+    }
+    if (
+      currentAperturaCaja &&
+      currentAperturaCaja.caja_id === cajaSeleccionada
+    ) {
+      toast.error("La caja seleccionada ya está abierta.");
+      return;
+    }
+
+    // Paso empresaId y sucursalId para coherencia con backend
+    const success = await openCaja(
+      parseFloat(montoInicialApertura),
+      cajaSeleccionada,
+      empresaId,
+      sucursalId,
+      user.id
+    );
+    if (success) {
+      toast.success("Caja abierta exitosamente. Puedes comenzar a trabajar.");
+      setMontoInicialApertura("");
+    }
+  };
+
+  // Cerrar caja validando usuario y monto
   const handleCloseCash = async () => {
+    if (!user) {
+      toast.error("Usuario no autenticado. Por favor inicia sesión.");
+      return;
+    }
     setIsClosing(true);
     try {
       if (!currentAperturaCaja)
@@ -189,7 +278,6 @@ export const CashClosePage: React.FC = () => {
         throw new Error("El monto final debe ser un número válido");
 
       const success = await closeCaja(montoFinal);
-
       if (!success) throw new Error("Error al cerrar la caja");
 
       toast.success("✅ Caja cerrada exitosamente.");
@@ -205,26 +293,7 @@ export const CashClosePage: React.FC = () => {
     }
   };
 
-  const handleOpenCash = async () => {
-    if (
-      montoInicialApertura === "" ||
-      isNaN(parseFloat(montoInicialApertura))
-    ) {
-      toast.error("Debes ingresar un monto inicial válido");
-      return;
-    }
-
-    if (currentAperturaCaja && currentAperturaCaja.caja_id === cajaIdApertura) {
-      toast.error("La caja ya está abierta.");
-      return;
-    }
-
-    const success = await openCaja(parseFloat(montoInicialApertura));
-    if (success) {
-      toast.success("Caja abierta exitosamente. Puedes comenzar a trabajar.");
-    }
-  };
-
+  // Mostrar indicador de carga si contexto o estado está en loading
   if (contextLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
@@ -238,6 +307,7 @@ export const CashClosePage: React.FC = () => {
     );
   }
 
+  // Si no hay caja abierta, mostrar UI para abrir caja (selección de caja está habilitada)
   if (!currentAperturaCaja) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
@@ -257,25 +327,46 @@ export const CashClosePage: React.FC = () => {
             >
               Monto Inicial
             </label>
-            <div className="relative">
-              <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-                $
-              </span>
-              <input
-                type="number"
-                id="montoInicialApertura"
-                className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                value={montoInicialApertura}
-                onChange={(e) => setMontoInicialApertura(e.target.value)}
-                placeholder="0"
-              />
-            </div>
+            <input
+              type="number"
+              id="montoInicialApertura"
+              className="w-full pl-3 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              value={montoInicialApertura}
+              onChange={(e) => setMontoInicialApertura(e.target.value)}
+              placeholder="0"
+              min="0"
+              step="0.01"
+            />
+          </div>
+
+          <div className="mb-6 text-left">
+            <label
+              htmlFor="selectCaja"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Selecciona una caja
+            </label>
+            <select
+              id="selectCaja"
+              className="w-full p-2 border border-gray-300 rounded-md"
+              value={cajaSeleccionada}
+              onChange={(e) => setCajaSeleccionada(e.target.value)}
+            >
+              <option value="">-- Seleccionar caja --</option>
+              {cajasDisponibles.map((caja) => (
+                <option key={caja.id} value={caja.id}>
+                  {caja.nombre}
+                </option>
+              ))}
+            </select>
           </div>
 
           <button
             onClick={handleOpenCash}
             disabled={
-              !montoInicialApertura || isNaN(parseFloat(montoInicialApertura))
+              !montoInicialApertura ||
+              isNaN(parseFloat(montoInicialApertura)) ||
+              !cajaSeleccionada
             }
             className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-base shadow-sm"
           >
@@ -286,9 +377,16 @@ export const CashClosePage: React.FC = () => {
     );
   }
 
+  // Pantalla principal con caja abierta
   const isLoading = contextLoading || isClosing;
 
-  const fechaApertura = new Date().toLocaleDateString("es-CL");
+  const fechaApertura = currentAperturaCaja
+    ? new Date(
+        currentAperturaCaja.abierta_en ||
+          currentAperturaCaja.creada_en ||
+          Date.now()
+      ).toLocaleDateString("es-CL")
+    : "";
   const horaCierrePropuesta = new Date().toLocaleTimeString("es-CL", {
     hour: "2-digit",
     minute: "2-digit",
@@ -311,6 +409,7 @@ export const CashClosePage: React.FC = () => {
       <main className="flex-1 overflow-y-auto">
         <div className="p-4 md:p-6">
           <div className="flex bg-white rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-[#E0E0E0] max-w-7xl mx-auto overflow-hidden">
+            {/* Izquierda: resumen ventas y caja */}
             <div className="w-3/5 p-6 border-r border-[#E0E0E0]">
               <h2 className="text-xl font-semibold text-[#333333] mb-4"></h2>
 
@@ -375,7 +474,7 @@ export const CashClosePage: React.FC = () => {
                 <SummaryLine
                   label="Efectivo (2)"
                   value={`+ ${formatPrice(
-                    currentAperturaCaja.monto_inicial +
+                    (currentAperturaCaja?.monto_inicial || 0) +
                       ventasEfectivo +
                       totalIngresos
                   )}`}
@@ -409,6 +508,8 @@ export const CashClosePage: React.FC = () => {
                     onChange={(e) => setMontoFinalInput(e.target.value)}
                     className="w-full text-center text-xl font-bold text-[#505050] bg-transparent focus:outline-none"
                     placeholder="0"
+                    min={0}
+                    step={0.01}
                   />
                 </div>
                 <div className="bg-[#F8F9FB] p-4 rounded-lg border border-[#E0E0E0] flex flex-col justify-between">
@@ -438,9 +539,10 @@ export const CashClosePage: React.FC = () => {
               </button>
             </div>
 
+            {/* Derecha: resumen documentos */}
             <div className="w-2/5 p-6 bg-gray-50">
               <h2 className="text-lg font-semibold text-[#333333] mb-4 flex items-center">
-                <ClipboardList className="mr-2 h-5 w-5 text-[#2196F3]" />{" "}
+                <ClipboardList className="mr-2 h-5 w-5 text-[#2196F3]" />
                 Resumen de documentos
               </h2>
               <div className="mb-4">
@@ -449,7 +551,7 @@ export const CashClosePage: React.FC = () => {
                 </label>
                 <select
                   id="filterType"
-                  className=" bg-gray-100 block w-full p-2 border border-[#E0E0E0] rounded-md shadow-sm focus:outline-none focus:ring-[#2196F3] focus:border-[#2196F3] text-sm text-[#505050]"
+                  className="bg-gray-100 block w-full p-2 border border-[#E0E0E0] rounded-md shadow-sm focus:outline-none focus:ring-[#2196F3] focus:border-[#2196F3] text-sm text-[#505050]"
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
                 >
