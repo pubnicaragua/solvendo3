@@ -5,7 +5,7 @@ import React, {
   useState,
   useRef,
 } from "react";
-import { supabase, Usuario } from "../lib/supabase";
+import { supabase, Usuario, UsuarioEmpresa } from "../lib/supabase";
 
 interface AuthContextType {
   user: Usuario | null;
@@ -48,7 +48,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       let finalUser = userData;
 
       if (userError || !userData) {
-        ("⚠️ Usuario no encontrado, creando usuario básico...");
         // Crear usuario básico como fallback
         finalUser = {
           id: userId,
@@ -68,23 +67,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Solo buscar empresa si hay usuario válido
       if (finalUser?.id) {
-        (":office: Buscando empresa y sucursal del usuario...");
         const { data: usuarioEmpresa, error: empresaError } = await supabase
           .from("usuario_empresa")
-          .select("empresa_id, sucursal_id")
+          .select("empresa_id, sucursal_id, proposito")
           .eq("usuario_id", finalUser.id)
           .eq("activo", true)
           .single();
 
+        if (empresaError) {
+          console.error("Error al obtener usuario_empresa:", empresaError);
+        }
 
         setEmpresaId(usuarioEmpresa?.empresa_id || null);
         setSucursalId(usuarioEmpresa?.sucursal_id || null);
+
+        if (usuarioEmpresa?.proposito) {
+          setUser((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              proposito: usuarioEmpresa.proposito,
+            };
+          });
+        }
+
       } else {
         setEmpresaId(null);
         setSucursalId(null);
       }
 
-      ("✅ fetchUserProfile completado exitosamente");
+
     } catch (error) {
       console.error("❌ Error crítico en fetchUserProfile:", error);
 

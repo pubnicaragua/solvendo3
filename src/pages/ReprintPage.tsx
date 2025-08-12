@@ -83,10 +83,11 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         // Cargar documentos
         const { data, error } = await supabase
           .from("ventas")
-          .select("id,folio,tipo_dte,total,fecha")
+          .select("id, folio, tipo_dte, total, created_at")
           .eq("empresa_id", empresaId)
-          .eq("fecha::date", fecha)
-          .order("fecha", { ascending: false });
+          .gte("created_at", `${fecha} 00:00:00`)
+          .lt("created_at", `${fecha} 23:59:59`)
+          .order("created_at", { ascending: false });
 
         if (error) {
           throw error;
@@ -102,49 +103,9 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                   ? "Boleta manual (no válida al SII)"
                   : "Documento electrónico",
               total: d.total,
-              fecha: d.fecha || new Date().toISOString(),
+              fecha: d.created_at || new Date().toISOString(),
             }))
           );
-        } else {
-          // Datos de ejemplo si no hay datos reales
-          const exampleDocs = [
-            {
-              id: "v1",
-              folio: "9",
-              tipo: "Boleta manual (no válida al SII)",
-              total: 204,
-              fecha: new Date().toISOString(),
-            },
-            {
-              id: "v2",
-              folio: "10",
-              tipo: "Boleta manual (no válida al SII)",
-              total: 350,
-              fecha: new Date().toISOString(),
-            },
-            {
-              id: "v3",
-              folio: "3421456",
-              tipo: "Boleta manual (no válida al SII)",
-              total: 22000,
-              fecha: new Date().toISOString(),
-            },
-            {
-              id: "v4",
-              folio: "3421457",
-              tipo: "Boleta manual (no válida al SII)",
-              total: 34000,
-              fecha: new Date().toISOString(),
-            },
-            {
-              id: "v5",
-              folio: "1001",
-              tipo: "Factura electrónica",
-              total: 45000,
-              fecha: new Date().toISOString(),
-            },
-          ];
-          setDocs(exampleDocs);
         }
       } catch (error) {
         console.error("Error al cargar documentos:", error);
@@ -259,11 +220,11 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           </div>
           <div style="font-size: 10px;">Folio: ${selectedDoc.folio}</div>
           <div style="font-size: 10px;">Total: ${formatPrice(
-            selectedDoc.total
-          )}</div>
+        selectedDoc.total
+      )}</div>
           <div style="font-size: 10px;">Fecha: ${new Date().toLocaleDateString(
-            "es-CL"
-          )}</div>
+        "es-CL"
+      )}</div>
           
           <div style="text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px;">
             <div style="font-size: 9px;">Documento reimpreso</div>
@@ -374,11 +335,10 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             <div className="space-y-6">
               <div
                 className={`p-6 rounded-2xl flex justify-between items-center bg-gray-200 
-                ${
-                  selectedDoc.tipo === "Boleta manual (no válida al SII)"
+                ${selectedDoc.tipo === "Boleta manual (no válida al SII)"
                     ? "border-b border-gray-200 pb-6"
                     : ""
-                }`}
+                  }`}
               >
                 <div>
                   <h5 className="font-semibold text-gray-900">

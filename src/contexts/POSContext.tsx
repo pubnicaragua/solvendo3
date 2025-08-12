@@ -406,11 +406,10 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
     setCurrentCliente(cliente);
     if (cliente) {
       toast.success(
-        `Cliente ${cliente.razon_social || cliente.nombre + " " + cliente.apellidos
-        } seleccionado`
+        `Cliente ${cliente.nombres} seleccionado`
       );
     } else {
-      toast.info("Cliente deseleccionado");
+      toast("Cliente deseleccionado");
     }
   };
 
@@ -548,7 +547,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
           empresa_id: empresaId,
           sucursal_id: sucursalId,
           caja_id: currentAperturaCaja.caja_id,
-          apertura_caja_id: currentAperturaCaja.id,
+          sesiones_caja_id: currentAperturaCaja.id,
           cliente_id: clienteId || null,
           usuario_id: user.id,
           folio: folio,
@@ -607,7 +606,6 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       toast.success(`Venta #${venta.folio} procesada.`);
-      clearCart();
       return { success: true, data: venta as Venta };
     } catch (error: any) {
       console.error("Error en procesarVenta:", error);

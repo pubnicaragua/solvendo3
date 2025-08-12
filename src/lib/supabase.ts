@@ -35,6 +35,8 @@ export interface Usuario {
   apellidos: string
   rut: string
   telefono?: string
+  direccion?: string
+  proposito?: string
   activo: boolean
   created_at?: string
   updated_at?: string
@@ -78,6 +80,8 @@ export interface UsuarioEmpresa {
   rol: 'admin' | 'supervisor' | 'cajero'
   activo: boolean
   created_at: string
+  proposito: string
+  direccion: string
 }
 
 export interface Categoria {

@@ -382,10 +382,10 @@ export const ReportsPage: React.FC = () => {
                       ? kpi.format === "currency"
                         ? formatPrice(kpi.value)
                         : kpi.format === "units"
-                        ? kpi.value.toLocaleString("es-CL")
-                        : kpi.format === "number"
-                        ? kpi.value.toLocaleString("es-CL")
-                        : formatPrice(kpi.value)
+                          ? kpi.value.toLocaleString("es-CL")
+                          : kpi.format === "number"
+                            ? kpi.value.toLocaleString("es-CL")
+                            : formatPrice(kpi.value)
                       : "N/A"}
                   </span>
                   {/* <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-lg">
