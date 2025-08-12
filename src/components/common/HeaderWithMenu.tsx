@@ -29,7 +29,7 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
   showClock = true,
 }) => {
   const { toggleSidebar } = useSidebar();
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { productos } = usePOS();
   const [time, setTime] = React.useState("");
@@ -50,7 +50,7 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
       const id = setInterval(tick, 1000);
       return () => clearInterval(id);
     }
-    return () => {};
+    return () => { };
   }, [showClock]);
 
   // Obtener productos bajo de stock (menos de 5 unidades)
@@ -79,7 +79,7 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
   }, [productosStockBajo]);
 
   const handleLogout = () => {
-    logout();
+    signOut();
     setShowLogoutModal(false);
     navigate("/login");
   };

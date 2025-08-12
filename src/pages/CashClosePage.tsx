@@ -59,7 +59,7 @@ export const CashClosePage: React.FC = () => {
     loading: contextLoading,
   } = usePOS();
   const navigate = useNavigate();
-  const { user, logout, empresaId, sucursalId } = useAuth();
+  const { user, signOut, empresaId, sucursalId } = useAuth();
 
   // Local state
   const [isClosing, setIsClosing] = useState(false);
@@ -283,7 +283,7 @@ export const CashClosePage: React.FC = () => {
       toast.success("✅ Caja cerrada exitosamente.");
 
       setTimeout(async () => {
-        await logout();
+        await signOut();
         navigate("/login");
       }, 2000);
     } catch (error: any) {
@@ -382,10 +382,10 @@ export const CashClosePage: React.FC = () => {
 
   const fechaApertura = currentAperturaCaja
     ? new Date(
-        currentAperturaCaja.abierta_en ||
-          currentAperturaCaja.creada_en ||
-          Date.now()
-      ).toLocaleDateString("es-CL")
+      currentAperturaCaja.abierta_en ||
+      currentAperturaCaja.creada_en ||
+      Date.now()
+    ).toLocaleDateString("es-CL")
     : "";
   const horaCierrePropuesta = new Date().toLocaleTimeString("es-CL", {
     hour: "2-digit",
@@ -475,8 +475,8 @@ export const CashClosePage: React.FC = () => {
                   label="Efectivo (2)"
                   value={`+ ${formatPrice(
                     (currentAperturaCaja?.monto_inicial || 0) +
-                      ventasEfectivo +
-                      totalIngresos
+                    ventasEfectivo +
+                    totalIngresos
                   )}`}
                 />
                 <SummaryLine
@@ -517,13 +517,12 @@ export const CashClosePage: React.FC = () => {
                     Diferencia
                   </label>
                   <p
-                    className={`text-xl font-bold ${
-                      diferencia === 0
-                        ? "text-[#2196F3]"
-                        : diferencia > 0
+                    className={`text-xl font-bold ${diferencia === 0
+                      ? "text-[#2196F3]"
+                      : diferencia > 0
                         ? "text-green-500"
                         : "text-red-500"
-                    }`}
+                      }`}
                   >
                     {formatPrice(Math.abs(diferencia))}
                   </p>

@@ -31,13 +31,13 @@ export interface Usuario {
   id: string
   email: string
   password_hash?: string
-  nombre: string
+  nombres: string
   apellidos: string
   rut: string
   telefono?: string
   activo: boolean
-  created_at: string
-  updated_at: string
+  created_at?: string
+  updated_at?: string
 }
 
 export interface Empresa {

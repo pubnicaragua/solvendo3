@@ -5,11 +5,10 @@ import React, {
   useState,
   useRef,
 } from "react";
-import { supabase } from "../lib/supabase";
-import { User } from "../types";
+import { supabase, Usuario } from "../lib/supabase";
 
 interface AuthContextType {
-  user: User | null;
+  user: Usuario | null;
   empresaId: string | null;
   sucursalId: string | null;
   loading: boolean;
@@ -21,7 +20,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<Usuario | null>(null);
   const [empresaId, setEmpresaId] = useState<string | null>(null);
   const [sucursalId, setSucursalId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
