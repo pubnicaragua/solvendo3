@@ -305,13 +305,12 @@ export const CashHistoryPage: React.FC<CashHistoryPageProps> = ({
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            movement.tipo === "ingreso"
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${movement.tipo === "ingreso"
                               ? "bg-green-100 text-green-800"
                               : movement.tipo === "retiro"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-blue-100 text-blue-800"
-                          }`}
+                                ? "bg-red-100 text-red-800"
+                                : "bg-blue-100 text-blue-800"
+                            }`}
                         >
                           {movement.tipo.charAt(0).toUpperCase() +
                             movement.tipo.slice(1)}
