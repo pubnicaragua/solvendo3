@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { DollarSign, X as XIcon } from "lucide-react";
 import { HeaderWithMenu } from "../components/common/HeaderWithMenu";
 import { useAuth } from "../contexts/AuthContext";
-import { supabase } from "../lib/supabase";
+import { AperturaCaja, AperturaCajaConUsuario, supabase } from "../lib/supabase";
 import toast from "react-hot-toast";
 
 interface Movement {
@@ -13,23 +13,10 @@ interface Movement {
   created_at: string;
 }
 
-interface AperturaCaja {
-  id: string;
-  caja_id: string;
-  usuario_id: string;
-  fecha_apertura: string;
-  monto_inicial: number;
-  estado: "abierta" | "cerrada";
-  usuarios?: {
-    nombre: string;
-    apellidos: string;
-  };
-}
-
 export const CashMovementPage: React.FC<{ onClose: () => void }> = ({
   onClose,
 }) => {
-  const { user, empresaId } = useAuth();
+  const { user, empresaId, sucursalId } = useAuth();
   const today = new Date().toISOString().split("T")[0];
 
   const [aperturasDisponibles, setAperturasDisponibles] = useState<
@@ -54,41 +41,48 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({
 
       try {
         setLoadingAperturas(true);
-        // Consultar todas las aperturas de caja para esta empresa
-        const { data, error } = await supabase
-          .from("aperturas_caja")
-          .select(
-            `  
-            id,  
-            caja_id,  
-            usuario_id,  
-            fecha_apertura,  
-            monto_inicial,  
-            estado,  
-            usuarios (  
-              nombre,  
-              apellidos  
-            )  
-          `
-          )
-          .eq("empresa_id", empresaId)
-          .order("fecha_apertura", { ascending: false });
 
-        if (error) {
-          console.error("Error loading aperturas:", error);
+        // 1. Traer aperturas
+        const { data: aperturas, error: aperturasError } = await supabase
+          .from("sesiones_caja")
+          .select("id, caja_id, usuario_id, abierta_en, saldo_inicial, estado")
+          .eq("sucursal_id", sucursalId)
+          .order("abierta_en", { ascending: false });
+
+        if (aperturasError) {
+          console.error("Error loading aperturas:", aperturasError);
           toast.error("Error al cargar las aperturas de caja");
           return;
         }
 
-        if (data && data.length > 0) {
-          setAperturasDisponibles(data);
-          // Seleccionar la apertura más reciente por defecto
-          setAperturaSeleccionada(data[0].id);
-        } else {
-          toast.info("No se encontraron aperturas de caja para esta empresa");
+        if (!aperturas || aperturas.length === 0) {
+          toast("No se encontraron aperturas de caja para esta empresa");
           setAperturasDisponibles([]);
           setAperturaSeleccionada("");
+          return;
         }
+
+        // 2. Traer usuarios únicos
+        const usuarioIds = [...new Set(aperturas.map(a => a.usuario_id))];
+        const { data: usuarios, error: usuariosError } = await supabase
+          .from("usuarios")
+          .select("id, nombres, apellidos")
+          .in("id", usuarioIds);
+
+        if (usuariosError) {
+          console.error("Error loading usuarios:", usuariosError);
+          toast.error("Error al cargar usuarios de las aperturas");
+        }
+
+        // 3. Unir datos manualmente
+        const aperturasConUsuario: AperturaCajaConUsuario[] = aperturas.map(a => ({
+          ...a,
+          usuario: usuarios?.find(u => u.id === a.usuario_id) || null
+        }));
+
+        setAperturasDisponibles(aperturasConUsuario);
+        setAperturaSeleccionada(aperturasConUsuario[0].id);
+
       } catch (error) {
         console.error("Error loading aperturas:", error);
         toast.error("Error al cargar las aperturas de caja");
@@ -113,13 +107,15 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({
 
     setLoading(true);
     try {
-      // Filtrar movimientos por apertura_caja_id y fecha
+      // Filtrar movimientos por sesiones_caja_id y fecha
       const { data, error } = await supabase
         .from("movimientos_caja")
         .select("*")
         .eq("fecha", fecha)
-        .eq("apertura_caja_id", aperturaSeleccionada)
+        .eq("sesiones_caja_id", aperturaSeleccionada)
         .order("created_at", { ascending: false });
+
+      console.log(aperturaSeleccionada)
 
       if (error) {
         console.error("Error loading movements:", error);
@@ -163,7 +159,7 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({
       const { error: insertError } = await supabase
         .from("movimientos_caja")
         .insert({
-          apertura_caja_id: aperturaSeleccionada,
+          sesiones_caja_id: aperturaSeleccionada,
           usuario_id: user.id,
           empresa_id: empresaId,
           tipo,
@@ -198,13 +194,19 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({
   };
 
   // Función para generar nombre descriptivo de la apertura
-  const getAperturaDisplayName = (apertura: AperturaCaja) => {
-    const fecha = new Date(apertura.fecha_apertura).toLocaleDateString("es-CL");
-    const usuario = apertura.usuarios
-      ? `${apertura.usuarios.nombre} ${apertura.usuarios.apellidos}`
+  const getAperturaDisplayName = (apertura: AperturaCajaConUsuario) => {
+    console.log(apertura)
+    const fecha = new Date(apertura.abierta_en);
+    const fechaFormateada = fecha.toLocaleDateString("es-CL", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    });
+    const usuario = apertura.usuario
+      ? `${apertura.usuario.nombres}`
       : "Usuario";
     const estado = apertura.estado === "abierta" ? "🟢" : "🔴";
-    return `${estado} ${fecha} - ${usuario} (${apertura.caja_id})`;
+    return `${estado} ${fechaFormateada} - ${usuario}`;
   };
 
   if (loadingAperturas) {

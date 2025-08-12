@@ -149,7 +149,7 @@ export interface AperturaCaja {
   id: string
   caja_id: string
   usuario_id: string
-  fecha_apertura: string
+  abierta_en: string
   fecha_cierre?: string
   monto_inicial: number
   monto_final?: number
@@ -158,6 +158,13 @@ export interface AperturaCaja {
   observaciones?: string
   created_at: string
 }
+
+export type AperturaCajaConUsuario = AperturaCaja & {
+  usuario?: {
+    id: string;
+    nombres: string;
+  } | null;
+};
 
 export interface MovimientoCaja {
   id: string

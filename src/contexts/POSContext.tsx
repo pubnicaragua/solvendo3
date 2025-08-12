@@ -628,6 +628,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
       setLoading(true);
       // Modificación para asegurar que, si por error hay varias cajas abiertas,
       // se tome la más reciente para evitar el error PGRST116.
+
       const { data, error } = await supabase
         .from("sesiones_caja")
         .select("*")
@@ -692,7 +693,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
           caja_id: cajaId,
           usuario_id: userId,
           // empresa_id: empresaId,
-          // sucursal_id: sucursalId,
+          sucursal_id: sucursalId,
           saldo_inicial: montoInicial,
           estado: "abierta",
           abierta_en: now,
@@ -744,11 +745,11 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
         supabase
           .from("ventas")
           .select("total, metodo_pago")
-          .eq("apertura_caja_id", aperturaId),
+          .eq("sesiones_caja_id", aperturaId),
         supabase
           .from("movimientos_caja")
           .select("monto, tipo")
-          .eq("apertura_caja_id", aperturaId),
+          .eq("sesiones_caja_id", aperturaId),
       ]);
       if (ventasRes.error) throw ventasRes.error;
       if (movRes.error) throw movRes.error;
@@ -774,17 +775,22 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
         totalRetiros;
       const diferencia_cierre = montoFinal - montoTeorico;
 
-      const { error: updateError } = await supabase
-        .from("aperturas_caja")
+      const { error: sesionesError } = await supabase
+        .from("sesiones_caja")
         .update({
           estado: "cerrada",
-          fecha_cierre: new Date().toISOString(),
-          monto_final: montoFinal,
-          diferencia_cierre,
+          saldo_final: montoFinal,
+          monto_efectivo: totalVentasEfectivo,
+          monto_tarjeta: 0, // aquí podrías calcularlo también si lo necesitas
+          monto_transferencia: 0,
+          monto_otros: 0,
           observaciones: observaciones || null,
+          cerrada_en: new Date().toISOString(),
+          cerrada_por: user?.id || null,
         })
         .eq("id", aperturaId);
-      if (updateError) throw updateError;
+
+      if (sesionesError) throw sesionesError;
 
       toast.success("✅ ¡Caja cerrada exitosamente!");
       setCajaAbierta(false);

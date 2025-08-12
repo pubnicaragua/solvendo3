@@ -94,10 +94,11 @@ export const CashClosePage: React.FC = () => {
         const { data: ventasData, error: ventasError } = await supabase
           .from("ventas")
           .select("*")
-          .eq("apertura_caja_id", currentAperturaCaja.id)
+          .eq("sesiones_caja_id", currentAperturaCaja.id)
           .order("fecha", { ascending: true });
 
         if (ventasError) {
+          console.log("ventas ", ventasError)
           toast.error("Error cargando ventas.");
           setVentas([]);
         } else {
@@ -108,7 +109,7 @@ export const CashClosePage: React.FC = () => {
           await supabase
             .from("movimientos_caja")
             .select("*")
-            .eq("apertura_caja_id", currentAperturaCaja.id)
+            .eq("sesiones_caja_id", currentAperturaCaja.id)
             .order("created_at", { ascending: true });
 
         if (movimientosError) {

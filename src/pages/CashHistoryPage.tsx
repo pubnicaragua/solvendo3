@@ -66,10 +66,10 @@ export const CashHistoryPage: React.FC<CashHistoryPageProps> = ({ onClose }) => 
       setLoading(false)
     }
   }
-  
+
   const handleDelete = async (id: string) => {
     if (!confirm('¿Está seguro de eliminar este movimiento?')) return
-    
+
     try {
       const { error } = await supabase
         .from('movimientos_caja')
@@ -77,7 +77,7 @@ export const CashHistoryPage: React.FC<CashHistoryPageProps> = ({ onClose }) => 
         .eq('id', id)
 
       if (error) throw error
-      
+
       toast.success('Movimiento eliminado correctamente')
       loadMovements()
     } catch (error) {
@@ -108,7 +108,7 @@ export const CashHistoryPage: React.FC<CashHistoryPageProps> = ({ onClose }) => 
     })
   }
 
-  const filteredMovements = (movements || []).filter(mov => 
+  const filteredMovements = (movements || []).filter(mov =>
     filters.tipo === 'todos' || mov.tipo === filters.tipo
   )
 
@@ -133,7 +133,7 @@ export const CashHistoryPage: React.FC<CashHistoryPageProps> = ({ onClose }) => 
             <Filter className="w-5 h-5 text-blue-600" />
             <h3 className="text-lg font-semibold text-gray-900">Filtros</h3>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Fecha inicio</label>
@@ -255,11 +255,10 @@ export const CashHistoryPage: React.FC<CashHistoryPageProps> = ({ onClose }) => 
                         {formatDateTime(movement.fecha)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          movement.tipo === 'ingreso' ? 'bg-green-100 text-green-800' :
-                          movement.tipo === 'retiro' ? 'bg-red-100 text-red-800' :
-                          'bg-blue-100 text-blue-800'
-                        }`}>
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${movement.tipo === 'ingreso' ? 'bg-green-100 text-green-800' :
+                            movement.tipo === 'retiro' ? 'bg-red-100 text-red-800' :
+                              'bg-blue-100 text-blue-800'
+                          }`}>
                           {movement.tipo.charAt(0).toUpperCase() + movement.tipo.slice(1)}
                         </span>
                       </td>
