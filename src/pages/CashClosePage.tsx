@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { MovimientoCaja, supabase, Venta } from "../lib/supabase";
 import { usePOS } from "../contexts/POSContext";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -13,23 +13,6 @@ import {
 } from "lucide-react";
 import { HeaderWithMenu } from "../components/common/HeaderWithMenu";
 import toast from "react-hot-toast";
-
-interface Venta {
-  id: string;
-  folio: string;
-  tipo_dte: string;
-  metodo_pago: string;
-  total: number;
-  fecha: string;
-}
-
-interface MovimientoCaja {
-  id: string;
-  tipo: string;
-  monto: number;
-  observacion?: string;
-  created_at: string;
-}
 
 const SummaryLine = ({
   label,
@@ -59,7 +42,7 @@ export const CashClosePage: React.FC = () => {
     loading: contextLoading,
   } = usePOS();
   const navigate = useNavigate();
-  const { user, signOut, empresaId, sucursalId } = useAuth();
+  const { user, empresaId, sucursalId } = useAuth();
 
   // Local state
   const [isClosing, setIsClosing] = useState(false);
@@ -261,7 +244,7 @@ export const CashClosePage: React.FC = () => {
       setMontoInicialApertura("");
     }
   };
-
+  console.log(currentAperturaCaja)
   // Cerrar caja validando usuario y monto
   const handleCloseCash = async () => {
     if (!user) {
@@ -282,10 +265,7 @@ export const CashClosePage: React.FC = () => {
 
       toast.success("✅ Caja cerrada exitosamente.");
 
-      setTimeout(async () => {
-        await signOut();
-        navigate("/login");
-      }, 2000);
+      navigate('/login')
     } catch (error: any) {
       toast.error("Error al cerrar la caja: " + error.message);
     } finally {
@@ -368,7 +348,7 @@ export const CashClosePage: React.FC = () => {
               isNaN(parseFloat(montoInicialApertura)) ||
               !cajaSeleccionada
             }
-            className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-base shadow-sm"
+            className="w-full flex justify-center items-center p-8 mt-6 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-base shadow-sm"
           >
             <PlayCircle className="w-5 h-5 mr-2" /> Abrir Caja
           </button>

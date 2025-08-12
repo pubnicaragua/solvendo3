@@ -6,93 +6,10 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
-import { supabase } from "../lib/supabase";
+import { AperturaCaja, Cliente, Producto, supabase, Venta } from "../lib/supabase";
 import { useAuth } from "./AuthContext";
 import toast from "react-hot-toast";
 import { SIIService } from "../lib/siiService";
-
-// ===================================================================================
-// INTERFACES Y TIPOS COMPLETOS
-// ===================================================================================
-export interface Producto {
-  id: string;
-  empresa_id: string;
-  nombre: string;
-  descripcion?: string;
-  precio: number;
-  costo?: number;
-  stock: number;
-  sku?: string;
-  codigo_barras?: string;
-  activo: boolean;
-  created_at: string;
-}
-
-export interface Cliente {
-  id: string;
-  empresa_id: string;
-  razon_social: string;
-  rut?: string;
-  nombre?: string; // Legacy support for UI
-  nombres?: string; // From DB schema
-  apellidos?: string;
-  direccion?: string;
-  comuna?: string;
-  ciudad?: string;
-  region?: string;
-  giro?: string;
-  telefono?: string;
-  email?: string;
-  contacto?: string;
-  activo?: boolean;
-  created_at: string;
-  updated_at?: string;
-}
-
-export interface Venta {
-  id: string;
-  empresa_id: string;
-  sucursal_id: string;
-  caja_id: string;
-  apertura_caja_id: string;
-  cliente_id: string | null;
-  usuario_id: string;
-  folio: string;
-  tipo_dte: "boleta" | "factura" | "nota_credito";
-  metodo_pago: string;
-  subtotal: number;
-  descuento: number;
-  impuestos: number;
-  total: number;
-  estado: "pendiente" | "completada" | "anulada";
-  fecha: string;
-  created_at: string;
-}
-
-export interface AperturaCaja {
-  id: string;
-  caja_id: string;
-  usuario_id: string;
-  fecha_apertura: string;
-  fecha_cierre: string | null;
-  monto_inicial: number;
-  monto_final: number | null;
-  diferencia: number | null;
-  estado: "abierta" | "cerrada";
-  observaciones: string | null;
-  created_at: string;
-}
-
-export interface MovimientoCaja {
-  id: string;
-  apertura_caja_id: string | null;
-  usuario_id: string | null;
-  tipo: "ingreso" | "retiro" | "venta";
-  monto: number;
-  observacion?: string | null;
-  fecha?: string;
-  created_at: string;
-}
 
 export interface CartItem extends Producto {
   quantity: number;
@@ -105,14 +22,6 @@ export interface DraftSale {
   fecha: string;
   items: CartItem[];
   total: number;
-}
-
-interface VentaItemInsert {
-  venta_id: string;
-  producto_id: string;
-  cantidad: number;
-  precio_unitario: number;
-  subtotal: number;
 }
 
 interface ApiResult<T> {
@@ -168,7 +77,11 @@ export interface POSContextType {
   cajaAbierta: boolean;
   currentAperturaCaja: AperturaCaja | null;
   checkCajaStatus: () => Promise<void>;
-  openCaja: (montoInicial: number) => Promise<boolean>;
+  openCaja: (montoInicial: number,
+    cajaId: string,
+    empresaId: string,
+    sucursalId: string,
+    userId: string) => Promise<boolean>;
   closeCaja: (montoFinal: number, observaciones?: string) => Promise<boolean>;
   getDefaultCajaId: () => Promise<string | null>;
 
@@ -493,8 +406,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
     setCurrentCliente(cliente);
     if (cliente) {
       toast.success(
-        `Cliente ${
-          cliente.razon_social || cliente.nombre + " " + cliente.apellidos
+        `Cliente ${cliente.razon_social || cliente.nombre + " " + cliente.apellidos
         } seleccionado`
       );
     } else {
@@ -717,11 +629,11 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
       // Modificación para asegurar que, si por error hay varias cajas abiertas,
       // se tome la más reciente para evitar el error PGRST116.
       const { data, error } = await supabase
-        .from("aperturas_caja")
+        .from("sesiones_caja")
         .select("*")
         .eq("usuario_id", user.id)
         .eq("estado", "abierta")
-        .order("fecha_apertura", { ascending: false })
+        .order("abierta_en", { ascending: false })
         .limit(1);
 
       if (error) {
@@ -752,7 +664,6 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
     sucursalId: string,
     userId: string
   ): Promise<boolean> => {
-    console.log(montoInicial, cajaId, empresaId, sucursalId, userId);
     if (!empresaId) {
       toast.error("Empresa no definida.");
       return false;
