@@ -10,7 +10,7 @@ export const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { signIn } = useAuth();
 
   const handleSupervisorAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,13 +30,7 @@ export const LoginForm: React.FC = () => {
     setError("");
 
     try {
-      const result = await login(email, password);
-      if (result.success) {
-        toast.success("Inicio de sesión exitoso");
-      } else {
-        setError(result.error || "Error en el login");
-        toast.error(result.error || "Error en el login");
-      }
+      await signIn(email, password);
     } catch (error: any) {
       setError("Error de conexión");
       toast.error("Error de conexión");

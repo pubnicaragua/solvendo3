@@ -12,7 +12,7 @@ export const LoginPage: React.FC = () => {
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
@@ -36,12 +36,8 @@ export const LoginPage: React.FC = () => {
 
     setLoading(true);
     try {
-      const result = await login(email, password);
-      if (result.success) {
-        navigate("/");
-      } else {
-        toast.error(result.error || "Error en el login");
-      }
+      await signIn(email, password);
+      navigate("/");
     } catch (error) {
       toast.error("Error de conexión");
     } finally {
@@ -76,10 +72,9 @@ export const LoginPage: React.FC = () => {
               htmlFor="email"
               className={`  
                 absolute left-4 transition-all duration-300 ease-in-out pointer-events-none  
-                ${
-                  emailFocused || email
-                    ? "top-0 text-xs text-blue-600 bg-white px-1 -translate-y-1/2"
-                    : "top-1/2 -translate-y-1/2 text-base text-gray-500"
+                ${emailFocused || email
+                  ? "top-0 text-xs text-blue-600 bg-white px-1 -translate-y-1/2"
+                  : "top-1/2 -translate-y-1/2 text-base text-gray-500"
                 }  
               `}
             >
@@ -102,10 +97,9 @@ export const LoginPage: React.FC = () => {
               htmlFor="password"
               className={`  
                 absolute left-4 transition-all duration-300 ease-in-out pointer-events-none  
-                ${
-                  passwordFocused || password
-                    ? "top-0 text-xs text-blue-600 bg-white px-1 -translate-y-1/2"
-                    : "top-1/2 -translate-y-1/2 text-base text-gray-500"
+                ${passwordFocused || password
+                  ? "top-0 text-xs text-blue-600 bg-white px-1 -translate-y-1/2"
+                  : "top-1/2 -translate-y-1/2 text-base text-gray-500"
                 }  
               `}
             >

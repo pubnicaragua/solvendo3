@@ -19,6 +19,7 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      'eslint-disable-next-line': off,
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },

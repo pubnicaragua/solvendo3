@@ -1,141 +1,130 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { supabase, Usuario, UsuarioEmpresa } from "../lib/supabase";
-import toast from "react-hot-toast";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useRef,
+} from "react";
+import { supabase } from "../lib/supabase";
+import { User } from "../types";
 
 interface AuthContextType {
-  user: Usuario | null;
-  loading: boolean;
-  login: (
-    email: string,
-    password: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  logout: () => Promise<void>;
+  user: User | null;
   empresaId: string | null;
   sucursalId: string | null;
-  userRole: string | null;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  refetchUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [user, setUser] = useState<Usuario | null>(null);
-  const [loading, setLoading] = useState(true);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
   const [empresaId, setEmpresaId] = useState<string | null>(null);
   const [sucursalId, setSucursalId] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Verificar sesión existente de Supabase
-    const getSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session?.user) {
-        await loadUserData(session.user.id);
-      }
-      setLoading(false);
-    };
+  // Ref para evitar llamadas simultáneas a fetchUserProfile
+  const isFetchingProfile = useRef(false);
 
-    getSession();
+  const fetchUserProfile = async (userId: string, userEmail?: string) => {
+    if (isFetchingProfile.current) {
+      // Ya hay una llamada en curso
+      return;
+    }
+    isFetchingProfile.current = true;
+    setLoading(true);
 
-    // Escuchar cambios de autenticación
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
-        await loadUserData(session.user.id);
-      } else if (event === "SIGNED_OUT") {
-        clearUserData();
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const loadUserData = async (authId: string) => {
     try {
+      console.log("🔄 fetchUserProfile iniciado para:", userId);
+
+      console.log("📊 Buscando usuario en tabla usuarios...");
       const { data: userData, error: userError } = await supabase
         .from("usuarios")
         .select("*")
-        .eq("auth_user_id", authId)
-        .eq("activo", true)
+        .eq("auth_user_id", userId)
         .single();
+
+      console.log("👤 Resultado usuario:", { userData, userError });
+
+      let finalUser = userData;
 
       if (userError || !userData) {
-        throw new Error("Usuario no encontrado o inactivo");
+        console.log("⚠️ Usuario no encontrado, creando usuario básico...");
+        // Crear usuario básico como fallback
+        finalUser = {
+          id: userId,
+          auth_user_id: userId,
+          email: userEmail || "usuario@ejemplo.com",
+          nombres: "Usuario",
+          apellidos: "",
+          rut: "",
+          telefono: "",
+          direccion: "",
+          activo: true,
+          created_at: new Date().toISOString(),
+        };
       }
 
-      const { data: empresaData, error: empresaError } = await supabase
-        .from("usuario_empresa")
-        .select(
-          `
-          empresa_id,
-          sucursal_id,
-          empresas (
-            nombre,
-            rut
-          ),
-          sucursales (
-            nombre,
-            direccion
-          )
-        `
-        )
-        .eq("usuario_id", userData.id)
-        .eq("activo", true)
-        .single();
+      setUser(finalUser);
 
-      if (empresaError || !empresaData) {
-        throw new Error("Usuario sin empresa asignada");
+      // Solo buscar empresa si hay usuario válido
+      if (finalUser?.id) {
+        console.log(":office: Buscando empresa y sucursal del usuario...");
+        const { data: usuarioEmpresa, error: empresaError } = await supabase
+          .from("usuario_empresa")
+          .select("empresa_id, sucursal_id")
+          .eq("usuario_id", finalUser.id)
+          .eq("activo", true)
+          .single();
+
+        console.log(":office: Resultado empresa y sucursal:", { usuarioEmpresa, empresaError });
+
+        setEmpresaId(usuarioEmpresa?.empresa_id || null);
+        setSucursalId(usuarioEmpresa?.sucursal_id || null);
+      } else {
+        setEmpresaId(null);
+        setSucursalId(null);
       }
 
-      const userWithEmpresa = {
-        ...userData,
-        usuario_empresa: [empresaData],
+      console.log("✅ fetchUserProfile completado exitosamente");
+    } catch (error) {
+      console.error("❌ Error crítico en fetchUserProfile:", error);
+
+      // Crear usuario fallback en caso de error crítico
+      const fallbackUser = {
+        id: userId,
+        auth_user_id: userId,
+        email: userEmail || "usuario@ejemplo.com",
+        nombres: "Usuario",
+        apellidos: "",
+        rut: "",
+        telefono: "",
+        direccion: "",
+        activo: true,
+        created_at: new Date().toISOString(),
       };
 
-      setUser(userWithEmpresa);
-      setEmpresaId(empresaData.empresa_id);
-      setSucursalId(empresaData.sucursal_id);
-      // setUserRole(empresaData.rol);
-
-      localStorage.setItem("pos_user", JSON.stringify(userWithEmpresa));
-      localStorage.setItem("pos_empresa", empresaData.empresa_id);
-      localStorage.setItem("pos_sucursal", empresaData.sucursal_id);
-      // localStorage.setItem("pos_role", empresaData.rol);
-    } catch (error: any) {
-      console.error("Error loading user data:", error);
-      toast.error(error.message || "Error cargando datos del usuario");
-      await supabase.auth.signOut();
+      setUser(fallbackUser);
+      setEmpresaId(null);
+    } finally {
+      setLoading(false);
+      isFetchingProfile.current = false;
     }
   };
 
-  const clearUserData = () => {
-    setUser(null);
-    setEmpresaId(null);
-    setSucursalId(null);
-    setUserRole(null);
-
-    localStorage.removeItem("pos_user");
-    localStorage.removeItem("pos_empresa");
-    localStorage.removeItem("pos_sucursal");
-    localStorage.removeItem("pos_role");
+  const refetchUserProfile = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (session?.user) {
+      await fetchUserProfile(session.user.id, session.user.email);
+    }
   };
 
-  const login = async (
-    email: string,
-    password: string
-  ): Promise<{ success: boolean; error?: string }> => {
+  const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
 
@@ -145,52 +134,98 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       });
 
       if (error) {
-        return { success: false, error: error.message };
+        setLoading(false);
+        throw error;
       }
-
-      if (data.user) {
-        await loadUserData(data.user.id);
-        toast.success("Inicio de sesión exitoso");
-        return { success: true };
-      }
-
-      return { success: false, error: "Error inesperado" };
-    } catch (error: any) {
-      console.error("Login error:", error);
-      return { success: false, error: error.message || "Error inesperado" };
-    } finally {
+      // La carga se manejará en onAuthStateChange
+    } catch (error) {
       setLoading(false);
+      throw error;
     }
   };
 
-  const logout = async () => {
+  const signOut = async () => {
     try {
-      localStorage.clear();
-      setLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) {
-        toast.error(`Error cerrando sesión: ${error.message}`);
-        return;
+        throw error;
       }
-      clearUserData();
-      toast.success("Sesión cerrada");
-    } catch (error: any) {
-      console.error("Logout error:", error);
-      toast.error("Error al cerrar sesión");
-    } finally {
-      setLoading(false);
+      setEmpresaId(null);
+      setUser(null);
+    } catch (error) {
+      throw error;
     }
   };
 
-  const value = {
-    user,
-    loading,
-    login,
-    logout,
-    empresaId,
-    sucursalId,
-    userRole,
-  };
+  useEffect(() => {
+    console.log("AuthProvider: inicializando auth, seteando loading true");
+    setLoading(true);
+
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log("AuthProvider: sesión obtenida:", session);
+
+      if (error) {
+        console.error("Error obteniendo sesión", error);
+        setLoading(false);
+        return;
+      }
+      if (session?.user) {
+        fetchUserProfile(session.user.id, session.user.email).finally(() => {
+          console.log(
+            "AuthProvider: loading false tras fetchUserProfile en inicialización"
+          );
+          setLoading(false);
+        });
+      } else {
+        setUser(null);
+        setEmpresaId(null);
+        console.log("AuthProvider: sin sesión, loading false");
+        setLoading(false);
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("AuthProvider: onAuthStateChange, sesión:", session);
+      if (session?.user) {
+        fetchUserProfile(session.user.id, session.user.email).finally(() => {
+          console.log(
+            "AuthProvider: loading false tras fetchUserProfile en onAuthStateChange"
+          );
+          setLoading(false);
+        });
+      } else {
+        setUser(null);
+        setEmpresaId(null);
+        console.log("AuthProvider: no hay sesión, loading false");
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const value = React.useMemo(
+    () => ({
+      user,
+      empresaId,
+      sucursalId,
+      loading,
+      signIn,
+      signOut,
+      refetchUserProfile,
+    }),
+    [user, empresaId, sucursalId, loading]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+}

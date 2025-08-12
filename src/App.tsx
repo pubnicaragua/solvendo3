@@ -1,7 +1,7 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
-import { POSProvider } from './contexts/POSContext' 
+import { POSProvider } from './contexts/POSContext'
 import { SidebarProvider } from './contexts/SidebarContext'
 import { LoginForm } from './components/auth/LoginForm'
 import Dashboard from './pages/Dashboard'
@@ -24,6 +24,8 @@ import { LoginPage } from './components/auth/LoginPage'
 
 const AppRoutes: React.FC = () => {
   const { user, loading } = useAuth()
+
+  console.log(loading)
 
   if (loading) {
     return (
@@ -53,22 +55,22 @@ const AppRoutes: React.FC = () => {
           <Routes>
             {/* Estas son las rutas PROTEGIDAS (solo accesibles si user existe) */}
             <Route path="/" element={<Dashboard />} />
-            <Route path="/movimiento" element={<CashMovementPage onClose={() => {}} />} />
-            <Route path="/reimprimir" element={<ReprintPage onClose={() => {}} />} />
-            <Route path="/reportes" element={<ReportsPage onClose={() => {}} />} />
-            <Route path="/despacho" element={<DeliveryPage onClose={() => {}} />} />
-            <Route path="/cierre" element={<CashClosePage onClose={() => {}} />} />
-            <Route path="/devolucion" element={<ReturnsPage onClose={() => {}} />} />
-            <Route path="/arqueo" element={<CashAuditPage onClose={() => {}} />} />
-            <Route path="/historial-movimientos" element={<CashHistoryPage onClose={() => {}} />} />
-            <Route path="/categorias" element={<CategoriesPage onClose={() => {}} />} />
-            <Route path="/codigos-barras" element={<BarcodePage onClose={() => {}} />} />
-            <Route path="/historial-cliente" element={<CustomerHistoryPage onClose={() => {}} />} />
-            <Route path="/promociones" element={<PromotionsPage onClose={() => {}} />} />
-            <Route path="/facturacion" element={<BillingPage onClose={() => {}} />} />
+            <Route path="/movimiento" element={<CashMovementPage onClose={() => { }} />} />
+            <Route path="/reimprimir" element={<ReprintPage onClose={() => { }} />} />
+            <Route path="/reportes" element={<ReportsPage onClose={() => { }} />} />
+            <Route path="/despacho" element={<DeliveryPage onClose={() => { }} />} />
+            <Route path="/cierre" element={<CashClosePage onClose={() => { }} />} />
+            <Route path="/devolucion" element={<ReturnsPage onClose={() => { }} />} />
+            <Route path="/arqueo" element={<CashAuditPage onClose={() => { }} />} />
+            <Route path="/historial-movimientos" element={<CashHistoryPage onClose={() => { }} />} />
+            <Route path="/categorias" element={<CategoriesPage onClose={() => { }} />} />
+            <Route path="/codigos-barras" element={<BarcodePage onClose={() => { }} />} />
+            <Route path="/historial-cliente" element={<CustomerHistoryPage onClose={() => { }} />} />
+            <Route path="/promociones" element={<PromotionsPage onClose={() => { }} />} />
+            <Route path="/facturacion" element={<BillingPage onClose={() => { }} />} />
             <Route path="/protect/status-pos" element={<StatusPOSPage />} />
             {/* Redirige a dashboard si intenta acceder a una ruta inexistente estando autenticado */}
-            <Route path="*" element={<Navigate to="/" replace />} /> 
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </POSLayout>
       </SidebarProvider>
