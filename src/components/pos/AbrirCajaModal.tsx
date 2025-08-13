@@ -54,6 +54,7 @@ function AbrirCajaModal() {
             toast.error("Usuario no autenticado. Por favor inicia sesión.");
             return;
         }
+
         if (!empresaId) {
             toast.error("Empresa no identificada.");
             return;

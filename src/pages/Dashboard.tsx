@@ -28,6 +28,7 @@ import { HeaderWithMenu } from "../components/common/HeaderWithMenu";
 import { Promocion } from "../lib/supabase";
 import AbrirCajaModal from "../components/pos/AbrirCajaModal";
 import SearchBarClientes from "../components/pos/SearchBarClientes";
+import { LoginForm } from "../components/auth/LoginForm";
 
 export type TabId = "destacado" | "borradores" | "productos" | "clientes";
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
@@ -60,7 +61,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
 
 const Dashboard: React.FC = () => {
   // toggleSidebar y user se obtienen de sus respectivos contextos y se pasan a HeaderWithMenu
-  const { user, empresaId } = useAuth();
+  const { user, empresaId, authorized, authorize } = useAuth();
 
   const [isCreating, setIsCreating] = useState(false);
 
@@ -632,7 +633,6 @@ const Dashboard: React.FC = () => {
         .eq("activo", true)
         .single();
 
-      console.log(promocion);
       if (promoError || !promocion) {
         toast.error("Promoción no encontrada");
         return false;
@@ -674,7 +674,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  console.log(currentAperturaCaja)
+  if (!authorized && !currentAperturaCaja) return <LoginForm />
 
   if (!currentAperturaCaja) return <AbrirCajaModal />
 

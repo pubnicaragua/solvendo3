@@ -5,24 +5,17 @@ import { useAuth } from "../../contexts/AuthContext";
 import toast from "react-hot-toast";
 
 export const LoginForm: React.FC = () => {
-  const [email, setEmail] = useState("");
+  const [rut, setRut] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { authorize } = useAuth();
 
   const handleSupervisorAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast.error("Por favor ingresa email y contraseña");
-      return;
-    }
-
-    // Validar formato de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast.error("Por favor ingrese un email válido");
+    if (!rut || !password) {
+      toast.error("Por favor ingresa rut y contraseña");
       return;
     }
 
@@ -30,7 +23,7 @@ export const LoginForm: React.FC = () => {
     setError("");
 
     try {
-      await signIn(email, password);
+      await authorize(rut, password);
     } catch (error: any) {
       setError("Error de conexión");
       toast.error("Error de conexión");
@@ -56,20 +49,20 @@ export const LoginForm: React.FC = () => {
           <div className="space-y-4">
             <div>
               <label
-                htmlFor="email"
+                htmlFor="rut"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Email
+                Rut
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
+                id="rut"
+                name="rut"
+                type="rut"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={rut}
+                onChange={(e) => setRut(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="supervisor@empresa.com"
+                placeholder="XX.XXX.XXX-X"
               />
             </div>
 
