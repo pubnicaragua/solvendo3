@@ -1,19 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, SetStateAction } from "react";
 import { User, Search, Plus, Check } from "lucide-react";
 import { usePOS } from "../../contexts/POSContext";
 import toast from "react-hot-toast";
+import SearchBarClientes from "./SearchBarClientes";
 
 interface Props {
   onClientSelected: (cliente: any) => void;
   clientSearchTerm?: string;
+  isCreating: boolean;
+  setIsCreating: React.Dispatch<SetStateAction<boolean>>
 }
 
-export default function ClientsPanel({ onClientSelected }: Props) {
+export default function ClientsPanel({ onClientSelected, isCreating, setIsCreating }: Props) {
   const { clientes, loadClientes, currentCliente, selectClient, crearCliente } =
     usePOS();
 
-  const [clientsPanelSearch, setClientsPanelSearch] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     tipo: "Persona",
@@ -31,10 +32,6 @@ export default function ClientsPanel({ onClientSelected }: Props) {
   useEffect(() => {
     loadClientes();
   }, [loadClientes]);
-
-  const filtered = (clientes || []).filter((c) =>
-    c.razon_social.toLowerCase().includes(clientsPanelSearch.toLowerCase())
-  );
 
   const pick = (c: any) => {
     selectClient(c);
@@ -307,45 +304,11 @@ export default function ClientsPanel({ onClientSelected }: Props) {
         <User className="w-5 h-5 text-blue-600" />
         <h3 className="text-blue-600 font-semibold text-lg">Clientes</h3>
       </div>
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-        <input
-          value={clientsPanelSearch}
-          onChange={(e) => setClientsPanelSearch(e.target.value)}
-          placeholder="Buscar cliente..."
-          className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <ul className="space-y-2 max-h-60 overflow-y-auto">
-        {filtered.map((c) => (
-          <li
-            key={c.id}
-            onClick={() => pick(c)}
-            className={`p-3 border rounded hover:bg-gray-50 cursor-pointer flex justify-between items-center ${
-              currentCliente?.id === c.id
-                ? "bg-blue-50 border-blue-200"
-                : "bg-white"
-            }`}
-          >
-            <div>
-              <span className="font-medium">{c.razon_social}</span>
-              <p className="text-xs text-gray-600">{c.rut}</p>
-            </div>
-            {currentCliente?.id === c.id ? (
-              <Check className="w-4 h-4 text-blue-600" />
-            ) : (
-              <Plus className="w-4 h-4 text-blue-600" />
-            )}
-          </li>
-        ))}
-        {!filtered.length && (
-          <li className="text-gray-500 text-center py-4">
-            {clientsPanelSearch
-              ? "Sin resultados"
-              : "Aquí aparecerán tus clientes"}
-          </li>
-        )}
-      </ul>
+      <SearchBarClientes
+        pick={pick}
+        clientModule={true}
+        setIsCreating={setIsCreating}
+      />
       <button
         onClick={() => setIsCreating(true)}
         className="w-full py-3 bg-blue-600 text-white rounded-lg flex items-center justify-center space-x-2"
