@@ -7,9 +7,9 @@ import toast from "react-hot-toast";
 
 export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
+  const [rut, setRut] = useState("");
   const [password, setPassword] = useState("");
-  const [emailFocused, setEmailFocused] = useState(false);
+  const [rutFocused, setRutFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
@@ -22,24 +22,17 @@ export const LoginPage: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !password) {
-      toast.error("Por favor ingrese email y contraseña");
-      return;
-    }
-
-    // Validar formato de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast.error("Por favor ingrese un email válido");
+    if (!rut || !password) {
+      toast.error("Por favor ingrese rut y contraseña");
       return;
     }
 
     setLoading(true);
     try {
-      await signIn(email, password);
+      await signIn(rut, password);
       navigate("/");
-    } catch (error) {
-      toast.error("Error de conexión");
+    } catch (error: any) {
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -59,26 +52,26 @@ export const LoginPage: React.FC = () => {
         <form onSubmit={handleLogin}>
           <div className="mb-6 relative">
             <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onFocus={() => setEmailFocused(true)}
-              onBlur={() => setEmailFocused(false)}
+              type="rut"
+              id="rut"
+              value={rut}
+              onChange={(e) => setRut(e.target.value)}
+              onFocus={() => setRutFocused(true)}
+              onBlur={() => setRutFocused(false)}
               className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base peer"
               required
             />
             <label
-              htmlFor="email"
+              htmlFor="rut"
               className={`  
                 absolute left-4 transition-all duration-300 ease-in-out pointer-events-none  
-                ${emailFocused || email
+                ${rutFocused || rut
                   ? "top-0 text-xs text-blue-600 bg-white px-1 -translate-y-1/2"
                   : "top-1/2 -translate-y-1/2 text-base text-gray-500"
                 }  
               `}
             >
-              Email
+              Rut
             </label>
           </div>
 

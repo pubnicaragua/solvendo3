@@ -131,23 +131,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const validarRut = (rut: string): boolean => {
+    // Limpiar formato
+    rut = rut.replace(/\./g, "").replace(/-/g, "").toUpperCase();
+
+    // Debe tener al menos 2 caracteres (cuerpo + DV)
+    if (rut.length < 2) return false;
+
+    const cuerpo = rut.slice(0, -1);
+    const dv = rut.slice(-1);
+
+    // Cuerpo solo números
+    if (!/^\d+$/.test(cuerpo)) return false;
+
+    // Calcular DV
+    let suma = 0;
+    let multiplicador = 2;
+
+    for (let i = cuerpo.length - 1; i >= 0; i--) {
+      suma += parseInt(cuerpo[i], 10) * multiplicador;
+      multiplicador = multiplicador < 7 ? multiplicador + 1 : 2;
+    }
+
+    const resto = 11 - (suma % 11);
+    let dvEsperado = resto === 11 ? "0" : resto === 10 ? "K" : resto.toString();
+
+    return dv === dvEsperado;
+  }
+
+
+  const signIn = async (rut: string, password: string) => {
     try {
+      if (!validarRut(rut)) {
+        throw new Error("RUT inválido");
+      }
+
       setLoading(true);
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+      const { data: usuario, error: errorUsuario } = await supabase
+        .from("usuarios")
+        .select("email")
+        .eq("rut", rut)
+        .single()
+
+      if (errorUsuario || !usuario) {
+        throw new Error("RUT no encontrado");
+      }
+
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: usuario.email,
         password,
       });
 
-      if (error) {
-        setLoading(false);
-        throw error;
+      if (authError) {
+        throw authError;
       }
       // La carga se manejará en onAuthStateChange
     } catch (error) {
-      setLoading(false);
       throw error;
+    } finally {
+      setLoading(false)
     }
   };
 
