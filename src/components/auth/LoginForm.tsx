@@ -10,7 +10,7 @@ export const LoginForm: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { authorize } = useAuth();
 
   const handleSupervisorAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +23,7 @@ export const LoginForm: React.FC = () => {
     setError("");
 
     try {
-      await signIn(rut, password);
+      await authorize(rut, password);
     } catch (error: any) {
       setError("Error de conexión");
       toast.error("Error de conexión");
@@ -62,7 +62,7 @@ export const LoginForm: React.FC = () => {
                 value={rut}
                 onChange={(e) => setRut(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="supervisor@empresa.com"
+                placeholder="XX.XXX.XXX-X"
               />
             </div>
 

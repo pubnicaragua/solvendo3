@@ -115,8 +115,6 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({
         .eq("sesiones_caja_id", aperturaSeleccionada)
         .order("created_at", { ascending: false });
 
-      console.log(aperturaSeleccionada)
-
       if (error) {
         console.error("Error loading movements:", error);
         toast.error("Error al cargar los movimientos");
@@ -195,7 +193,6 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({
 
   // Función para generar nombre descriptivo de la apertura
   const getAperturaDisplayName = (apertura: AperturaCajaConUsuario) => {
-    console.log(apertura)
     const fecha = new Date(apertura.abierta_en);
     const fechaFormateada = fecha.toLocaleDateString("es-CL", {
       day: "2-digit",

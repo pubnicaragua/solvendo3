@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Usar variables de entorno primero, fallback a valores hardcodeados  
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ujkdekqhoeyfjvtzdtaz.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqa2Rla3Fob2V5Zmp2dHpkdGF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxNjA5MTksImV4cCI6MjA2NDczNjkxOX0.bv4GEzEgDG9FyTM2gZR38HoHGAGNlwAKb_NoXZjpFyY'
+export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ujkdekqhoeyfjvtzdtaz.supabase.co'
+export const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqa2Rla3Fob2V5Zmp2dHpkdGF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxNjA5MTksImV4cCI6MjA2NDczNjkxOX0.bv4GEzEgDG9FyTM2gZR38HoHGAGNlwAKb_NoXZjpFyY'
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Missing Supabase environment variables, using fallback values')
@@ -33,6 +33,7 @@ export interface Usuario {
   password_hash?: string
   nombres: string
   apellidos: string
+  rol: 'admin' | 'empleado' | 'supervisor' | 'cajero'
   rut: string
   telefono?: string
   direccion?: string
@@ -77,7 +78,7 @@ export interface UsuarioEmpresa {
   usuario_id: string
   empresa_id: string
   sucursal_id: string
-  rol: 'admin' | 'supervisor' | 'cajero'
+  rol: 'admin' | 'empleado' | 'supervisor' | 'cajero'
   activo: boolean
   created_at: string
   proposito: string

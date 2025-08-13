@@ -5,15 +5,19 @@ import React, {
   useState,
   useRef,
 } from "react";
-import { supabase, Usuario, UsuarioEmpresa } from "../lib/supabase";
+import { supabase, supabaseAnonKey, supabaseUrl, Usuario, UsuarioEmpresa } from "../lib/supabase";
+import toast from "react-hot-toast";
+import { createClient } from "@supabase/supabase-js";
 
 interface AuthContextType {
   user: Usuario | null;
   empresaId: string | null;
+  authorized: boolean;
   sucursalId: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  authorize: (rut: string, password: string) => Promise<void>
   refetchUserProfile: () => Promise<void>;
 }
 
@@ -21,6 +25,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<Usuario | null>(null);
+  const [authorized, setAuthorized] = useState<boolean>(false);
   const [empresaId, setEmpresaId] = useState<string | null>(null);
   const [sucursalId, setSucursalId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,77 +49,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq("auth_user_id", userId)
         .single();
 
+      setUser(userData);
 
-      let finalUser = userData;
-
-      if (userError || !userData) {
-        // Crear usuario básico como fallback
-        finalUser = {
-          id: userId,
-          auth_user_id: userId,
-          email: userEmail || "usuario@ejemplo.com",
-          nombres: "Usuario",
-          apellidos: "",
-          rut: "",
-          telefono: "",
-          direccion: "",
-          activo: true,
-          created_at: new Date().toISOString(),
-        };
+      if (userError) {
+        throw new Error(userError.message)
       }
 
-      setUser(finalUser);
+      const { data: usuarioEmpresa, error: empresaError } = await supabase
+        .from("usuario_empresa")
+        .select("empresa_id, sucursal_id, proposito, rol")
+        .eq("usuario_id", userData.id)
+        .eq("activo", true)
+        .single();
 
-      // Solo buscar empresa si hay usuario válido
-      if (finalUser?.id) {
-        const { data: usuarioEmpresa, error: empresaError } = await supabase
-          .from("usuario_empresa")
-          .select("empresa_id, sucursal_id, proposito")
-          .eq("usuario_id", finalUser.id)
-          .eq("activo", true)
-          .single();
-
-        if (empresaError) {
-          console.error("Error al obtener usuario_empresa:", empresaError);
-        }
-
-        setEmpresaId(usuarioEmpresa?.empresa_id || null);
-        setSucursalId(usuarioEmpresa?.sucursal_id || null);
-
-        if (usuarioEmpresa?.proposito) {
-          setUser((prev) => {
-            if (!prev) return prev;
-            return {
-              ...prev,
-              proposito: usuarioEmpresa.proposito,
-            };
-          });
-        }
-
-      } else {
-        setEmpresaId(null);
-        setSucursalId(null);
+      if (empresaError) {
+        console.error("Error al obtener usuario_empresa:", empresaError);
       }
 
+      setEmpresaId(usuarioEmpresa?.empresa_id || null);
+      setSucursalId(usuarioEmpresa?.sucursal_id || null);
+
+      if (usuarioEmpresa) {
+        setUser((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            rol: usuarioEmpresa.rol,
+            proposito: usuarioEmpresa.proposito,
+          };
+        });
+      }
+
+      if (user?.rol === "empleado") setAuthorized(false)
 
     } catch (error) {
       console.error("❌ Error crítico en fetchUserProfile:", error);
 
-      // Crear usuario fallback en caso de error crítico
-      const fallbackUser = {
-        id: userId,
-        auth_user_id: userId,
-        email: userEmail || "usuario@ejemplo.com",
-        nombres: "Usuario",
-        apellidos: "",
-        rut: "",
-        telefono: "",
-        direccion: "",
-        activo: true,
-        created_at: new Date().toISOString(),
-      };
-
-      setUser(fallbackUser);
       setEmpresaId(null);
     } finally {
       setLoading(false);
@@ -159,6 +129,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return dv === dvEsperado;
   }
 
+  const authorize = async (rut: string, password: string) => {
+    try {
+      if (!validarRut(rut)) {
+        throw new Error("RUT inválido");
+      }
+
+      setLoading(true);
+
+      const { data: usuario, error: errorUsuario } = await supabase
+        .from("usuarios")
+        .select("id, nombres, email")
+        .eq("rut", rut)
+        .single();
+
+      if (errorUsuario || !usuario) {
+        toast.error("RUT no encontrado")
+        return
+      }
+
+      const { data: usuarioEmpresa, error: errorUsuarioEmpresa } = await
+        supabase.
+          from("usuario_empresa")
+          .select("rol")
+          .eq("usuario_id", usuario.id)
+          .single()
+
+      if (usuarioEmpresa?.rol === "empleado") {
+        toast.error(`El usuario ${usuario.nombres} no cuenta esta autorizado para realizar esta acción`)
+        return
+      }
+
+      const tempClient = createClient(supabaseUrl, supabaseAnonKey);
+
+      const { error: authError } = await tempClient.auth.signInWithPassword({
+        email: usuario.email,
+        password,
+      });
+
+      if (authError) {
+        throw authError;
+      }
+
+      setAuthorized(true)
+    } catch (error) {
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const signIn = async (rut: string, password: string) => {
     try {
@@ -170,12 +190,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const { data: usuario, error: errorUsuario } = await supabase
         .from("usuarios")
-        .select("email")
+        .select("id, email")
         .eq("rut", rut)
         .single()
 
       if (errorUsuario || !usuario) {
         throw new Error("RUT no encontrado");
+      }
+
+      const { data: usuarioEmpresa, error: errorUsuarioEmpresa } = await
+        supabase.from("usuario_empresa").select("rol").eq("usuario_id", usuario.id).single()
+
+      if (usuarioEmpresa?.rol === "empleado") {
+        setAuthorized(false)
+      } else {
+        setAuthorized(true)
       }
 
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -208,11 +237,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    ("AuthProvider: inicializando auth, seteando loading true");
     setLoading(true);
-
     supabase.auth.getSession().then(({ data: { session }, error }) => {
-
       if (error) {
         console.error("Error obteniendo sesión", error);
         setLoading(false);
@@ -220,15 +246,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       if (session?.user) {
         fetchUserProfile(session.user.id, session.user.email).finally(() => {
-          (
-            "AuthProvider: loading false tras fetchUserProfile en inicialización"
-          );
           setLoading(false);
         });
       } else {
         setUser(null);
         setEmpresaId(null);
-        ("AuthProvider: sin sesión, loading false");
         setLoading(false);
       }
     });
@@ -238,15 +260,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         fetchUserProfile(session.user.id, session.user.email).finally(() => {
-          (
-            "AuthProvider: loading false tras fetchUserProfile en onAuthStateChange"
-          );
           setLoading(false);
         });
       } else {
         setUser(null);
         setEmpresaId(null);
-        ("AuthProvider: no hay sesión, loading false");
         setLoading(false);
       }
     });
@@ -261,10 +279,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       sucursalId,
       loading,
       signIn,
+      authorized,
+      authorize,
       signOut,
       refetchUserProfile,
     }),
-    [user, empresaId, sucursalId, loading]
+    [user, empresaId, sucursalId, loading, authorized, authorize]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
