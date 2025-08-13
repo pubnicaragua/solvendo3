@@ -532,8 +532,6 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
       // Generar folio según tipo de documento
       if (tipoDte === "boleta") {
         folio = `${timestamp}`;
-      } else if (tipoDte === "boleta_manual") {
-        folio = `BM${timestamp}`;
       } else if (tipoDte === "factura") {
         folio = `F${timestamp}`;
       } else {

@@ -7,12 +7,11 @@ import {
   DollarSign,
   Calendar,
   Clock,
-  AlertCircle,
   ClipboardList,
-  PlayCircle,
 } from "lucide-react";
 import { HeaderWithMenu } from "../components/common/HeaderWithMenu";
 import toast from "react-hot-toast";
+import AbrirCajaModal from "../components/pos/AbrirCajaModal";
 
 const SummaryLine = ({
   label,
@@ -51,34 +50,6 @@ export const CashClosePage: React.FC = () => {
   const [montoFinalInput, setMontoFinalInput] = useState("");
   const [montoInicialApertura, setMontoInicialApertura] = useState("");
   const [filterType, setFilterType] = useState("all");
-  const [cajasDisponibles, setCajasDisponibles] = useState<
-    { id: string; nombre: string }[]
-  >([]);
-  const [cajaSeleccionada, setCajaSeleccionada] = useState<string>("");
-
-  // Cargar cajas disponibles de la empresa
-  useEffect(() => {
-    if (!empresaId) return;
-
-    const fetchCajas = async () => {
-      const { data, error } = await supabase
-        .from("cajas")
-        .select("*")
-        .eq("empresa_id", empresaId)
-        .eq("activo", true);
-      if (error) {
-        toast.error("Error cargando cajas disponibles");
-        setCajasDisponibles([]);
-        return;
-      }
-      setCajasDisponibles(data ?? []);
-      if (data && data.length > 0 && !cajaSeleccionada) {
-        setCajaSeleccionada(data[0].id);
-      }
-    };
-
-    fetchCajas();
-  }, [empresaId, cajaSeleccionada]);
 
   // Cargar ventas y movimientos asociados a la apertura de caja actual
   useEffect(() => {
@@ -198,54 +169,6 @@ export const CashClosePage: React.FC = () => {
     return montoFinalNum - montoEsperadoSafe;
   }, [montoFinalInput, montoEsperado]);
 
-  // Abrir caja, validando usuario y campos
-  const handleOpenCash = async () => {
-    if (!user) {
-      toast.error("Usuario no autenticado. Por favor inicia sesión.");
-      return;
-    }
-    if (!empresaId) {
-      toast.error("Empresa no identificada.");
-      return;
-    }
-    if (!sucursalId) {
-      toast.error("Sucursal no identificada.");
-      return;
-    }
-    if (
-      montoInicialApertura === "" ||
-      isNaN(parseFloat(montoInicialApertura)) ||
-      parseFloat(montoInicialApertura) < 0
-    ) {
-      toast.error("Debes ingresar un monto inicial válido");
-      return;
-    }
-    if (!cajaSeleccionada) {
-      toast.error("Debes seleccionar una caja para abrir");
-      return;
-    }
-    if (
-      currentAperturaCaja &&
-      currentAperturaCaja.caja_id === cajaSeleccionada
-    ) {
-      toast.error("La caja seleccionada ya está abierta.");
-      return;
-    }
-
-    // Paso empresaId y sucursalId para coherencia con backend
-    const success = await openCaja(
-      parseFloat(montoInicialApertura),
-      cajaSeleccionada,
-      empresaId,
-      sucursalId,
-      user.id
-    );
-    if (success) {
-      toast.success("Caja abierta exitosamente. Puedes comenzar a trabajar.");
-      setMontoInicialApertura("");
-    }
-  };
-  console.log(currentAperturaCaja)
   // Cerrar caja validando usuario y monto
   const handleCloseCash = async () => {
     if (!user) {
@@ -289,74 +212,7 @@ export const CashClosePage: React.FC = () => {
   }
 
   // Si no hay caja abierta, mostrar UI para abrir caja (selección de caja está habilitada)
-  if (!currentAperturaCaja) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
-        <div className="text-center bg-white p-8 rounded-lg shadow-md w-full max-w-sm mx-4">
-          <AlertCircle className="mx-auto h-12 w-12 text-blue-500 mb-4" />
-          <h2 className="mt-4 text-xl font-semibold text-gray-800">
-            No hay una caja abierta
-          </h2>
-          <p className="mt-2 text-gray-600 mb-6">
-            Por favor, abre una caja para comenzar a operar.
-          </p>
-
-          <div className="mb-6 text-left">
-            <label
-              htmlFor="montoInicialApertura"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Monto Inicial
-            </label>
-            <input
-              type="number"
-              id="montoInicialApertura"
-              className="w-full pl-3 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-              value={montoInicialApertura}
-              onChange={(e) => setMontoInicialApertura(e.target.value)}
-              placeholder="0"
-              min="0"
-              step="0.01"
-            />
-          </div>
-
-          <div className="mb-6 text-left">
-            <label
-              htmlFor="selectCaja"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Selecciona una caja
-            </label>
-            <select
-              id="selectCaja"
-              className="w-full p-2 border border-gray-300 rounded-md"
-              value={cajaSeleccionada}
-              onChange={(e) => setCajaSeleccionada(e.target.value)}
-            >
-              <option value="">-- Seleccionar caja --</option>
-              {cajasDisponibles.map((caja) => (
-                <option key={caja.id} value={caja.id}>
-                  {caja.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <button
-            onClick={handleOpenCash}
-            disabled={
-              !montoInicialApertura ||
-              isNaN(parseFloat(montoInicialApertura)) ||
-              !cajaSeleccionada
-            }
-            className="w-full flex justify-center items-center p-8 mt-6 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-base shadow-sm"
-          >
-            <PlayCircle className="w-5 h-5 mr-2" /> Abrir Caja
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if (!currentAperturaCaja) return <AbrirCajaModal />
 
   // Pantalla principal con caja abierta
   const isLoading = contextLoading || isClosing;
@@ -364,7 +220,7 @@ export const CashClosePage: React.FC = () => {
   const fechaApertura = currentAperturaCaja
     ? new Date(
       currentAperturaCaja.abierta_en ||
-      currentAperturaCaja.creada_en ||
+      currentAperturaCaja.created_at ||
       Date.now()
     ).toLocaleDateString("es-CL")
     : "";
@@ -373,8 +229,8 @@ export const CashClosePage: React.FC = () => {
     minute: "2-digit",
   });
 
-  const cajaNombreReal = user?.nombre
-    ? `${user.nombre} ${user?.apellidos || ""}`
+  const cajaNombreReal = user?.nombres
+    ? `${user.nombres}`
     : "Usuario";
 
   return (

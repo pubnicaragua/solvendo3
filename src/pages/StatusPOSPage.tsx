@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { 
-  Activity, 
-  Database, 
-  Wifi, 
-  AlertTriangle, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Activity,
+  Database,
+  Wifi,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
   Clock,
   Server,
   Users,
@@ -50,7 +50,7 @@ interface PerformanceMetrics {
 export const StatusPOSPage: React.FC = () => {
   const { user, empresaId } = useAuth()
   const { cajaAbierta, productos, clientes, carrito, loading } = usePOS()
-  
+
   const [status, setStatus] = useState<SystemStatus>({
     database: 'disconnected',
     supabase: 'disconnected',
@@ -60,7 +60,7 @@ export const StatusPOSPage: React.FC = () => {
     clients: 'loading',
     cart: 'empty'
   })
-  
+
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [metrics, setMetrics] = useState<PerformanceMetrics>({
     loadTime: 0,
@@ -69,7 +69,7 @@ export const StatusPOSPage: React.FC = () => {
     memoryUsage: 0,
     activeConnections: 0
   })
-  
+
   const [autoRefresh, setAutoRefresh] = useState(true)
   const [refreshInterval, setRefreshInterval] = useState(5000) // 5 seconds
   const [systemWarnings, setSystemWarnings] = useState<string[]>([])
@@ -84,7 +84,7 @@ export const StatusPOSPage: React.FC = () => {
       message,
       details
     }
-    
+
     setLogs(prev => [newLog, ...prev.slice(0, 99)]) // Keep only last 100 logs
   }, [])
 
@@ -96,15 +96,15 @@ export const StatusPOSPage: React.FC = () => {
         .from('empresas')
         .select('id')
         .limit(1)
-      
+
       const responseTime = Date.now() - startTime
-      
+
       if (error) {
         setStatus(prev => ({ ...prev, database: 'error', supabase: 'error' }))
         addLog('error', 'Database', `Connection failed: ${error.message}`, error)
         return false
       }
-      
+
       setStatus(prev => ({ ...prev, database: 'connected', supabase: 'connected' }))
       setMetrics(prev => ({ ...prev, dbResponseTime: responseTime }))
       addLog('success', 'Database', `Connection successful (${responseTime}ms)`)
@@ -120,7 +120,7 @@ export const StatusPOSPage: React.FC = () => {
   const checkAuthStatus = useCallback(() => {
     if (user && empresaId) {
       setStatus(prev => ({ ...prev, authentication: 'active' }))
-      addLog('success', 'Auth', `User authenticated: ${user.nombre} (${empresaId})`)
+      addLog('success', 'Auth', `User authenticated: ${user.nombres} (${empresaId})`)
     } else {
       setStatus(prev => ({ ...prev, authentication: 'inactive' }))
       addLog('warning', 'Auth', 'User not authenticated or missing empresa')
@@ -176,7 +176,7 @@ export const StatusPOSPage: React.FC = () => {
   const updatePerformanceMetrics = useCallback(() => {
     const now = Date.now()
     const memoryInfo = (performance as any).memory
-    
+
     setMetrics(prev => ({
       ...prev,
       lastUpdate: new Date().toISOString(),
@@ -188,42 +188,42 @@ export const StatusPOSPage: React.FC = () => {
   // System health checks and warnings
   const checkSystemHealth = useCallback(() => {
     const warnings: string[] = []
-    
+
     // Check for hardcoded values
     if (user?.rut === '78.168.951-3') {
       warnings.push('⚠️ Usuario hardcoded detectado (RUT: 78.168.951-3)')
     }
-    
+
     // Check database connection
     if (status.database !== 'connected') {
       warnings.push('🔴 Base de datos desconectada')
     }
-    
+
     // Check if products are loading properly
     if (productos.length === 0) {
       warnings.push('⚠️ No hay productos cargados')
     }
-    
+
     // Check if cash register is closed
     if (!cajaAbierta) {
       warnings.push('⚠️ Caja registradora cerrada')
     }
-    
+
     // Check for low memory
     if (metrics.memoryUsage > 100) {
       warnings.push('⚠️ Alto uso de memoria detectado')
     }
-    
+
     // Check for slow database response
     if (metrics.dbResponseTime > 2000) {
       warnings.push('⚠️ Respuesta lenta de base de datos')
     }
-    
+
     // Check for missing environment variables
     if (!import.meta.env.VITE_SUPABASE_URL) {
       warnings.push('🔴 Variable VITE_SUPABASE_URL no configurada')
     }
-    
+
     // Check for broken navigation links
     const brokenLinks = [
       '/protect/status-pos',
@@ -234,21 +234,21 @@ export const StatusPOSPage: React.FC = () => {
       '/cierre',
       '/devolucion'
     ]
-    
+
     brokenLinks.forEach(link => {
       // This is a simplified check - in a real app you'd test actual navigation
       if (window.location.pathname === link && !document.querySelector('[data-testid="page-content"]')) {
         warnings.push(`🔗 Posible enlace roto: ${link}`)
       }
     })
-    
+
     setSystemWarnings(warnings)
   }, [user, status, productos, cajaAbierta, metrics])
   // Run all checks
   const runAllChecks = useCallback(async () => {
     const startTime = Date.now()
     addLog('info', 'System', 'Running system checks...')
-    
+
     await checkDatabaseConnection()
     checkAuthStatus()
     checkCashRegisterStatus()
@@ -256,7 +256,7 @@ export const StatusPOSPage: React.FC = () => {
     checkClientsStatus()
     checkCartStatus()
     updatePerformanceMetrics()
-    
+
     const totalTime = Date.now() - startTime
     setMetrics(prev => ({ ...prev, loadTime: totalTime }))
     addLog('info', 'System', `System checks completed in ${totalTime}ms`)
@@ -276,7 +276,7 @@ export const StatusPOSPage: React.FC = () => {
     if (autoRefresh) {
       const interval = setInterval(runAllChecks, refreshInterval)
       return () => clearInterval(interval)
-        checkSystemHealth()
+      checkSystemHealth()
     }
   }, [autoRefresh, refreshInterval, runAllChecks, checkSystemHealth])
 
@@ -353,10 +353,10 @@ export const StatusPOSPage: React.FC = () => {
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
-      <HeaderWithMenu 
-        title="Status POS - Monitoreo en Tiempo Real" 
+      <HeaderWithMenu
+        title="Status POS - Monitoreo en Tiempo Real"
         icon={<Activity className="w-6 h-6 text-gray-600" />}
-        userName={user?.nombre || 'Usuario'}
+        userName={user?.nombres || 'Usuario'}
         showClock={true}
       />
 
@@ -371,7 +371,7 @@ export const StatusPOSPage: React.FC = () => {
               <RefreshCw className="w-4 h-4" />
               Actualizar
             </button>
-            
+
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
@@ -381,7 +381,7 @@ export const StatusPOSPage: React.FC = () => {
               />
               <span className="text-sm text-gray-700">Auto-actualizar</span>
             </label>
-            
+
             <select
               value={refreshInterval}
               onChange={(e) => setRefreshInterval(Number(e.target.value))}
@@ -394,7 +394,7 @@ export const StatusPOSPage: React.FC = () => {
               <option value={30000}>30 segundos</option>
             </select>
           </div>
-          
+
           <div className="text-sm text-gray-600">
             Última actualización: {formatTime(metrics.lastUpdate)}
           </div>
@@ -409,7 +409,7 @@ export const StatusPOSPage: React.FC = () => {
             </div>
             <p className="text-2xl font-bold text-gray-900">{metrics.loadTime}ms</p>
           </div>
-          
+
           <div className="bg-white p-4 rounded-lg shadow-sm border">
             <div className="flex items-center gap-2 mb-2">
               <Database className="w-4 h-4 text-green-600" />
@@ -417,7 +417,7 @@ export const StatusPOSPage: React.FC = () => {
             </div>
             <p className="text-2xl font-bold text-gray-900">{metrics.dbResponseTime}ms</p>
           </div>
-          
+
           <div className="bg-white p-4 rounded-lg shadow-sm border">
             <div className="flex items-center gap-2 mb-2">
               <Monitor className="w-4 h-4 text-purple-600" />
@@ -425,7 +425,7 @@ export const StatusPOSPage: React.FC = () => {
             </div>
             <p className="text-2xl font-bold text-gray-900">{metrics.memoryUsage}MB</p>
           </div>
-          
+
           <div className="bg-white p-4 rounded-lg shadow-sm border">
             <div className="flex items-center gap-2 mb-2">
               <Wifi className="w-4 h-4 text-orange-600" />
@@ -444,7 +444,7 @@ export const StatusPOSPage: React.FC = () => {
                 Estado del Sistema
               </h3>
             </div>
-            
+
             <div className="p-4 space-y-3">
               {Object.entries(status).map(([key, value]) => {
                 const labels = {
@@ -456,7 +456,7 @@ export const StatusPOSPage: React.FC = () => {
                   clients: 'Clientes',
                   cart: 'Carrito'
                 }
-                
+
                 return (
                   <div
                     key={key}
@@ -470,20 +470,20 @@ export const StatusPOSPage: React.FC = () => {
                     </div>
                     <span className="text-sm font-medium text-gray-700 capitalize">
                       {value === 'connected' ? 'Conectado' :
-                       value === 'active' ? 'Activo' :
-                       value === 'open' ? 'Abierta' :
-                       value === 'loaded' ? 'Cargado' :
-                       value === 'loading' ? 'Cargando...' :
-                       value === 'closed' ? 'Cerrada' :
-                       value === 'empty' ? 'Vacío' :
-                       value === 'error' ? 'Error' :
-                       value === 'disconnected' ? 'Desconectado' :
-                       value === 'inactive' ? 'Inactivo' : value}
+                        value === 'active' ? 'Activo' :
+                          value === 'open' ? 'Abierta' :
+                            value === 'loaded' ? 'Cargado' :
+                              value === 'loading' ? 'Cargando...' :
+                                value === 'closed' ? 'Cerrada' :
+                                  value === 'empty' ? 'Vacío' :
+                                    value === 'error' ? 'Error' :
+                                      value === 'disconnected' ? 'Desconectado' :
+                                        value === 'inactive' ? 'Inactivo' : value}
                     </span>
                   </div>
                 )
               })}
-              
+
               {/* System Warnings Section */}
               {systemWarnings.length > 0 && (
                 <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -519,7 +519,7 @@ export const StatusPOSPage: React.FC = () => {
                 </button>
               </div>
             </div>
-            
+
             <div className="p-4 max-h-96 overflow-y-auto">
               {logs.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">
@@ -570,7 +570,7 @@ export const StatusPOSPage: React.FC = () => {
               <RefreshCw className="w-4 h-4" />
               Recargar Aplicación
             </button>
-            
+
             <button
               onClick={() => localStorage.clear()}
               className="flex items-center gap-2 bg-yellow-100 text-yellow-700 px-4 py-3 rounded-lg hover:bg-yellow-200 transition-colors"
@@ -578,7 +578,7 @@ export const StatusPOSPage: React.FC = () => {
               <XCircle className="w-4 h-4" />
               Limpiar Cache
             </button>
-            
+
             <button
               onClick={() => {
                 const data = {

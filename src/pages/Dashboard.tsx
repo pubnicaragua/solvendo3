@@ -26,8 +26,10 @@ import { DraftSaveModal } from "../components/pos/DraftSaveModal";
 import { supabase } from "../lib/supabase";
 import { HeaderWithMenu } from "../components/common/HeaderWithMenu";
 import { Promocion } from "../lib/supabase";
+import AbrirCajaModal from "../components/pos/AbrirCajaModal";
+import SearchBarClientes from "../components/pos/SearchBarClientes";
 
-type TabId = "destacado" | "borradores" | "productos" | "clientes";
+export type TabId = "destacado" | "borradores" | "productos" | "clientes";
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   {
     id: "destacado" as TabId,
@@ -60,6 +62,8 @@ const Dashboard: React.FC = () => {
   // toggleSidebar y user se obtienen de sus respectivos contextos y se pasan a HeaderWithMenu
   const { user, empresaId } = useAuth();
 
+  const [isCreating, setIsCreating] = useState(false);
+
   const {
     productos,
     carrito,
@@ -80,6 +84,7 @@ const Dashboard: React.FC = () => {
     loadProductos,
     clientes,
     currentCliente,
+    currentAperturaCaja,
     selectClient,
   } = usePOS();
 
@@ -138,9 +143,20 @@ const Dashboard: React.FC = () => {
     fetchInitialData();
   }, [loadClientes, loadProductos, loadBorradores, loadPromociones]);
 
+  const handleCreateClient = () => {
+
+    setShowPaymentModal(false)
+    setActiveTab("clientes")
+    return
+
+  }
+
   // Handle client selection from dropdown
   const handleClientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const clienteId = e.target.value;
+
+    handleCreateClient()
+
     if (clienteId) {
       const cliente = clientes.find((c) => c.id === clienteId);
       if (cliente) {
@@ -234,6 +250,11 @@ const Dashboard: React.FC = () => {
       return;
     }
 
+    if (tipoEntrega === "despacho" && !currentCliente) {
+      toast.error("Debe seleccionar un cliente para factura electrónica");
+      return;
+    }
+
     // Validar monto recibido para efectivo
     if (selectedMethod === "efectivo" && montoRecibido < totalConDescuento) {
       toast.error("El monto recibido debe ser mayor o igual al total");
@@ -271,7 +292,7 @@ const Dashboard: React.FC = () => {
       const result = await procesarVenta(
         selectedMethod,
         selectedDte as "boleta" | "factura" | "nota_credito",
-        currentCliente?.id || null
+        currentCliente?.id
       );
 
       if (result.success) {
@@ -385,51 +406,47 @@ const Dashboard: React.FC = () => {
     <div class="document-type">${selectedDte.toUpperCase()}</div>
     <div class="info"><strong>Folio:</strong> V${Date.now()}</div>
     <div class="info"><strong>Fecha:</strong> ${new Date().toLocaleDateString(
-      "es-CL"
-    )}</div>
+        "es-CL"
+      )}</div>
     <div class="info"><strong>Hora:</strong> ${new Date().toLocaleTimeString(
-      "es-CL"
-    )}</div>
-    <div class="info"><strong>Cajero:</strong> ${
-      user?.nombre || "Usuario"
-    }</div>
-    <div class="info"><strong>Cliente:</strong> ${
-      currentCliente?.razon_social || "Consumidor Final"
-    }</div>
-    <div class="info"><strong>RUT:</strong> ${
-      currentCliente?.rut || "66.666.666-6"
-    }</div>
+        "es-CL"
+      )}</div>
+    <div class="info"><strong>Cajero:</strong> ${user?.nombre || "Usuario"
+        }</div>
+    <div class="info"><strong>Cliente:</strong> ${currentCliente?.razon_social || "Consumidor Final"
+        }</div>
+    <div class="info"><strong>RUT:</strong> ${currentCliente?.rut || "66.666.666-6"
+        }</div>
     <div class="info"><strong>Método:</strong> ${selectedMethod}</div>
     
     <div style="border-top: 1px dashed #000; margin: 15px 0; padding-top: 10px;">
       <div style="font-weight: bold; margin-bottom: 10px;">PRODUCTOS:</div>
       ${carrito
-        .map(
-          (item) => `
+          .map(
+            (item) => `
         <div style="margin: 5px 0; display: flex; justify-content: space-between;">
           <span>${item.nombre} x${item.quantity}</span>
           <span>${fmt(item.precio * item.quantity)}</span>
         </div>
       `
-        )
-        .join("")}
+          )
+          .join("")}
     </div>
     
     <div class="totales">
       <div class="total-line">
         <span>Total a pagar:</span>
         <span>${fmt(
-          selectedMethod === "efectivo"
-            ? Math.round(totalConDescuento / 10) * 10
-            : totalConDescuento
-        )}</span>
+            selectedMethod === "efectivo"
+              ? Math.round(totalConDescuento / 10) * 10
+              : totalConDescuento
+          )}</span>
       </div>
       <div class="total-line" style="margin-top: 10px; border-top: 1px dashed #ddd; padding-top: 5px;">
         <span>Subtotal:</span>
         <span>${fmt(total)}</span>
       </div>
-      ${
-        descuentosEnabled && parseFloat(descuentoPorcentaje) > 0
+      ${descuentosEnabled && parseFloat(descuentoPorcentaje) > 0
           ? `
         <div class="total-line" style="color: red;">
           <span>Descuento (${descuentoPorcentaje}%):</span>
@@ -440,9 +457,8 @@ const Dashboard: React.FC = () => {
         </div>
       `
           : ""
-      }
-      ${
-        cuponValido && cuponDescuento > 0
+        }
+      ${cuponValido && cuponDescuento > 0
           ? `
         <div class="total-line" style="color: red;">
           <span>Descuento por cupón:</span>
@@ -450,9 +466,8 @@ const Dashboard: React.FC = () => {
         </div>
       `
           : ""
-      }
-      ${
-        selectedMethod === "efectivo"
+        }
+      ${selectedMethod === "efectivo"
           ? `
         <div class="total-line">
           <span>Monto recibido:</span>
@@ -464,7 +479,7 @@ const Dashboard: React.FC = () => {
         </div>
       `
           : ""
-      }
+        }
     </div>
     
     <div class="footer">
@@ -494,7 +509,7 @@ const Dashboard: React.FC = () => {
       if (printWindow) {
         printWindow.document.write(
           pdfContent +
-            `
+          `
           <script>
             window.onload = function() { 
               window.print(); 
@@ -598,8 +613,9 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const setDiscount = (promo: Promocion) => {
-    console.log(promo);
+  const pick = (c: any) => {
+    selectClient(c);
+    setClientSearchTermMain(c ? c.razon_social : "");
   };
 
   const cargarProductosEnPromocion = async (
@@ -657,6 +673,11 @@ const Dashboard: React.FC = () => {
       return false;
     }
   };
+
+  console.log(currentAperturaCaja)
+
+  if (!currentAperturaCaja) return <AbrirCajaModal />
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Reemplazamos el <header> manual con el componente HeaderWithMenu */}
@@ -798,9 +819,8 @@ const Dashboard: React.FC = () => {
                     {clientes.map((cliente) => (
                       <option key={cliente.id} value={cliente.id}>
                         {cliente.razon_social ||
-                          `${cliente.nombres || ""} ${
-                            cliente.apellidos || ""
-                          }`.trim()}
+                          `${cliente.nombres || ""} ${cliente.apellidos || ""
+                            }`.trim()}
                       </option>
                     ))}
                   </select>
@@ -893,9 +913,8 @@ const Dashboard: React.FC = () => {
         </div>
 
         <aside
-          className={`flex-1 p-6 bg-gray-50 border-l flex flex-col overflow-y-auto ${
-            showPaymentModal ? "hidden" : ""
-          }`}
+          className={`flex-1 p-6 bg-gray-50 border-l flex flex-col overflow-y-auto ${showPaymentModal ? "hidden" : ""
+            }`}
         >
           {activeTab === "destacado" && <ProductHighlights />}
           {activeTab === "borradores" && (
@@ -936,8 +955,8 @@ const Dashboard: React.FC = () => {
                           {promo.tipo === "descuento_porcentaje"
                             ? `${promo.valor}% descuento`
                             : promo.tipo === "descuento_monto"
-                            ? `$${promo.valor} descuento`
-                            : promo.tipo}
+                              ? `$${promo.valor} descuento`
+                              : promo.tipo}
                         </span>
                         <button
                           onClick={() => cargarProductosEnPromocion(promo)}
@@ -961,27 +980,26 @@ const Dashboard: React.FC = () => {
           {activeTab === "clientes" && (
             <ClientsPanel
               onClientSelected={(cliente) => {
-                selectClient(cliente);
-                setClientSearchTermMain(cliente ? cliente.razon_social : "");
+                pick(cliente)
               }}
               clientSearchTerm=""
+              isCreating={isCreating}
+              setIsCreating={setIsCreating}
             />
           )}
 
           <nav
-            className={`flex justify-around items-center h-16 bg-white border-t mt-auto mb-4 ${
-              showPaymentModal ? "hidden" : ""
-            }`}
+            className={`flex justify-around items-center h-16 bg-white border-t mt-auto mb-4 ${showPaymentModal ? "hidden" : ""
+              }`}
           >
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-colors ${
-                  activeTab === tab.id
-                    ? "text-blue-600 bg-blue-50"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                }`}
+                className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-colors ${activeTab === tab.id
+                  ? "text-blue-600 bg-blue-50"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  }`}
               >
                 {tab.icon}
                 <span className="text-xs font-medium">{tab.label}</span>
@@ -1022,7 +1040,7 @@ const Dashboard: React.FC = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="boleta">Boleta</option>
-                    <option value="factura_manual">Factura Manual</option>
+                    <option value="factura">Factura Manual</option>
                   </select>
                 </div>
 
@@ -1034,11 +1052,10 @@ const Dashboard: React.FC = () => {
                           tipoEntrega === "inmediata" ? null : "inmediata"
                         )
                       }
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                        tipoEntrega === "inmediata"
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${tipoEntrega === "inmediata"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
                     >
                       <Package className="w-4 h-4" />
                       <span>Entrega inmediata</span>
@@ -1051,11 +1068,10 @@ const Dashboard: React.FC = () => {
                           tipoEntrega === "despacho" ? null : "despacho"
                         )
                       }
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                        tipoEntrega === "despacho"
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${tipoEntrega === "despacho"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
                     >
                       <Truck className="w-4 h-4" />
                       <span>Despacho</span>
@@ -1067,22 +1083,20 @@ const Dashboard: React.FC = () => {
                 <div className="flex items-center gap-6">
                   <button
                     onClick={() => setDescuentosEnabled(!descuentosEnabled)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                      descuentosEnabled
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${descuentosEnabled
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
                   >
                     <Percent className="w-4 h-4" />
                     <span className="text-sm">Descuentos</span>
                   </button>
                   <button
                     onClick={() => setCupon(!cupon)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                      cupon
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${cupon
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
                   >
                     <Plus className="w-4 h-4" />
                     <span className="text-sm">Agregar cupón</span>
@@ -1090,7 +1104,7 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Selección de Cliente para Factura */}
-                {selectedDte === "factura" && (
+                {(selectedDte === "factura" || tipoEntrega === "despacho") && (
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Cliente (requerido)
@@ -1100,7 +1114,7 @@ const Dashboard: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium">
-                              {currentCliente.nombre} {currentCliente.apellidos}
+                              {currentCliente.nombres}
                             </p>
                             <p className="text-xs text-blue-700">
                               RUT: {currentCliente.rut}
@@ -1116,20 +1130,12 @@ const Dashboard: React.FC = () => {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        <select
-                          className="w-full p-2 border rounded-md text-sm"
-                          value={currentCliente?.id || ""}
-                          onChange={handleClientChange}
-                        >
-                          <option value="">
-                            Seleccionar cliente existente
-                          </option>
-                          {clientes.map((cliente) => (
-                            <option key={cliente.id} value={cliente.id}>
-                              {cliente.razon_social} - {cliente.rut}
-                            </option>
-                          ))}
-                        </select>
+                        <SearchBarClientes
+                          pick={pick}
+                          clientModule={false}
+                          setIsCreating={setIsCreating}
+                          handleCreateClient={handleCreateClient}
+                        />
                       </div>
                     )}
                   </div>
@@ -1201,11 +1207,10 @@ const Dashboard: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <button
                     onClick={() => setSelectedMethod("efectivo")}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-lg ${
-                      selectedMethod === "efectivo"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    } transition-colors`}
+                    className={`flex items-center gap-2 px-4 py-3 rounded-lg ${selectedMethod === "efectivo"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      } transition-colors`}
                   >
                     <DollarSign className="w-5 h-5" />
                     <span>Efectivo</span>
@@ -1213,11 +1218,10 @@ const Dashboard: React.FC = () => {
 
                   <button
                     onClick={() => setSelectedMethod("tarjeta")}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-lg ${
-                      selectedMethod === "tarjeta"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    } transition-colors`}
+                    className={`flex items-center gap-2 px-4 py-3 rounded-lg ${selectedMethod === "tarjeta"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      } transition-colors`}
                   >
                     <CreditCard className="w-5 h-5" />
                     <span>Tarjeta</span>
@@ -1326,9 +1330,8 @@ const Dashboard: React.FC = () => {
                   carrito.length === 0 ||
                   (selectedMethod === "efectivo" &&
                     (montoRecibido || 0) <
-                      Math.round(totalConDescuento / 10) * 10) ||
-                  ((selectedDte === "factura_manual" ||
-                    selectedDte === "factura") &&
+                    Math.round(totalConDescuento / 10) * 10) ||
+                  ((selectedDte === "factura") &&
                     !currentCliente) // Cambiar selectedClient por currentCliente
                 }
                 className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
