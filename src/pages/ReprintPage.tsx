@@ -267,7 +267,7 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         title="Reimprimir"
         icon={<Printer className="w-6 h-6 text-gray-600" />}
         showClock
-        userName={user?.email || "Usuario"}
+        userName={user?.nombres || "Desconocido"}
         userAvatarUrl={undefined}
       />
 

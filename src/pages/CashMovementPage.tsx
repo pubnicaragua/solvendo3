@@ -225,8 +225,7 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({
         title="Movimiento de efectivo"
         icon={<DollarSign className="w-6 h-6 text-gray-600" />}
         showClock
-        userName={user?.nombre || "Usuario"}
-        userAvatarUrl={user?.avatar_url}
+        userName={user?.nombres || "Desconocido"}
       />
 
       <div className="flex-1 flex overflow-hidden">

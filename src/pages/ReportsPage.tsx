@@ -321,7 +321,7 @@ export const ReportsPage: React.FC = () => {
       <HeaderWithMenu
         title="Reportes"
         icon={<BarChart3 className="w-6 h-6 text-gray-600" />}
-        userName={user?.email}
+        userName={user?.nombres || "Desconocido"}
       />
 
       <div className="flex-1 p-6 space-y-6 overflow-auto">

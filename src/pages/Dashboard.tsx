@@ -683,7 +683,7 @@ const Dashboard: React.FC = () => {
       {/* Reemplazamos el <header> manual con el componente HeaderWithMenu */}
       <HeaderWithMenu
         title="POS" // Título para el POS
-        userName={user?.email || "Usuario"} // Nombre del usuario
+        userName={user?.nombres || "Desconocido"}
         userAvatarUrl={undefined} // URL del avatar si existe en tu objeto user
         showClock={true} // Mostrar el reloj
       />

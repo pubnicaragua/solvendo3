@@ -328,25 +328,21 @@ export const ReturnsPage: React.FC = () => {
             NOTA DE CRÉDITO  
           </div>  
           <div style="font-size: 10px;">Folio: NC-${folio}</div>  
-          <div style="font-size: 10px;">Cliente: ${
-            clienteDevolucion.nombre
-          }</div>  
+          <div style="font-size: 10px;">Cliente: ${clienteDevolucion.nombre
+        }</div>  
           <div style="font-size: 10px;">RUT: ${clienteDevolucion.rut}</div>  
-          <div style="font-size: 10px;">Email: ${
-            clienteDevolucion.correo
-          }</div>  
-          <div style="font-size: 10px;">Reembolso: ${
-            clienteDevolucion.tipoReembolso
-          }</div>  
-          ${
-            clienteDevolucion.tipoReembolso === "bancario"
-              ? `<div style="font-size: 10px;">Cuenta: ${clienteDevolucion.cuentaTarjeta}</div>`
-              : ""
-          }  
+          <div style="font-size: 10px;">Email: ${clienteDevolucion.correo
+        }</div>  
+          <div style="font-size: 10px;">Reembolso: ${clienteDevolucion.tipoReembolso
+        }</div>  
+          ${clienteDevolucion.tipoReembolso === "bancario"
+          ? `<div style="font-size: 10px;">Cuenta: ${clienteDevolucion.cuentaTarjeta}</div>`
+          : ""
+        }  
           <div style="font-size: 10px;">Total: ${formatPrice(total)}</div>  
           <div style="font-size: 10px;">Fecha: ${new Date().toLocaleDateString(
-            "es-CL"
-          )}</div>  
+          "es-CL"
+        )}</div>  
             
           <div style="text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px;">  
             <div style="font-size: 9px;">Nota de crédito generada</div>  
@@ -415,8 +411,7 @@ export const ReturnsPage: React.FC = () => {
         title="Devolución"
         icon={<RotateCcw className="w-6 h-6 text-gray-600" />}
         showClock
-        userName={user?.nombre || "Usuario"}
-        userAvatarUrl={user?.avatar_url}
+        userName={user?.nombres || "Desconocido"}
       />
 
       <div className="flex-1 flex overflow-hidden">
@@ -543,7 +538,6 @@ export const ReturnsPage: React.FC = () => {
                 className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 focus:ring-blue-500 focus:border-blue-500 flex-grow max-w-[200px]"
               >
                 <option>Nota de crédito manual</option>
-                <option>Nota electrónica</option>
               </select>
               <div className="relative flex-grow min-w-[180px] max-w-[250px]">
                 <input

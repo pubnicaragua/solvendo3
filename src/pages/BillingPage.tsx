@@ -136,64 +136,59 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
             ${billingData.tipoDte.toUpperCase()}
           </div>
           <div style="font-size: 10px;">Folio: V${Date.now()}</div>
-          <div style="font-size: 10px;">Cliente: ${
-            selectedClient?.razon_social || "Consumidor Final"
-          }</div>
-          <div style="font-size: 10px;">RUT: ${
-            selectedClient?.rut || "66.666.666-6"
-          }</div>
+          <div style="font-size: 10px;">Cliente: ${selectedClient?.razon_social || "Consumidor Final"
+        }</div>
+          <div style="font-size: 10px;">RUT: ${selectedClient?.rut || "66.666.666-6"
+        }</div>
           <div style="font-size: 10px;">Método: ${billingData.metodoPago}</div>
           <div style="font-size: 10px;">Total: ${formatPrice(
-            totalConDescuento
-          )}</div>
+          totalConDescuento
+        )}</div>
           <div style="font-size: 10px;">Fecha: ${new Date().toLocaleDateString(
-            "es-CL"
-          )}</div>
+          "es-CL"
+        )}</div>
           
           <div style="border-top: 1px dashed #000; margin-top: 15px; padding-top: 10px;">
             <div style="font-size: 10px; font-weight: bold;">PRODUCTOS:</div>
             ${carrito
-              .map(
-                (item) => `
+          .map(
+            (item) => `
               <div style="font-size: 9px; margin: 5px 0;">
                 ${item.nombre} x${item.quantity} - ${formatPrice(
-                  item.precio * item.quantity
-                )}
+              item.precio * item.quantity
+            )}
               </div>
             `
-              )
-              .join("")}
+          )
+          .join("")}
           </div>
           
           <div style="border-top: 1px dashed #000; margin-top: 15px; padding-top: 10px;">
             <div style="font-size: 10px; font-weight: bold;">RESUMEN:</div>
             <div style="font-size: 9px; margin: 3px 0;">Subtotal: ${formatPrice(
-              total
-            )}</div>
-            ${
-              billingData.descuentoGlobal > 0
-                ? `<div style="font-size: 9px; margin: 3px 0; color: red;">Descuento (${
-                    billingData.descuentoGlobal
-                  }%): -${formatPrice(
-                    total * (billingData.descuentoGlobal / 100)
-                  )}</div>`
-                : ""
-            }
+            total
+          )}</div>
+            ${billingData.descuentoGlobal > 0
+          ? `<div style="font-size: 9px; margin: 3px 0; color: red;">Descuento (${billingData.descuentoGlobal
+          }%): -${formatPrice(
+            total * (billingData.descuentoGlobal / 100)
+          )}</div>`
+          : ""
+        }
             <div style="font-size: 10px; font-weight: bold; margin: 5px 0; border-top: 1px solid #000; padding-top: 5px;">TOTAL: ${formatPrice(
-              totalConDescuento
-            )}</div>
-            ${
-              billingData.metodoPago === "efectivo"
-                ? `
+          totalConDescuento
+        )}</div>
+            ${billingData.metodoPago === "efectivo"
+          ? `
               <div style="font-size: 9px; margin: 3px 0;">Recibido: ${formatPrice(
-                billingData.montoRecibido
-              )}</div>
+            billingData.montoRecibido
+          )}</div>
               <div style="font-size: 9px; margin: 3px 0;">Vuelto: ${formatPrice(
-                vuelto
-              )}</div>
+            vuelto
+          )}</div>
             `
-                : ""
-            }
+          : ""
+        }
           </div>
           
           <div style="text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px;">
@@ -262,9 +257,9 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
   const vuelto =
     billingData.metodoPago === "efectivo"
       ? Math.max(
-          0,
-          validatePositiveNumber(billingData.montoRecibido) - totalAPagar
-        )
+        0,
+        validatePositiveNumber(billingData.montoRecibido) - totalAPagar
+      )
       : 0;
 
   if (showPrintDialog) {
@@ -338,7 +333,7 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
       <HeaderWithMenu
         title="Facturación"
         icon={<FileText className="w-6 h-6 text-gray-600" />}
-        userName={user?.nombre || "Usuario"}
+        userName={user?.nombres || "Usuario"}
       />
 
       <div className="flex-1 p-6 overflow-y-auto">
@@ -411,8 +406,8 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
                       <div className="font-medium text-sm">
                         {selectedClient.razon_social ||
                           (selectedClient.nombre || "") +
-                            " " +
-                            (selectedClient.apellidos || "").trim()}
+                          " " +
+                          (selectedClient.apellidos || "").trim()}
                       </div>
                       <div className="text-xs text-gray-500">
                         RUT: {selectedClient.rut}
@@ -433,11 +428,10 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-2">
                     <div
-                      className={`w-4 h-4 ${
-                        billingData.envioInmediato
+                      className={`w-4 h-4 ${billingData.envioInmediato
                           ? "bg-blue-600"
                           : "border border-gray-300"
-                      } rounded-full flex items-center justify-center`}
+                        } rounded-full flex items-center justify-center`}
                     >
                       {billingData.envioInmediato && (
                         <div className="w-2 h-2 bg-white rounded-full"></div>
@@ -447,9 +441,8 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Truck
-                      className={`w-4 h-4 ${
-                        billingData.despacho ? "text-blue-600" : "text-gray-400"
-                      } cursor-pointer`}
+                      className={`w-4 h-4 ${billingData.despacho ? "text-blue-600" : "text-gray-400"
+                        } cursor-pointer`}
                       onClick={() =>
                         setBillingData((prev) => ({
                           ...prev,
@@ -458,9 +451,8 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
                       }
                     />
                     <span
-                      className={`text-sm ${
-                        billingData.despacho ? "text-blue-600" : "text-gray-600"
-                      }`}
+                      className={`text-sm ${billingData.despacho ? "text-blue-600" : "text-gray-600"
+                        }`}
                     >
                       Despacho
                     </span>
@@ -484,9 +476,8 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Plus
-                      className={`w-4 h-4 ${
-                        billingData.cupon ? "text-blue-600" : "text-gray-400"
-                      } cursor-pointer`}
+                      className={`w-4 h-4 ${billingData.cupon ? "text-blue-600" : "text-gray-400"
+                        } cursor-pointer`}
                       onClick={() =>
                         setBillingData((prev) => ({
                           ...prev,
@@ -495,9 +486,8 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
                       }
                     />
                     <span
-                      className={`text-sm ${
-                        billingData.cupon ? "text-blue-600" : "text-gray-600"
-                      }`}
+                      className={`text-sm ${billingData.cupon ? "text-blue-600" : "text-gray-600"
+                        }`}
                     >
                       Agregar cupón
                     </span>
@@ -508,62 +498,62 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
               {/* Client Selection - Only for Factura */}
               {(billingData.tipoDte === "factura" ||
                 billingData.tipoDte === "factura_manual") && (
-                <div className="mb-6">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">
-                    Cliente
-                  </h4>
-                  {selectedClient ? (
-                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-blue-900">
-                            {selectedClient.razon_social}
-                          </p>
-                          <p className="text-xs text-blue-700">
-                            RUT: {selectedClient.rut}
-                          </p>
+                  <div className="mb-6">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">
+                      Cliente
+                    </h4>
+                    {selectedClient ? (
+                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-blue-900">
+                              {selectedClient.razon_social}
+                            </p>
+                            <p className="text-xs text-blue-700">
+                              RUT: {selectedClient.rut}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => setSelectedClient(null)}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            Cambiar
+                          </button>
                         </div>
-                        <button
-                          onClick={() => setSelectedClient(null)}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <select
+                          onChange={(e) => {
+                            const clienteId = e.target.value;
+                            if (clienteId) {
+                              const cliente = clientes.find(
+                                (c) => c.id === clienteId
+                              );
+                              if (cliente) {
+                                handleClientSelect(cliente);
+                              }
+                            }
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                         >
-                          Cambiar
+                          <option value="">Seleccionar cliente existente</option>
+                          {clientes.map((cliente) => (
+                            <option key={cliente.id} value={cliente.id}>
+                              {cliente.razon_social} - {cliente.rut}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => setShowClientModal(true)}
+                          className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm"
+                        >
+                          + Registrar nuevo cliente
                         </button>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <select
-                        onChange={(e) => {
-                          const clienteId = e.target.value;
-                          if (clienteId) {
-                            const cliente = clientes.find(
-                              (c) => c.id === clienteId
-                            );
-                            if (cliente) {
-                              handleClientSelect(cliente);
-                            }
-                          }
-                        }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                      >
-                        <option value="">Seleccionar cliente existente</option>
-                        {clientes.map((cliente) => (
-                          <option key={cliente.id} value={cliente.id}>
-                            {cliente.razon_social} - {cliente.rut}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => setShowClientModal(true)}
-                        className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm"
-                      >
-                        + Registrar nuevo cliente
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </div>
+                )}
 
               {/* Global Discount */}
               <div className="mb-6">
@@ -606,11 +596,10 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
                         metodoPago: "efectivo",
                       }))
                     }
-                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors ${
-                      billingData.metodoPago === "efectivo"
+                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors ${billingData.metodoPago === "efectivo"
                         ? "bg-blue-600 text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
+                      }`}
                   >
                     <DollarSign className="w-5 h-5" />
                     <span>Efectivo</span>
@@ -623,11 +612,10 @@ export const BillingPage: React.FC<BillingPageProps> = ({ onClose }) => {
                         metodoPago: "tarjeta",
                       }))
                     }
-                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors ${
-                      billingData.metodoPago === "tarjeta"
+                    className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors ${billingData.metodoPago === "tarjeta"
                         ? "bg-blue-600 text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
+                      }`}
                   >
                     <CreditCard className="w-5 h-5" />
                     <span>Tarjeta</span>

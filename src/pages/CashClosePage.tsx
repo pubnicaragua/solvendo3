@@ -238,9 +238,7 @@ export const CashClosePage: React.FC = () => {
       <HeaderWithMenu
         title="Cierre de caja"
         icon={<DollarSign className="w-6 h-6" />}
-        heightClass="h-20"
-        userName={user?.user_metadata?.full_name || user?.email || "Usuario"}
-        userAvatarSrc={user?.user_metadata?.avatar_url || ""}
+        userName={user?.nombres || "Desconocido"}
       />
 
       <main className="flex-1 overflow-y-auto">

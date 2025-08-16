@@ -160,15 +160,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
 
-      const tempClient = createClient(supabaseUrl, supabaseAnonKey);
-
-      const { error: authError } = await tempClient.auth.signInWithPassword({
-        email: usuario.email,
-        password,
+      const res = await fetch(`${supabaseUrl}/functions/v1/authorize`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({
+          email: usuario.email,
+          password,
+        }),
       });
 
-      if (authError) {
-        throw authError;
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || "Error en autorización");
       }
 
       setAuthorized(true)
@@ -201,6 +208,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data: usuarioEmpresa, error: errorUsuarioEmpresa } = await
         supabase.from("usuario_empresa").select("rol").eq("usuario_id", usuario.id).single()
 
+      console.log(usuarioEmpresa)
+
       if (usuarioEmpresa?.rol === "empleado") {
         setAuthorized(false)
       } else {
@@ -230,6 +239,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
       setEmpresaId(null);
+      setAuthorized(false)
       setUser(null);
     } catch (error) {
       throw error;
