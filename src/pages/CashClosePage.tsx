@@ -136,11 +136,12 @@ export const CashClosePage: React.FC = () => {
     const totalRetirosVal = movimientos
       .filter((m) => m.tipo === "retiro")
       .reduce((acc, m) => acc + m.monto, 0);
+
+    console.log(currentAperturaCaja)
     const montoEsperadoCalc =
-      (currentAperturaCaja?.monto_inicial || 0) +
+      (currentAperturaCaja?.saldo_inicial || 0) +
       ventasEfectivoVal +
-      totalIngresosVal -
-      totalRetirosVal;
+      totalIngresosVal;
     return {
       ventasEfectivo: ventasEfectivoVal,
       ventasTarjeta: ventasTarjetaVal,

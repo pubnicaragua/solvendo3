@@ -26,6 +26,7 @@ function AbrirCajaModal() {
                     .from("cajas")
                     .select("*")
                     .eq("empresa_id", empresaId)
+                    .eq("sucursal_id", sucursalId)
                     .eq("activo", true);
 
                 if (error) {
@@ -59,10 +60,12 @@ function AbrirCajaModal() {
             toast.error("Empresa no identificada.");
             return;
         }
+
         if (!sucursalId) {
             toast.error("Sucursal no identificada.");
             return;
         }
+
         if (
             montoInicialApertura === "" ||
             isNaN(parseFloat(montoInicialApertura)) ||
@@ -71,30 +74,48 @@ function AbrirCajaModal() {
             toast.error("Debes ingresar un monto inicial válido");
             return;
         }
+
         if (!cajaSeleccionada) {
             toast.error("Debes seleccionar una caja para abrir");
             return;
         }
-        if (
-            currentAperturaCaja &&
-            currentAperturaCaja.caja_id === cajaSeleccionada
-        ) {
-            toast.error("La caja seleccionada ya está abierta.");
-            return;
-        }
 
-        // Paso empresaId y sucursalId para coherencia con backend
-        const success = await openCaja(
-            parseFloat(montoInicialApertura),
-            cajaSeleccionada,
-            empresaId,
-            sucursalId,
-            user.id
-        );
+        try {
+            // 1️⃣ Verificar si ya existe una sesión abierta para la caja seleccionada
+            const { data: sesionesAbiertas, error } = await supabase
+                .from("sesiones_caja")
+                .select("id")
+                .eq("caja_id", cajaSeleccionada)
+                .eq("estado", "abierta")
+                .limit(1);
 
-        if (success) {
-            toast.success("Caja abierta exitosamente. Puedes comenzar a trabajar.");
-            setMontoInicialApertura("");
+            if (error) {
+                console.error("Error verificando sesión de caja:", error);
+                toast.error("No se pudo verificar el estado de la caja.");
+                return;
+            }
+
+            if (sesionesAbiertas && sesionesAbiertas.length > 0) {
+                toast.error("La caja seleccionada ya tiene una sesión abierta.");
+                return;
+            }
+
+            // 2️⃣ Abrir la caja
+            const success = await openCaja(
+                parseFloat(montoInicialApertura),
+                cajaSeleccionada,
+                empresaId,
+                sucursalId,
+                user.id
+            );
+
+            if (success) {
+                toast.success("Caja abierta exitosamente. Puedes comenzar a trabajar.");
+                setMontoInicialApertura("");
+            }
+        } catch (err) {
+            console.error("Error al abrir caja:", err);
+            toast.error("Ocurrió un error al intentar abrir la caja.");
         }
     };
 

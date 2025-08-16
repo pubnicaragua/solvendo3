@@ -156,7 +156,7 @@ export interface AperturaCaja {
   usuario_id: string
   abierta_en: string
   fecha_cierre?: string
-  monto_inicial: number
+  saldo_inicial: number
   monto_final?: number
   diferencia?: number
   estado: 'abierta' | 'cerrada'

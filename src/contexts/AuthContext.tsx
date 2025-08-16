@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data: userData, error: userError } = await supabase
         .from("usuarios")
         .select("*")
-        .eq("auth_user_id", userId)
+        .eq("id", userId)
         .single();
 
       setUser(userData);
@@ -189,9 +189,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (rut: string, password: string) => {
     try {
-      if (!validarRut(rut)) {
-        throw new Error("RUT inválido");
-      }
+      // if (!validarRut(rut)) {
+      //   throw new Error("RUT inválido");
+      // }
 
       setLoading(true);
 
