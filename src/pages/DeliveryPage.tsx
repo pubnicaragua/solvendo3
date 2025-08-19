@@ -432,79 +432,53 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const handleConfirm = async () => {
     if (!selectedClient) {
       setClientError(true);
-      toast.error('Debe seleccionar un cliente para el despacho');
+      toast.error("Debe seleccionar un cliente para el despacho");
       return;
     }
     if (carrito.length === 0) {
-      toast.error('No hay productos para despachar');
+      toast.error("No hay productos para despachar");
       return;
     }
-
+  
     try {
+      // 🚀 Solo columnas que existen en la tabla
       const despachoDataToSend = {
         empresa_id: empresaId,
-        usuario_id: user?.id,
-        cliente_id: selectedClient.id,
-        destinatario: despachoData.destinatario,
-        direccion: despachoData.direccion,
-        comuna: despachoData.comuna,
-        ciudad: despachoData.ciudad,
-        region: despachoData.region,
-        tipo: despachoData.tipo,
-        numero_documento: despachoData.numDocumento,
-        total,
-        fecha: new Date().toISOString()
+        sucursal_id: selectedSucursal || null, 
+        entregado_por: user?.id || null,            
+        folio: despachoData.folio || null,          
+        fecha: new Date().toISOString(),            
+        rut: selectedClient.rut,                    
+        direccion: selectedClient.direccion || "",  
+        estado: "pendiente",
+        cliente_id: selectedClient.id
       };
-      
+  
       const { data: despacho, error } = await supabase
-        .from('despachos')
+        .from("despachos")
         .insert([despachoDataToSend])
         .select()
         .single();
-
+  
       if (error) {
-        console.error('Error al crear despacho:', error);
-        toast.error('Error al crear despacho. Verifique los datos e intente nuevamente.');
+        console.error("Error al crear despacho:", error);
+        toast.error("Error al crear despacho. Verifique los datos e intente nuevamente.");
         return;
       }
-
-      const detalles = carrito.map((item) => ({
-        despacho_id: despacho.id,
-        producto_id: item.id,
-        cantidad: item.quantity,
-        precio: item.precio
-      }));
-
-      if (detalles.length > 0) {
-        const { error: itemsError } = await supabase
-          .from('despachos_items')
-          .insert(detalles);
-
-        if (itemsError) {
-          console.error('Error al insertar detalles del despacho:', itemsError);
-          toast.error('Error al insertar detalles del despacho.');
-          return;
-        }
-      }
-
-      toast.success('Despacho creado exitosamente.');
+  
+      toast.success("Despacho creado exitosamente.");
       clearCart();
       setSelectedClient(null);
-      setDeliveryClientSearchTerm('');
+      setDeliveryClientSearchTerm("");
       setDespachoData({
-        fecha: new Date().toISOString().split('T')[0],
-        tipo: 'Guía de despacho manual',
-        destinatario: '',
-        direccion: '',
-        comuna: '',
-        ciudad: '',
-        region: '',
-        numDocumento: ''
+        folio: "",
+        rut: "",
+        direccion: "",
       });
       onClose();
     } catch (error) {
-      console.error('Error general en el despacho:', error);
-      toast.error('Error inesperado. Intente nuevamente.');
+      console.error("Error general en el despacho:", error);
+      toast.error("Error inesperado. Intente nuevamente.");
     }
   };
 
