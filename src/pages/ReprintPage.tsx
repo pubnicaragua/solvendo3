@@ -16,7 +16,6 @@ interface Document {
 export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   // Aseguramos que today siempre esté en formato 'YYYY-MM-DD'
   const today = new Date().toISOString().split("T")[0];
-
   const [fecha, setFecha] = useState(today);
   const [searchFolio, setSearchFolio] = useState("");
   const [docs, setDocs] = useState<Document[]>([]);
@@ -79,6 +78,34 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     }
   };
 
+  const generatePrintableDoc = (doc: Document, copies: number) => {
+    let content = "";
+    for (let i = 0; i < copies; i++) {
+      content += `
+      <div style="font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 15px; margin-bottom: 15px;">
+          <div style="font-size: 16px; font-weight: bold;">${user?.nombres}</div>
+          <div style="font-size: 10px;">RUT: ${user?.rut}</div>
+          <div style="font-size: 10px;">${user?.direccion}</div>
+        </div>
+        
+        <div style="text-align: center; font-weight: bold; margin: 10px 0;">
+          ${doc.tipo.toUpperCase()}
+        </div>
+        <div style="font-size: 10px;">Folio: ${doc.folio}</div>
+        <div style="font-size: 10px;">Total: ${formatPrice(doc.total)}</div>
+        <div style="font-size: 10px;">Fecha: ${new Date(doc.fecha).toLocaleDateString("es-CL")}</div>
+        <div style="text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px;">
+          <div style="font-size: 9px;">Documento reimpreso</div>
+          <div style="font-size: 9px;">Copias: ${copies}</div>
+        </div>
+      </div>
+    `;
+    }
+    return content;
+  };
+
+
   const handleSearch = () => {
     if (!searchFolio.trim()) {
       toast.error("Ingrese un número de folio para buscar");
@@ -88,26 +115,6 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const foundDoc = docs.find((doc) => doc.folio.includes(searchFolio));
     if (foundDoc) {
       setSelectedDoc(foundDoc);
-      setPrintableDoc(`
-        <div style="font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 15px; margin-bottom: 15px;">
-            <div style="font-size: 16px; font-weight: bold;">ANROLTEC SPA</div>
-            <div style="font-size: 10px;">RUT: 78.168.951-3</div>
-            <div style="font-size: 10px;">Av. Providencia 1234, Santiago</div>
-          </div>
-          
-          <div style="text-align: center; font-weight: bold; margin: 10px 0;">
-            ${selectedDoc?.tipo.toUpperCase()}
-          </div>
-          <div style="font-size: 10px;">Folio: ${selectedDoc?.folio}</div>
-          <div style="font-size: 10px;">Total: ${formatPrice(selectedDoc?.total!)}</div>
-          <div style="font-size: 10px;">Fecha: ${new Date().toLocaleDateString("es-CL")}</div>
-          <div style="text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px;">
-            <div style="font-size: 9px;">Documento reimpreso</div>
-            <div style="font-size: 9px;">Copias: ${copies}</div>
-          </div>
-        </div>
-      `)
       toast.success("Documento encontrado");
     } else {
       toast.error("No se encontró el documento");
@@ -116,26 +123,6 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
   const handleSelectDoc = (document: Document) => {
     setSelectedDoc(document)
-    setPrintableDoc(`
-        <div style="font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 15px; margin-bottom: 15px;">
-            <div style="font-size: 16px; font-weight: bold;">ANROLTEC SPA</div>
-            <div style="font-size: 10px;">RUT: 78.168.951-3</div>
-            <div style="font-size: 10px;">Av. Providencia 1234, Santiago</div>
-          </div>
-          
-          <div style="text-align: center; font-weight: bold; margin: 10px 0;">
-            ${selectedDoc?.tipo.toUpperCase()}
-          </div>
-          <div style="font-size: 10px;">Folio: ${selectedDoc?.folio}</div>
-          <div style="font-size: 10px;">Total: ${formatPrice(selectedDoc?.total!)}</div>
-          <div style="font-size: 10px;">Fecha: ${new Date().toLocaleDateString("es-CL")}</div>
-          <div style="text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px;">
-            <div style="font-size: 9px;">Documento reimpreso</div>
-            <div style="font-size: 9px;">Copias: ${copies}</div>
-          </div>
-        </div>
-      `)
   }
 
   const formatPrice = (n: number) =>
@@ -160,11 +147,7 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     if (!doc) return;
 
     doc.open();
-    let content = "";
-    for (let i = 0; i < copies; i++) {
-      content += printableDoc;
-    }
-    doc.write(content);
+    doc.write(generatePrintableDoc(selectedDoc, copies))
     doc.close();
 
     iframe.contentWindow?.focus();
@@ -193,7 +176,7 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             <div
               id="printablediv"
               style={{ display: "none" }}
-              dangerouslySetInnerHTML={{ __html: printableDoc }}
+              dangerouslySetInnerHTML={{ __html: generatePrintableDoc(selectedDoc, copies) }}
             />
           )}
         </div>
