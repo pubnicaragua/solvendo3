@@ -44,14 +44,15 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const [deliveryClientSearchTerm, setDeliveryClientSearchTerm] = useState('');
 
   const [despachoData, setDespachoData] = useState({
-    fecha: new Date().toISOString().split('T')[0], 
+    fecha: new Date().toISOString().split('T')[0],
     tipo: 'Guía de despacho manual',
     destinatario: '',
     direccion: '',
     comuna: '',
     ciudad: '',
     region: '',
-    numDocumento: ''
+    numDocumento: '',
+    estado: ''
   });
 
   // Estados para cajas y sucursales dinámicas
@@ -93,7 +94,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         setSelectedSucursal('sucursal1');
         return;
       }
-      
+
       try {
         // Cargar cajas
         const { data: cajasData, error: cajasError } = await supabase
@@ -101,7 +102,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           .select('*')
           .eq('empresa_id', empresaId)
           .eq('activo', true);
-          
+
         if (!cajasError && cajasData && cajasData.length > 0) {
           setCajas(cajasData);
           setSelectedCaja(cajasData[0].id);
@@ -113,14 +114,14 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           ]);
           setSelectedCaja('caja1');
         }
-        
+
         // Cargar sucursales
         const { data: sucursalesData, error: sucursalesError } = await supabase
           .from('sucursales')
           .select('*')
           .eq('empresa_id', empresaId)
           .eq('activo', true);
-          
+
         if (!sucursalesError && sucursalesData && sucursalesData.length > 0) {
           setSucursales(sucursalesData);
           setSelectedSucursal(sucursalesData[0].id);
@@ -147,7 +148,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         setSelectedSucursal('sucursal1');
       }
     };
-    
+
     loadCajasYSucursales();
   }, [empresaId]);
 
@@ -159,7 +160,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         { id: '2', nombre: 'Ejemplo producto 2', precio: 68.5, stock: 50 },
         { id: '3', nombre: 'Ejemplo producto 3', precio: 34.5, stock: 75 }
       ]);
-      
+
       // Solo mostrar documentos si hay cliente seleccionado
       if (selectedClient) {
         setDocsDisponibles([
@@ -182,7 +183,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           precio: item.precio,
           stock: item.stock || 0
         }));
-        
+
         if (cartProducts.length > 0) {
           setProductos(cartProducts);
         } else {
@@ -202,7 +203,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             .eq('empresa_id', empresaId)
             .eq('cliente_id', selectedClient.id)
             .limit(10);
-          
+
           if (!docsError && docs && docs.length > 0) {
             setDocsDisponibles(
               docs.map((d: any) => ({
@@ -243,7 +244,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const handleSelectDoc = (doc: any) => {
     // Limpiar carrito existente
     clearCart();
-    
+
     // Cargar productos reales de la venta
     const loadVentaProducts = async () => {
       try {
@@ -265,7 +266,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               updated_at: new Date().toISOString()
             }
           ];
-          
+
           exampleProducts.forEach(product => addToCart(product));
           return;
         }
@@ -296,7 +297,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               updated_at: new Date().toISOString()
             }
           ];
-          
+
           exampleProducts.forEach(product => addToCart(product));
           return;
         }
@@ -343,7 +344,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               updated_at: new Date().toISOString()
             }
           ];
-          
+
           exampleProducts.forEach(product => addToCart(product));
           return;
         }
@@ -355,7 +356,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               ...item.productos,
               precio: item.precio_unitario // Usar el precio de la venta
             };
-            
+
             // Agregar con la cantidad específica de la venta
             for (let i = 0; i < item.cantidad; i++) {
               addToCart(product);
@@ -367,7 +368,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       } catch (error) {
         console.error('Error loading venta products:', error);
         toast.error('Error al cargar productos de la venta');
-        
+
         // Fallback a productos de ejemplo
         const exampleProducts = [
           {
@@ -385,28 +386,12 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             updated_at: new Date().toISOString()
           }
         ];
-        
+
         exampleProducts.forEach(product => addToCart(product));
       }
     };
-    
-    loadVentaProducts();
-  };
 
-  const handleClientSelect = (c: Cliente) => {
-    setSelectedClient(c);
-    selectClient(c);
-    setClientSearchTerm(c.razon_social);
-    setDespachoData((p) => ({
-      ...p,
-      destinatario: c.razon_social,
-      direccion: c.direccion || '',
-      comuna: c.comuna || '',
-      ciudad: c.ciudad || '',
-      region: c.region || '',
-      numDocumento: c.rut
-    }));
-    setClientError(false);
+    loadVentaProducts();
   };
 
   const handleCancelDespacho = () => {
@@ -423,7 +408,8 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       comuna: '',
       ciudad: '',
       region: '',
-      numDocumento: ''
+      numDocumento: '',
+      estado: '',
     });
     setClientError(false);
     onClose();
@@ -439,39 +425,40 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       toast.error("No hay productos para despachar");
       return;
     }
-  
+
     try {
       // 🚀 Solo columnas que existen en la tabla
       const despachoDataToSend = {
         empresa_id: empresaId,
-        sucursal_id: selectedSucursal || null, 
-        entregado_por: user?.id || null,            
-        folio: despachoData.folio || null,          
-        fecha: new Date().toISOString(),            
-        rut: selectedClient.rut,                    
-        direccion: selectedClient.direccion || "",  
+        sucursal_id: selectedSucursal || null,
+        entregado_por: user?.id || null,
+        folio: despachoData.folio || null,
+        fecha: new Date().toISOString(),
+        rut: selectedClient.rut,
+        direccion: selectedClient.direccion || "",
         estado: "pendiente",
         cliente_id: selectedClient.id
       };
-  
+
       const { data: despacho, error } = await supabase
         .from("despachos")
         .insert([despachoDataToSend])
         .select()
         .single();
-  
+
       if (error) {
         console.error("Error al crear despacho:", error);
         toast.error("Error al crear despacho. Verifique los datos e intente nuevamente.");
         return;
       }
-  
+
       toast.success("Despacho creado exitosamente.");
       clearCart();
       setSelectedClient(null);
       setDeliveryClientSearchTerm("");
       setDespachoData({
         folio: "",
+        estado: "",
         rut: "",
         direccion: "",
       });
@@ -485,7 +472,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const handleSelectClient = () => {
     setShowClientModal(true);
   };
-  
+
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
       <HeaderWithMenu
@@ -506,7 +493,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               onChange={(e) => setProductSearch(e.target.value)}
               className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
             />
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5"/>
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
           </div>
 
           <div className="grid grid-cols-4 gap-4 text-sm font-medium border-b border-gray-200 pb-2 mb-4 text-gray-600">
@@ -532,14 +519,14 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                       disabled={item.quantity <= 1}
                       className="p-1 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      <Minus className="w-4 h-4"/>
+                      <Minus className="w-4 h-4" />
                     </button>
                     <span className="w-8 text-center font-semibold text-gray-800">{item.quantity}</span>
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       className="p-1 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-600 transition-colors"
                     >
-                      <Plus className="w-4 h-4"/>
+                      <Plus className="w-4 h-4" />
                     </button>
                   </div>
                   <span className="text-center text-gray-800">0%</span>
@@ -549,7 +536,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                       onClick={() => removeFromCart(item.id)}
                       className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-gray-100 transition-colors"
                     >
-                      <XIcon className="w-4 h-4"/>
+                      <XIcon className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -590,7 +577,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     setSelectedClient(null);
                   } else {
                     // Buscar cliente mientras escribe
-                    const cliente = clientes.find(c => 
+                    const cliente = clientes.find(c =>
                       c.razon_social.toLowerCase().includes(e.target.value.toLowerCase())
                     );
                     if (cliente) {
@@ -609,11 +596,10 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 <XIcon className="w-4 h-4 mr-1" />Cancelar
               </button>
               <button
-                onClick={handleConfirm}
                 disabled={!selectedClient || carrito.length === 0}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded font-semibold text-base disabled:opacity-50"
               >
-                Despachar {formatPrice(total)}
+                Estado: {despachoData.estado ? despachoData.estado : "Pendiente"}
               </button>
             </div>
           </div>
@@ -626,9 +612,9 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               <User className="w-5 h-5 text-blue-600" />
               <h3 className="text-blue-600 font-semibold text-lg">Clientes</h3>
             </div>
-            
+
             <ul className="space-y-2 max-h-60 overflow-y-auto">
-              {clientes.filter(c => 
+              {clientes.filter(c =>
                 c.razon_social.toLowerCase().includes(deliveryClientSearchTerm.toLowerCase())
               ).map(c => (
                 <li key={c.id}
@@ -637,9 +623,8 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     setDeliveryClientSearchTerm(c.razon_social);
                     selectClient(c);
                   }}
-                  className={`p-3 border rounded hover:bg-gray-50 cursor-pointer flex justify-between items-center ${
-                    selectedClient?.id === c.id ? 'bg-blue-50 border-blue-200' : 'bg-white'
-                  }`}
+                  className={`p-3 border rounded hover:bg-gray-50 cursor-pointer flex justify-between items-center ${selectedClient?.id === c.id ? 'bg-blue-50 border-blue-200' : 'bg-white'
+                    }`}
                 >
                   <div>
                     <span className="font-medium">{c.razon_social}</span>
@@ -652,13 +637,13 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   )}
                 </li>
               ))}
-              {clientes.filter(c => 
+              {clientes.filter(c =>
                 c.razon_social.toLowerCase().includes(deliveryClientSearchTerm.toLowerCase())
               ).length === 0 && (
-                <li className="text-gray-500 text-center py-4">
-                  {deliveryClientSearchTerm ? 'Sin resultados' : 'Aquí aparecerán tus clientes'}
-                </li>
-              )}
+                  <li className="text-gray-500 text-center py-4">
+                    {deliveryClientSearchTerm ? 'Sin resultados' : 'Aquí aparecerán tus clientes'}
+                  </li>
+                )}
             </ul>
           </div>
 
