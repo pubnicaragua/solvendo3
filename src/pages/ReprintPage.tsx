@@ -24,6 +24,7 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [copies, setCopies] = useState(1);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [printableDoc, setPrintableDoc] = useState("")
 
   // Obtener datos del usuario y empresa del contexto de autenticación
   const { user, empresaId } = useAuth();
@@ -36,49 +37,6 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     setLoading(true);
     setDocs([]); // Limpiar documentos anteriores
     try {
-      if (!empresaId) {
-        // Usar datos de ejemplo si no hay empresaId
-        const exampleDocs = [
-          {
-            id: "v1",
-            folio: "9",
-            tipo: "Boleta manual (no válida al SII)",
-            total: 204,
-            fecha: new Date().toISOString(),
-          },
-          {
-            id: "v2",
-            folio: "10",
-            tipo: "Boleta manual (no válida al SII)",
-            total: 350,
-            fecha: new Date().toISOString(),
-          },
-          {
-            id: "v3",
-            folio: "3421456",
-            tipo: "Boleta manual (no válida al SII)",
-            total: 22000,
-            fecha: new Date().toISOString(),
-          },
-          {
-            id: "v4",
-            folio: "3421457",
-            tipo: "Boleta manual (no válida al SII)",
-            total: 34000,
-            fecha: new Date().toISOString(),
-          },
-          {
-            id: "v5",
-            folio: "1001",
-            tipo: "Factura electrónica",
-            total: 45000,
-            fecha: new Date().toISOString(),
-          },
-        ];
-        setDocs(exampleDocs);
-        return;
-      }
-
       try {
         // Cargar documentos
         const { data, error } = await supabase
@@ -99,7 +57,7 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               id: d.id,
               folio: d.folio,
               tipo:
-                d.tipo_dte === "boleta"
+                d.tipo_dte === "Boleta"
                   ? "Boleta manual (no válida al SII)"
                   : "Documento electrónico",
               total: d.total,
@@ -109,70 +67,13 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         }
       } catch (error) {
         console.error("Error al cargar documentos:", error);
-        // Usar datos de ejemplo en caso de error
-        const exampleDocs = [
-          {
-            id: "v1",
-            folio: "9",
-            tipo: "Boleta manual (no válida al SII)",
-            total: 204,
-            fecha: new Date().toISOString(),
-          },
-          {
-            id: "v2",
-            folio: "10",
-            tipo: "Boleta manual (no válida al SII)",
-            total: 350,
-            fecha: new Date().toISOString(),
-          },
-          {
-            id: "v3",
-            folio: "3421456",
-            tipo: "Boleta manual (no válida al SII)",
-            total: 22000,
-            fecha: new Date().toISOString(),
-          },
-          {
-            id: "v4",
-            folio: "3421457",
-            tipo: "Boleta manual (no válida al SII)",
-            total: 34000,
-            fecha: new Date().toISOString(),
-          },
-          {
-            id: "v5",
-            folio: "1001",
-            tipo: "Factura electrónica",
-            total: 45000,
-            fecha: new Date().toISOString(),
-          },
-        ];
-        setDocs(exampleDocs);
       }
-
       setSelectedDoc(null);
+      setPrintableDoc("")
       setSearchFolio("");
       setCopies(1);
     } catch (error) {
       console.error("Error al cargar documentos:", error);
-      // Usar datos de ejemplo en caso de error
-      const exampleDocs = [
-        {
-          id: "v1",
-          folio: "9",
-          tipo: "Boleta manual (no válida al SII)",
-          total: 204,
-          fecha: new Date().toISOString(),
-        },
-        {
-          id: "v2",
-          folio: "10",
-          tipo: "Boleta manual (no válida al SII)",
-          total: 350,
-          fecha: new Date().toISOString(),
-        },
-      ];
-      setDocs(exampleDocs);
     } finally {
       setLoading(false);
     }
@@ -187,11 +88,55 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const foundDoc = docs.find((doc) => doc.folio.includes(searchFolio));
     if (foundDoc) {
       setSelectedDoc(foundDoc);
+      setPrintableDoc(`
+        <div style="font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 15px; margin-bottom: 15px;">
+            <div style="font-size: 16px; font-weight: bold;">ANROLTEC SPA</div>
+            <div style="font-size: 10px;">RUT: 78.168.951-3</div>
+            <div style="font-size: 10px;">Av. Providencia 1234, Santiago</div>
+          </div>
+          
+          <div style="text-align: center; font-weight: bold; margin: 10px 0;">
+            ${selectedDoc?.tipo.toUpperCase()}
+          </div>
+          <div style="font-size: 10px;">Folio: ${selectedDoc?.folio}</div>
+          <div style="font-size: 10px;">Total: ${formatPrice(selectedDoc?.total!)}</div>
+          <div style="font-size: 10px;">Fecha: ${new Date().toLocaleDateString("es-CL")}</div>
+          <div style="text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px;">
+            <div style="font-size: 9px;">Documento reimpreso</div>
+            <div style="font-size: 9px;">Copias: ${copies}</div>
+          </div>
+        </div>
+      `)
       toast.success("Documento encontrado");
     } else {
       toast.error("No se encontró el documento");
     }
   };
+
+  const handleSelectDoc = (document: Document) => {
+    setSelectedDoc(document)
+    setPrintableDoc(`
+        <div style="font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 15px; margin-bottom: 15px;">
+            <div style="font-size: 16px; font-weight: bold;">ANROLTEC SPA</div>
+            <div style="font-size: 10px;">RUT: 78.168.951-3</div>
+            <div style="font-size: 10px;">Av. Providencia 1234, Santiago</div>
+          </div>
+          
+          <div style="text-align: center; font-weight: bold; margin: 10px 0;">
+            ${selectedDoc?.tipo.toUpperCase()}
+          </div>
+          <div style="font-size: 10px;">Folio: ${selectedDoc?.folio}</div>
+          <div style="font-size: 10px;">Total: ${formatPrice(selectedDoc?.total!)}</div>
+          <div style="font-size: 10px;">Fecha: ${new Date().toLocaleDateString("es-CL")}</div>
+          <div style="text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px;">
+            <div style="font-size: 9px;">Documento reimpreso</div>
+            <div style="font-size: 9px;">Copias: ${copies}</div>
+          </div>
+        </div>
+      `)
+  }
 
   const formatPrice = (n: number) =>
     new Intl.NumberFormat("es-CL", {
@@ -205,64 +150,33 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       return;
     }
 
-    try {
-      // Usar la función de impresión del navegador directamente
-      const printContent = `
-        <div style="font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 15px; margin-bottom: 15px;">
-            <div style="font-size: 16px; font-weight: bold;">ANROLTEC SPA</div>
-            <div style="font-size: 10px;">RUT: 78.168.951-3</div>
-            <div style="font-size: 10px;">Av. Providencia 1234, Santiago</div>
-          </div>
-          
-          <div style="text-align: center; font-weight: bold; margin: 10px 0;">
-            ${selectedDoc.tipo.toUpperCase()}
-          </div>
-          <div style="font-size: 10px;">Folio: ${selectedDoc.folio}</div>
-          <div style="font-size: 10px;">Total: ${formatPrice(
-        selectedDoc.total
-      )}</div>
-          <div style="font-size: 10px;">Fecha: ${new Date().toLocaleDateString(
-        "es-CL"
-      )}</div>
-          
-          <div style="text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px;">
-            <div style="font-size: 9px;">Documento reimpreso</div>
-            <div style="font-size: 9px;">Copias: ${copies}</div>
-          </div>
-        </div>
-      `;
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "absolute";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    document.body.appendChild(iframe);
 
-      // Crear un elemento temporal para imprimir
-      const printElement = document.createElement("div");
-      printElement.innerHTML = printContent;
-      printElement.style.display = "none";
-      document.body.appendChild(printElement);
+    const doc = iframe.contentWindow?.document;
+    if (!doc) return;
 
-      // Configurar impresión
-      const originalContent = document.body.innerHTML;
-      document.body.innerHTML = printContent;
-      window.print();
-      document.body.innerHTML = originalContent;
-
-      // Limpiar
-      if (document.body.contains(printElement)) {
-        document.body.removeChild(printElement);
-      }
-
-      // Limpiar selección para permitir nueva selección
-      setSelectedDoc(null);
-      setSearchFolio("");
-    } catch (error) {
-      console.error("Error en impresión:", error);
-      toast.error("Error al imprimir documento");
+    doc.open();
+    let content = "";
+    for (let i = 0; i < copies; i++) {
+      content += printableDoc;
     }
+    doc.write(content);
+    doc.close();
 
+    iframe.contentWindow?.focus();
+    iframe.contentWindow?.print();
+
+    document.body.removeChild(iframe);
     toast.success(`Imprimiendo ${copies} ${copies === 1 ? "copia" : "copias"}`);
   };
 
+
   return (
-    <div className="h-screen bg-gray-50 flex flex-col">
+    <div className="h-screen bg-gray-50 flex flex-col no-printme">
       <HeaderWithMenu
         title="Reimprimir"
         icon={<Printer className="w-6 h-6 text-gray-600" />}
@@ -274,20 +188,13 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       <div className="flex-1 flex overflow-hidden">
         {/* LEFT - 60% */}
         <div className="w-3/5 bg-white p-10 flex items-center justify-center">
-          {!selectedDoc ? (
-            <p className="text-gray-400 italic text-lg text-center">
-              Debe seleccionar el documento a reimprimir
-            </p>
-          ) : (
-            <div className="p-4 rounded-lg bg-gray-100 text-gray-700 w-full max-w-lg">
-              <h3 className="font-semibold text-lg mb-2">
-                Detalle del documento seleccionado:
-              </h3>
-              <p>Tipo: {selectedDoc.tipo}</p>
-              <p>Folio: {selectedDoc.folio}</p>
-              <p>Total: {formatPrice(selectedDoc.total)}</p>
-              <p>Fecha: {new Date(selectedDoc.fecha).toLocaleDateString()}</p>
-            </div>
+          {/* Bloque oculto solo para impresión */}
+          {selectedDoc && typeof window !== "undefined" && (
+            <div
+              id="printablediv"
+              style={{ display: "none" }}
+              dangerouslySetInnerHTML={{ __html: printableDoc }}
+            />
           )}
         </div>
 
@@ -395,7 +302,7 @@ export const ReprintPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               {docs.map((doc) => (
                 <div
                   key={doc.id}
-                  onClick={() => setSelectedDoc(doc)}
+                  onClick={() => handleSelectDoc(doc)}
                   className="p-4 rounded-2xl flex justify-between items-center cursor-pointer bg-gray-50"
                 >
                   <div>

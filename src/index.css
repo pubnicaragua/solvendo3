@@ -9,3 +9,16 @@
   --color-primary: #2979ff;  
   --font-base: 'Montserrat', sans-serif;  
 }  
+
+.printme {
+  display: none;
+}
+
+@media print {
+  .no-printme {
+    display: none !important;
+  }
+  .printme {
+    display: block !important;
+  }
+}
