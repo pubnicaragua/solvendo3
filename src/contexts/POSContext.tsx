@@ -76,6 +76,7 @@ export interface POSContextType {
   // Caja
   cajaAbierta: boolean;
   currentAperturaCaja: AperturaCaja | null;
+  setCurrentAperturaCaja: (caja: any) => void
   checkCajaStatus: () => Promise<void>;
   openCaja: (montoInicial: number,
     cajaId: string,
@@ -622,8 +623,6 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
 
     try {
       setLoading(true);
-      // Modificación para asegurar que, si por error hay varias cajas abiertas,
-      // se tome la más reciente para evitar el error PGRST116.
 
       const { data, error } = await supabase
         .from("sesiones_caja")
@@ -1051,6 +1050,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
     selectDoc,
     generarDTE,
     enviarDTEAlSII,
+    setCurrentAperturaCaja,
   };
 
   return <POSContext.Provider value={value}>{children}</POSContext.Provider>;

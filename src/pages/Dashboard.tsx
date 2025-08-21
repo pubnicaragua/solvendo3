@@ -29,6 +29,7 @@ import { Promocion } from "../lib/supabase";
 import AbrirCajaModal from "../components/pos/AbrirCajaModal";
 import SearchBarClientes from "../components/pos/SearchBarClientes";
 import { LoginForm } from "../components/auth/LoginForm";
+import AsignarSaldoInicialModal from "../components/pos/AsignarSaldoModal";
 
 export type TabId = "destacado" | "borradores" | "productos" | "clientes";
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
@@ -673,6 +674,8 @@ const Dashboard: React.FC = () => {
       return false;
     }
   };
+
+  if (currentAperturaCaja?.saldo_inicial === 0) return <AsignarSaldoInicialModal />
 
   if (!authorized && !currentAperturaCaja) return <LoginForm />
 
