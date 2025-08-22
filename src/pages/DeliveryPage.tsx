@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Search,
   User,
@@ -8,17 +8,19 @@ import {
   FileText,
   Check,
   Truck,
-  Calendar
-} from 'lucide-react';
-import { HeaderWithMenu } from '../components/common/HeaderWithMenu';
-import { useAuth } from '../contexts/AuthContext';
-import { usePOS } from '../contexts/POSContext';
-import { supabase } from '../lib/supabase';
-import type { Cliente } from '../contexts/POSContext';
-import { ClientModal } from '../components/pos/ClientModal';
-import toast from 'react-hot-toast';
+  Calendar,
+} from "lucide-react";
+import { HeaderWithMenu } from "../components/common/HeaderWithMenu";
+import { useAuth } from "../contexts/AuthContext";
+import { usePOS } from "../contexts/POSContext";
+import { supabase } from "../lib/supabase";
+import type { Cliente } from "../contexts/POSContext";
+import { ClientModal } from "../components/pos/ClientModal";
+import toast from "react-hot-toast";
 
-export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+export const DeliveryPage: React.FC<{ onClose: () => void }> = ({
+  onClose,
+}) => {
   const { user, empresaId } = useAuth();
   const {
     carrito,
@@ -29,11 +31,11 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     clearCart,
     currentCliente,
     selectClient,
-    clientes
+    clientes,
   } = usePOS();
 
-  const [productSearch, setProductSearch] = useState('');
-  const [docSearch, setDocSearch] = useState('');
+  const [productSearch, setProductSearch] = useState("");
+  const [docSearch, setDocSearch] = useState("");
   const [productos, setProductos] = useState<any[]>([]);
   const [docsDisponibles, setDocsDisponibles] = useState<any[]>([]);
 
@@ -41,25 +43,25 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const [showClientSelection, setShowClientSelection] = useState(false);
   const [showClientModal, setShowClientModal] = useState(false);
   const [clientError, setClientError] = useState(false);
-  const [deliveryClientSearchTerm, setDeliveryClientSearchTerm] = useState('');
+  const [deliveryClientSearchTerm, setDeliveryClientSearchTerm] = useState("");
 
   const [despachoData, setDespachoData] = useState({
-    fecha: new Date().toISOString().split('T')[0],
-    tipo: 'Guía de despacho manual',
-    destinatario: '',
-    direccion: '',
-    comuna: '',
-    ciudad: '',
-    region: '',
-    numDocumento: '',
-    estado: ''
+    fecha: new Date().toISOString().split("T")[0],
+    tipo: "Guía de despacho manual",
+    destinatario: "",
+    direccion: "",
+    comuna: "",
+    ciudad: "",
+    region: "",
+    numDocumento: "",
+    estado: "",
   });
 
   // Estados para cajas y sucursales dinámicas
   const [cajas, setCajas] = useState<any[]>([]);
   const [sucursales, setSucursales] = useState<any[]>([]);
-  const [selectedCaja, setSelectedCaja] = useState<string>('');
-  const [selectedSucursal, setSelectedSucursal] = useState<string>('');
+  const [selectedCaja, setSelectedCaja] = useState<string>("");
+  const [selectedSucursal, setSelectedSucursal] = useState<string>("");
 
   // Sincronizar con el cliente seleccionado en el contexto
   useEffect(() => {
@@ -68,11 +70,11 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       setDespachoData((p) => ({
         ...p,
         destinatario: currentCliente.razon_social,
-        direccion: currentCliente.direccion || '',
-        comuna: currentCliente.comuna || '',
-        ciudad: currentCliente.ciudad || '',
-        region: currentCliente.region || '',
-        numDocumento: currentCliente.rut
+        direccion: currentCliente.direccion || "",
+        comuna: currentCliente.comuna || "",
+        ciudad: currentCliente.ciudad || "",
+        region: currentCliente.region || "",
+        numDocumento: currentCliente.rut,
       }));
     }
   }, [currentCliente]);
@@ -83,25 +85,25 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       if (!empresaId) {
         // Datos de ejemplo si no hay empresaId
         setCajas([
-          { id: 'caja1', nombre: 'Caja Principal' },
-          { id: 'caja2', nombre: 'Caja Secundaria' }
+          { id: "caja1", nombre: "Caja Principal" },
+          { id: "caja2", nombre: "Caja Secundaria" },
         ]);
         setSucursales([
-          { id: 'sucursal1', nombre: 'Sucursal Principal' },
-          { id: 'sucursal2', nombre: 'Sucursal Centro' }
+          { id: "sucursal1", nombre: "Sucursal Principal" },
+          { id: "sucursal2", nombre: "Sucursal Centro" },
         ]);
-        setSelectedCaja('caja1');
-        setSelectedSucursal('sucursal1');
+        setSelectedCaja("caja1");
+        setSelectedSucursal("sucursal1");
         return;
       }
 
       try {
         // Cargar cajas
         const { data: cajasData, error: cajasError } = await supabase
-          .from('cajas')
-          .select('*')
-          .eq('empresa_id', empresaId)
-          .eq('activo', true);
+          .from("cajas")
+          .select("*")
+          .eq("empresa_id", empresaId)
+          .eq("activo", true);
 
         if (!cajasError && cajasData && cajasData.length > 0) {
           setCajas(cajasData);
@@ -109,18 +111,18 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         } else {
           // Fallback a datos de ejemplo
           setCajas([
-            { id: 'caja1', nombre: 'Caja Principal' },
-            { id: 'caja2', nombre: 'Caja Secundaria' }
+            { id: "caja1", nombre: "Caja Principal" },
+            { id: "caja2", nombre: "Caja Secundaria" },
           ]);
-          setSelectedCaja('caja1');
+          setSelectedCaja("caja1");
         }
 
         // Cargar sucursales
         const { data: sucursalesData, error: sucursalesError } = await supabase
-          .from('sucursales')
-          .select('*')
-          .eq('empresa_id', empresaId)
-          .eq('activo', true);
+          .from("sucursales")
+          .select("*")
+          .eq("empresa_id", empresaId)
+          .eq("activo", true);
 
         if (!sucursalesError && sucursalesData && sucursalesData.length > 0) {
           setSucursales(sucursalesData);
@@ -128,24 +130,24 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         } else {
           // Fallback a datos de ejemplo
           setSucursales([
-            { id: 'sucursal1', nombre: 'Sucursal Principal' },
-            { id: 'sucursal2', nombre: 'Sucursal Centro' }
+            { id: "sucursal1", nombre: "Sucursal Principal" },
+            { id: "sucursal2", nombre: "Sucursal Centro" },
           ]);
-          setSelectedSucursal('sucursal1');
+          setSelectedSucursal("sucursal1");
         }
       } catch (error) {
-        console.error('Error loading cajas y sucursales:', error);
+        console.error("Error loading cajas y sucursales:", error);
         // Fallback a datos de ejemplo en caso de error
         setCajas([
-          { id: 'caja1', nombre: 'Caja Principal' },
-          { id: 'caja2', nombre: 'Caja Secundaria' }
+          { id: "caja1", nombre: "Caja Principal" },
+          { id: "caja2", nombre: "Caja Secundaria" },
         ]);
         setSucursales([
-          { id: 'sucursal1', nombre: 'Sucursal Principal' },
-          { id: 'sucursal2', nombre: 'Sucursal Centro' }
+          { id: "sucursal1", nombre: "Sucursal Principal" },
+          { id: "sucursal2", nombre: "Sucursal Centro" },
         ]);
-        setSelectedCaja('caja1');
-        setSelectedSucursal('sucursal1');
+        setSelectedCaja("caja1");
+        setSelectedSucursal("sucursal1");
       }
     };
 
@@ -156,17 +158,25 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     if (!empresaId) {
       // Usar datos de ejemplo si no hay empresaId
       setProductos([
-        { id: '1', nombre: 'Ejemplo producto 1', precio: 34.5, stock: 100 },
-        { id: '2', nombre: 'Ejemplo producto 2', precio: 68.5, stock: 50 },
-        { id: '3', nombre: 'Ejemplo producto 3', precio: 34.5, stock: 75 }
+        { id: "1", nombre: "Ejemplo producto 1", precio: 34.5, stock: 100 },
+        { id: "2", nombre: "Ejemplo producto 2", precio: 68.5, stock: 50 },
+        { id: "3", nombre: "Ejemplo producto 3", precio: 34.5, stock: 75 },
       ]);
 
       // Solo mostrar documentos si hay cliente seleccionado
       if (selectedClient) {
         setDocsDisponibles([
-          { id: 'doc1', label: 'Boleta manual (no válida al SII) N°V17522786664074', total: 35 },
-          { id: 'doc2', label: 'Boleta manual (no válida al SII) N°3421457', total: 34000 },
-          { id: 'doc3', label: 'Factura N°1001', total: 45000 }
+          {
+            id: "doc1",
+            label: "Boleta manual (no válida al SII) N°V17522786664074",
+            total: 35,
+          },
+          {
+            id: "doc2",
+            label: "Boleta manual (no válida al SII) N°3421457",
+            total: 34000,
+          },
+          { id: "doc3", label: "Factura N°1001", total: 45000 },
         ]);
       } else {
         setDocsDisponibles([]);
@@ -177,11 +187,11 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     const fetchProductsAndDocs = async () => {
       try {
         // Cargar productos desde el carrito actual
-        const cartProducts = carrito.map(item => ({
+        const cartProducts = carrito.map((item) => ({
           id: item.id,
           nombre: item.nombre,
           precio: item.precio,
-          stock: item.stock || 0
+          stock: item.stock || 0,
         }));
 
         if (cartProducts.length > 0) {
@@ -189,19 +199,19 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         } else {
           // Datos de ejemplo si no hay productos
           setProductos([
-            { id: '1', nombre: 'Ejemplo producto 1', precio: 34.5, stock: 100 },
-            { id: '2', nombre: 'Ejemplo producto 2', precio: 68.5, stock: 50 },
-            { id: '3', nombre: 'Ejemplo producto 3', precio: 34.5, stock: 75 }
+            { id: "1", nombre: "Ejemplo producto 1", precio: 34.5, stock: 100 },
+            { id: "2", nombre: "Ejemplo producto 2", precio: 68.5, stock: 50 },
+            { id: "3", nombre: "Ejemplo producto 3", precio: 34.5, stock: 75 },
           ]);
         }
 
         // Cargar documentos disponibles solo si hay cliente seleccionado
         if (selectedClient) {
           const { data: docs, error: docsError } = await supabase
-            .from('ventas')
-            .select('id, folio, tipo_dte, total')
-            .eq('empresa_id', empresaId)
-            .eq('cliente_id', selectedClient.id)
+            .from("ventas")
+            .select("id, folio, tipo_dte, total")
+            .eq("empresa_id", empresaId)
+            .eq("cliente_id", selectedClient.id)
             .limit(10);
 
           if (!docsError && docs && docs.length > 0) {
@@ -209,12 +219,12 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               docs.map((d: any) => ({
                 id: d.id,
                 label:
-                  (d.tipo_dte === 'boleta'
-                    ? 'Boleta manual (no válida al SII)'
+                  (d.tipo_dte === "boleta"
+                    ? "Boleta manual (no válida al SII)"
                     : d.tipo_dte) +
-                  ' Nº' +
+                  " Nº" +
                   d.folio,
-                total: d.total
+                total: d.total,
               }))
             );
           } else {
@@ -224,12 +234,12 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           setDocsDisponibles([]);
         }
       } catch (error) {
-        console.error('Error loading data:', error);
+        console.error("Error loading data:", error);
         // Usar datos de ejemplo en caso de error
         setProductos([
-          { id: '1', nombre: 'Ejemplo producto 1', precio: 34.5, stock: 100 },
-          { id: '2', nombre: 'Ejemplo producto 2', precio: 68.5, stock: 50 },
-          { id: '3', nombre: 'Ejemplo producto 3', precio: 34.5, stock: 75 }
+          { id: "1", nombre: "Ejemplo producto 1", precio: 34.5, stock: 100 },
+          { id: "2", nombre: "Ejemplo producto 2", precio: 68.5, stock: 50 },
+          { id: "3", nombre: "Ejemplo producto 3", precio: 34.5, stock: 75 },
         ]);
         setDocsDisponibles([]);
       }
@@ -239,7 +249,10 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   }, [empresaId, docSearch, carrito, selectedClient]);
 
   const formatPrice = (n: number) =>
-    new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(n);
+    new Intl.NumberFormat("es-CL", {
+      style: "currency",
+      currency: "CLP",
+    }).format(n);
 
   const handleSelectDoc = (doc: any) => {
     // Limpiar carrito existente
@@ -252,60 +265,61 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           // Datos de ejemplo si no hay empresaId
           const exampleProducts = [
             {
-              id: 'f1eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-              empresa_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-              nombre: 'Ejemplo producto 1',
+              id: "f1eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+              empresa_id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+              nombre: "Ejemplo producto 1",
               precio: 34.5,
               stock: 100,
               activo: true,
               created_at: new Date().toISOString(),
               costo: 0,
-              descripcion: 'Producto de ejemplo',
-              codigo: 'PROD001',
+              descripcion: "Producto de ejemplo",
+              codigo: "PROD001",
               destacado: false,
-              updated_at: new Date().toISOString()
-            }
+              updated_at: new Date().toISOString(),
+            },
           ];
 
-          exampleProducts.forEach(product => addToCart(product));
+          exampleProducts.forEach((product) => addToCart(product));
           return;
         }
 
         // Buscar la venta por folio
         const { data: venta, error: ventaError } = await supabase
-          .from('ventas')
-          .select('id')
-          .eq('id', doc.id)
-          .eq('empresa_id', empresaId)
+          .from("ventas")
+          .select("id")
+          .eq("id", doc.id)
+          .eq("empresa_id", empresaId)
           .single();
 
         if (ventaError || !venta) {
           // Si no se encuentra la venta, usar productos de ejemplo
           const exampleProducts = [
             {
-              id: 'f1eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+              id: "f1eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
               empresa_id: empresaId,
-              nombre: 'Ejemplo producto 1',
+              nombre: "Ejemplo producto 1",
               precio: 34.5,
               stock: 100,
               activo: true,
               created_at: new Date().toISOString(),
               costo: 0,
-              descripcion: 'Producto de ejemplo',
-              codigo: 'PROD001',
+              descripcion: "Producto de ejemplo",
+              codigo: "PROD001",
               destacado: false,
-              updated_at: new Date().toISOString()
-            }
+              updated_at: new Date().toISOString(),
+            },
           ];
 
-          exampleProducts.forEach(product => addToCart(product));
+          exampleProducts.forEach((product) => addToCart(product));
           return;
         }
 
         // Cargar items de la venta
         const { data: ventaItems, error: itemsError } = await supabase
-          .from('venta_items')
-          .select(`
+          .from("venta_items")
+          .select(
+            `
             id,
             cantidad,
             precio_unitario,
@@ -323,38 +337,39 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               destacado,
               updated_at
             )
-          `)
-          .eq('venta_id', venta.id);
+          `
+          )
+          .eq("venta_id", venta.id);
 
         if (itemsError || !ventaItems || ventaItems.length === 0) {
           // Si no hay items, usar productos de ejemplo
           const exampleProducts = [
             {
-              id: 'f1eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-              empresa_id: empresaId,
-              nombre: 'Ejemplo producto 1',
-              precio: 34.5,
-              stock: 100,
+              id: "f1eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+              empresa_id: empresaId || "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+              nombre: "Producto no encontrado",
+              precio: 0,
+              stock: 0,
               activo: true,
               created_at: new Date().toISOString(),
               costo: 0,
-              descripcion: 'Producto de ejemplo',
-              codigo: 'PROD001',
+              descripcion: "Producto no encontrado",
+              codigo: "NOT FOUND",
               destacado: false,
-              updated_at: new Date().toISOString()
-            }
+              updated_at: new Date().toISOString(),
+            },
           ];
 
-          exampleProducts.forEach(product => addToCart(product));
+          exampleProducts.forEach((product) => addToCart(product));
           return;
         }
 
         // Agregar productos reales al carrito
-        ventaItems.forEach(item => {
+        ventaItems.forEach((item) => {
           if (item.productos) {
             const product = {
               ...item.productos,
-              precio: item.precio_unitario // Usar el precio de la venta
+              precio: item.precio_unitario, // Usar el precio de la venta
             };
 
             // Agregar con la cantidad específica de la venta
@@ -366,28 +381,28 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
         toast.success(`Productos cargados desde ${doc.label}`);
       } catch (error) {
-        console.error('Error loading venta products:', error);
-        toast.error('Error al cargar productos de la venta');
+        console.error("Error loading venta products:", error);
+        toast.error("Error al cargar productos de la venta");
 
         // Fallback a productos de ejemplo
         const exampleProducts = [
           {
-            id: 'f1eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-            empresa_id: empresaId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-            nombre: 'Ejemplo producto 1',
-            precio: 34.5,
-            stock: 100,
+            id: "f1eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+            empresa_id: empresaId || "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+            nombre: "Producto no encontrado",
+            precio: 0,
+            stock: 0,
             activo: true,
             created_at: new Date().toISOString(),
             costo: 0,
-            descripcion: 'Producto de ejemplo',
-            codigo: 'PROD001',
+            descripcion: "Producto no encontrado",
+            codigo: "NOT FOUND",
             destacado: false,
-            updated_at: new Date().toISOString()
-          }
+            updated_at: new Date().toISOString(),
+          },
         ];
 
-        exampleProducts.forEach(product => addToCart(product));
+        exampleProducts.forEach((product) => addToCart(product));
       }
     };
 
@@ -397,19 +412,19 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const handleCancelDespacho = () => {
     clearCart();
     setSelectedClient(null);
-    setDeliveryClientSearchTerm('');
-    setProductSearch('');
-    setDocSearch('');
+    setDeliveryClientSearchTerm("");
+    setProductSearch("");
+    setDocSearch("");
     setDespachoData({
-      fecha: new Date().toISOString().split('T')[0],
-      tipo: 'Guía de despacho manual',
-      destinatario: '',
-      direccion: '',
-      comuna: '',
-      ciudad: '',
-      region: '',
-      numDocumento: '',
-      estado: '',
+      fecha: new Date().toISOString().split("T")[0],
+      tipo: "Guía de despacho manual",
+      destinatario: "",
+      direccion: "",
+      comuna: "",
+      ciudad: "",
+      region: "",
+      numDocumento: "",
+      estado: "",
     });
     setClientError(false);
     onClose();
@@ -437,7 +452,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         rut: selectedClient.rut,
         direccion: selectedClient.direccion || "",
         estado: "pendiente",
-        cliente_id: selectedClient.id
+        cliente_id: selectedClient.id,
       };
 
       const { data: despacho, error } = await supabase
@@ -448,7 +463,9 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
       if (error) {
         console.error("Error al crear despacho:", error);
-        toast.error("Error al crear despacho. Verifique los datos e intente nuevamente.");
+        toast.error(
+          "Error al crear despacho. Verifique los datos e intente nuevamente."
+        );
         return;
       }
 
@@ -478,8 +495,8 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       <HeaderWithMenu
         title="Despacho"
         icon={<Truck className="w-6 h-6 text-gray-600" />}
-        userName={user?.user_metadata?.full_name || user?.email || 'Usuario'}
-        userAvatarUrl={user?.user_metadata?.avatar_url || ''}
+        userName={user?.user_metadata?.full_name || user?.email || "Usuario"}
+        userAvatarUrl={user?.user_metadata?.avatar_url || ""}
         showClock={true}
       />
 
@@ -505,7 +522,9 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
           <div className="space-y-3 pb-4 flex-grow overflow-y-auto max-h-96">
             {carrito.length === 0 ? (
-              <div className="text-center text-gray-500 py-8">No hay ítems en el despacho.</div>
+              <div className="text-center text-gray-500 py-8">
+                No hay ítems en el despacho.
+              </div>
             ) : (
               carrito.map((item) => (
                 <div
@@ -515,13 +534,17 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   <span className="text-gray-800">{item.nombre}</span>
                   <div className="flex items-center justify-center gap-1">
                     <button
-                      onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                      onClick={() =>
+                        updateQuantity(item.id, Math.max(1, item.quantity - 1))
+                      }
                       disabled={item.quantity <= 1}
                       className="p-1 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       <Minus className="w-4 h-4" />
                     </button>
-                    <span className="w-8 text-center font-semibold text-gray-800">{item.quantity}</span>
+                    <span className="w-8 text-center font-semibold text-gray-800">
+                      {item.quantity}
+                    </span>
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       className="p-1 bg-gray-200 hover:bg-gray-300 rounded-md text-gray-600 transition-colors"
@@ -531,7 +554,9 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   </div>
                   <span className="text-center text-gray-800">0%</span>
                   <div className="flex items-center justify-between pl-4">
-                    <span className="font-semibold text-gray-800">{formatPrice(item.precio * item.quantity)}</span>
+                    <span className="font-semibold text-gray-800">
+                      {formatPrice(item.precio * item.quantity)}
+                    </span>
                     <button
                       onClick={() => removeFromCart(item.id)}
                       className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-gray-100 transition-colors"
@@ -547,7 +572,8 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           <div className="mt-auto pt-4 border-t border-gray-200">
             <div className="grid grid-cols-2 gap-4 items-center mb-4">
               <span className="text-gray-600 text-sm">
-                N° Líneas {carrito.length} / Tot. ítems {carrito.reduce((acc, item) => acc + item.quantity, 0)}
+                N° Líneas {carrito.length} / Tot. ítems{" "}
+                {carrito.reduce((acc, item) => acc + item.quantity, 0)}
               </span>
               <select className="px-2 py-1.5 border rounded-lg bg-gray-50 text-sm focus:ring-2 focus:ring-blue-500 w-fit ml-auto">
                 <option>Guía de despacho manual</option>
@@ -556,12 +582,17 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
 
             <div className="grid grid-cols-2 gap-4 items-center mb-3">
               <div className="text-sm text-gray-600">
-                Cliente: {selectedClient ? selectedClient.razon_social : 'No seleccionado'}
+                Cliente:{" "}
+                {selectedClient
+                  ? selectedClient.razon_social
+                  : "No seleccionado"}
               </div>
               <div className="flex items-center justify-end">
                 <span className="text-lg font-semibold mr-2">Total</span>
                 <div className="bg-gray-100 p-2 rounded-lg text-right min-w-[100px]">
-                  <span className="text-xl font-bold">{formatPrice(total)}</span>
+                  <span className="text-xl font-bold">
+                    {formatPrice(total)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -577,8 +608,10 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                     setSelectedClient(null);
                   } else {
                     // Buscar cliente mientras escribe
-                    const cliente = clientes.find(c =>
-                      c.razon_social.toLowerCase().includes(e.target.value.toLowerCase())
+                    const cliente = clientes.find((c) =>
+                      c.razon_social
+                        .toLowerCase()
+                        .includes(e.target.value.toLowerCase())
                     );
                     if (cliente) {
                       setSelectedClient(cliente);
@@ -592,14 +625,19 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             </div>
 
             <div className="mt-auto flex gap-2">
-              <button onClick={handleCancelDespacho} className="flex-1 px-4 py-2 bg-gray-100 rounded flex items-center justify-center text-sm">
-                <XIcon className="w-4 h-4 mr-1" />Cancelar
+              <button
+                onClick={handleCancelDespacho}
+                className="flex-1 px-4 py-2 bg-gray-100 rounded flex items-center justify-center text-sm"
+              >
+                <XIcon className="w-4 h-4 mr-1" />
+                Cancelar
               </button>
               <button
                 disabled={!selectedClient || carrito.length === 0}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded font-semibold text-base disabled:opacity-50"
               >
-                Estado: {despachoData.estado ? despachoData.estado : "Pendiente"}
+                Estado:{" "}
+                {despachoData.estado ? despachoData.estado : "Pendiente"}
               </button>
             </div>
           </div>
@@ -614,36 +652,48 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             </div>
 
             <ul className="space-y-2 max-h-60 overflow-y-auto">
-              {clientes.filter(c =>
-                c.razon_social.toLowerCase().includes(deliveryClientSearchTerm.toLowerCase())
-              ).map(c => (
-                <li key={c.id}
-                  onClick={() => {
-                    setSelectedClient(c);
-                    setDeliveryClientSearchTerm(c.razon_social);
-                    selectClient(c);
-                  }}
-                  className={`p-3 border rounded hover:bg-gray-50 cursor-pointer flex justify-between items-center ${selectedClient?.id === c.id ? 'bg-blue-50 border-blue-200' : 'bg-white'
+              {clientes
+                .filter((c) =>
+                  c.razon_social
+                    .toLowerCase()
+                    .includes(deliveryClientSearchTerm.toLowerCase())
+                )
+                .map((c) => (
+                  <li
+                    key={c.id}
+                    onClick={() => {
+                      setSelectedClient(c);
+                      setDeliveryClientSearchTerm(c.razon_social);
+                      selectClient(c);
+                    }}
+                    className={`p-3 border rounded hover:bg-gray-50 cursor-pointer flex justify-between items-center ${
+                      selectedClient?.id === c.id
+                        ? "bg-blue-50 border-blue-200"
+                        : "bg-white"
                     }`}
-                >
-                  <div>
-                    <span className="font-medium">{c.razon_social}</span>
-                    <p className="text-xs text-gray-600">{c.rut}</p>
-                  </div>
-                  {selectedClient?.id === c.id ? (
-                    <Check className="w-4 h-4 text-blue-600" />
-                  ) : (
-                    <Plus className="w-4 h-4 text-blue-600" />
-                  )}
-                </li>
-              ))}
-              {clientes.filter(c =>
-                c.razon_social.toLowerCase().includes(deliveryClientSearchTerm.toLowerCase())
-              ).length === 0 && (
-                  <li className="text-gray-500 text-center py-4">
-                    {deliveryClientSearchTerm ? 'Sin resultados' : 'Aquí aparecerán tus clientes'}
+                  >
+                    <div>
+                      <span className="font-medium">{c.razon_social}</span>
+                      <p className="text-xs text-gray-600">{c.rut}</p>
+                    </div>
+                    {selectedClient?.id === c.id ? (
+                      <Check className="w-4 h-4 text-blue-600" />
+                    ) : (
+                      <Plus className="w-4 h-4 text-blue-600" />
+                    )}
                   </li>
-                )}
+                ))}
+              {clientes.filter((c) =>
+                c.razon_social
+                  .toLowerCase()
+                  .includes(deliveryClientSearchTerm.toLowerCase())
+              ).length === 0 && (
+                <li className="text-gray-500 text-center py-4">
+                  {deliveryClientSearchTerm
+                    ? "Sin resultados"
+                    : "Aquí aparecerán tus clientes"}
+                </li>
+              )}
             </ul>
           </div>
 
@@ -651,7 +701,9 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           <div className="mt-6 space-y-4">
             <div className="flex items-center gap-2 mb-4">
               <FileText className="w-4 h-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-800">Documentos disponibles</span>
+              <span className="text-sm font-medium text-blue-800">
+                Documentos disponibles
+              </span>
             </div>
 
             {/* Lista de documentos */}
@@ -665,7 +717,9 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                   <div className="flex justify-between items-center">
                     <div>
                       <span className="text-sm font-medium">{doc.label}</span>
-                      <p className="text-xs text-gray-500 mt-1">{formatPrice(doc.total)}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatPrice(doc.total)}
+                      </p>
                     </div>
                   </div>
                 </div>

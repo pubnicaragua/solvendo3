@@ -50,7 +50,7 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
       const id = setInterval(tick, 1000);
       return () => clearInterval(id);
     }
-    return () => { };
+    return () => {};
   }, [showClock]);
 
   // Obtener productos bajo de stock (menos de 5 unidades)
@@ -142,7 +142,7 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
 
               <div
                 className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-2 rounded-lg"
-                onClick={() => setShowLogoutModal(true)}
+                // onClick={() => setShowLogoutModal(true)}
               >
                 {userAvatarUrl ? (
                   <img
