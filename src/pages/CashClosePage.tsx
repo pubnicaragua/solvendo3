@@ -41,7 +41,7 @@ export const CashClosePage: React.FC = () => {
     loading: contextLoading,
   } = usePOS();
   const navigate = useNavigate();
-  const { user, empresaId, sucursalId } = useAuth();
+  const { user, empresaId, sucursalId, signOut } = useAuth();
 
   // Local state
   const [isClosing, setIsClosing] = useState(false);
@@ -187,6 +187,8 @@ export const CashClosePage: React.FC = () => {
 
       const success = await closeCaja(montoFinal);
       if (!success) throw new Error("Error al cerrar la caja");
+
+      await signOut()
 
       toast.success("✅ Caja cerrada exitosamente.");
 
