@@ -258,7 +258,7 @@ const Dashboard: React.FC = () => {
     }
 
     // Validar monto recibido para efectivo
-    if (selectedMethod === "efectivo" && montoRecibido < totalConDescuento) {
+    if (selectedMethod === "efectivo" && montoRecibido < totalAPagar) {
       toast.error("El monto recibido debe ser mayor o igual al total");
       return;
     }
