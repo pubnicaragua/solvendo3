@@ -13,6 +13,7 @@ import { Logo } from "./Logo";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { usePOS } from "../../contexts/POSContext";
+import { supabase } from "../../lib/supabase";
 
 interface HeaderWithMenuProps {
   title: string;
@@ -33,50 +34,87 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
   const navigate = useNavigate();
   const { productos } = usePOS();
   const [time, setTime] = React.useState("");
+  const [supabaseNotificaciones, setSupabaseNotificaciones] = React.useState<
+    any[]
+  >([]);
+  const [loading, setLoading] = React.useState(true);
+  const { sucursalId } = useAuth();
+
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
 
+  // Reloj
   React.useEffect(() => {
-    if (showClock) {
-      const tick = () =>
-        setTime(
-          new Intl.DateTimeFormat("es-CL", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-          }).format(new Date())
-        );
-      tick();
-      const id = setInterval(tick, 1000);
-      return () => clearInterval(id);
-    }
-    return () => {};
-  }, [showClock]);
-
-  // Obtener productos bajo de stock (menos de 5 unidades)
-  const productosStockBajo = productos.filter((p) => p.stock < 5);
-
-  // Generar notificaciones solo para productos con stock bajo
-  const notificaciones = React.useMemo(() => {
-    const today = new Date();
-    const notifications = [];
-
-    // Solo notificaciones de stock bajo
-    productosStockBajo.forEach((producto) => {
-      notifications.push({
-        id: `stock-${producto.id}`,
-        tipo: "stock_bajo",
-        mensaje: `Stock bajo: ${producto.nombre} (${producto.stock} unidades)`,
-        hora: today.toLocaleTimeString("es-CL", {
+    const tick = () =>
+      setTime(
+        new Intl.DateTimeFormat("es-CL", {
           hour: "2-digit",
           minute: "2-digit",
-        }),
-        icono: <AlertTriangle className="w-4 h-4 text-orange-500" />,
-      });
-    });
+          hour12: false,
+        }).format(new Date())
+      );
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
 
-    return notifications;
-  }, [productosStockBajo]);
+  // Obtener notificaciones desde Supabase
+  React.useEffect(() => {
+    const fetchNotificaciones = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("notificaciones")
+        .select("*")
+        .eq("sucursal_id", sucursalId)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error al obtener notificaciones:", error.message);
+      } else {
+        setSupabaseNotificaciones(data || []);
+      }
+      setLoading(false);
+    };
+
+    fetchNotificaciones();
+  }, [sucursalId]);
+
+  // Productos con stock bajo
+  const productosStockBajo = productos.filter((p) => p.stock < 5);
+
+  // Combinar notificaciones
+  const notificaciones = React.useMemo(() => {
+    const today = new Date();
+
+    const localNotifications = productosStockBajo.map((producto) => ({
+      id: `stock-${producto.id}`,
+      tipo: "stock_bajo",
+      mensaje: `Stock bajo: ${producto.nombre} (${producto.stock} unidades)`,
+      hora: today.toLocaleTimeString("es-CL", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      icono: <AlertTriangle className="w-4 h-4 text-orange-500" />,
+    }));
+
+    const supabaseNotifications = supabaseNotificaciones.map((notif: any) => ({
+      id: `supabase-${notif.id}`,
+      tipo: notif.tipo,
+      mensaje: notif.mensaje,
+      hora: notif.created_at
+        ? new Date(notif.created_at).toLocaleTimeString("es-CL", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : today.toLocaleTimeString("es-CL", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+      icono: <Bell className="w-4 h-4 text-blue-500" />,
+    }));
+
+    return [...supabaseNotifications, ...localNotifications];
+  }, [productosStockBajo, supabaseNotificaciones]);
 
   const handleLogout = () => {
     signOut();
@@ -172,7 +210,7 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
           <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[80vh] flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
-                Notificaciones de Stock
+                Notificaciones
               </h3>
               <button
                 onClick={() => setShowNotifications(false)}
