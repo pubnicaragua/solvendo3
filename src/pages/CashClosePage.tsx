@@ -7,6 +7,7 @@ import { DollarSign, Calendar, Clock, ClipboardList } from "lucide-react";
 import { HeaderWithMenu } from "../components/common/HeaderWithMenu";
 import toast from "react-hot-toast";
 import AbrirCajaModal from "../components/pos/AbrirCajaModal";
+import { useUserPermissions } from "../hooks/usePermissions";
 
 const SummaryLine = ({
   label,
@@ -37,6 +38,7 @@ export const CashClosePage: React.FC = () => {
   } = usePOS();
   const navigate = useNavigate();
   const { user, empresaId, sucursalId, signOut } = useAuth();
+  const { hasPermission, PERMISOS } = useUserPermissions();
 
   // Local state
   const [isClosing, setIsClosing] = useState(false);
@@ -135,7 +137,6 @@ export const CashClosePage: React.FC = () => {
       .filter((m) => m.tipo === "retiro")
       .reduce((acc, m) => acc + m.monto, 0);
 
-    console.log(currentAperturaCaja);
     const montoEsperadoCalc =
       (currentAperturaCaja?.saldo_inicial || 0) +
       ventasEfectivoVal +
@@ -182,6 +183,11 @@ export const CashClosePage: React.FC = () => {
       const montoFinal = parseFloat(montoFinalInput);
       if (isNaN(montoFinal))
         throw new Error("El monto final debe ser un número válido");
+
+      if (!hasPermission(PERMISOS.CerrarCaja)) {
+        toast.error("No tienes permisos para cerrar la caja.");
+        return;
+      }
 
       const success = await closeCaja(montoFinal);
       if (!success) throw new Error("Error al cerrar la caja");

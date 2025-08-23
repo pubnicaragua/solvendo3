@@ -24,6 +24,7 @@ import { HeaderWithMenu } from "../components/common/HeaderWithMenu";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
 import toast from "react-hot-toast";
+import { useUserPermissions } from "../hooks/usePermissions";
 
 interface ReportData {
   ventasTotales: number;
@@ -51,6 +52,7 @@ interface CustomTooltipProps {
 
 export const ReportsPage: React.FC = () => {
   const { empresaId, user } = useAuth();
+  const { hasPermission, PERMISOS } = useUserPermissions();
 
   // KPI state
   const [data, setData] = useState<ReportData>({
@@ -315,6 +317,20 @@ export const ReportsPage: React.FC = () => {
     toast.success("Reporte descargado en Excel");
   };
 
+  if (!hasPermission(PERMISOS.AccesoReportes))
+    return (
+      <>
+        <HeaderWithMenu
+          title="Reportes"
+          icon={<BarChart3 className="w-6 h-6 text-gray-600" />}
+          userName={user?.nombres || "Desconocido"}
+        />
+        <div className="flex justify-center mt-2">
+          No cuentas con permisos para ver los reportes
+        </div>
+      </>
+    );
+
   return (
     <div className="h-screen bg-white flex flex-col relative">
       {/* Header */}
@@ -382,10 +398,10 @@ export const ReportsPage: React.FC = () => {
                       ? kpi.format === "currency"
                         ? formatPrice(kpi.value)
                         : kpi.format === "units"
-                          ? kpi.value.toLocaleString("es-CL")
-                          : kpi.format === "number"
-                            ? kpi.value.toLocaleString("es-CL")
-                            : formatPrice(kpi.value)
+                        ? kpi.value.toLocaleString("es-CL")
+                        : kpi.format === "number"
+                        ? kpi.value.toLocaleString("es-CL")
+                        : formatPrice(kpi.value)
                       : "N/A"}
                   </span>
                   {/* <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-lg">

@@ -30,6 +30,7 @@ import AbrirCajaModal from "../components/pos/AbrirCajaModal";
 import SearchBarClientes from "../components/pos/SearchBarClientes";
 import { LoginForm } from "../components/auth/LoginForm";
 import AsignarSaldoInicialModal from "../components/pos/AsignarSaldoModal";
+import { useUserPermissions } from "../hooks/usePermissions";
 
 export type TabId = "destacado" | "borradores" | "productos" | "clientes";
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
@@ -89,6 +90,8 @@ const Dashboard: React.FC = () => {
     currentAperturaCaja,
     selectClient,
   } = usePOS();
+
+  const { hasPermission, PERMISOS } = useUserPermissions();
 
   // Alias for selectClient to avoid naming conflicts
   const handleSelectClient = selectClient;
@@ -262,6 +265,10 @@ const Dashboard: React.FC = () => {
       return;
     }
 
+    if (!hasPermission(PERMISOS.RealizarVentas)) {
+      toast.error("No cuentas con permisos para realizar ventas");
+      return;
+    }
     setLoading(true);
 
     try {
@@ -683,9 +690,16 @@ const Dashboard: React.FC = () => {
   if (currentAperturaCaja?.saldo_inicial === 0)
     return <AsignarSaldoInicialModal />;
 
-  if (!authorized && !currentAperturaCaja) return <LoginForm />;
+  const tienePermisoAbrirCaja = hasPermission(PERMISOS.AbrirCaja);
 
-  if (!currentAperturaCaja) return <AbrirCajaModal />;
+  // Si tiene permiso, omitir validación de autorización
+  if (tienePermisoAbrirCaja) {
+    // Usuario con permiso específico - acceso directo
+    if (!currentAperturaCaja) return <AbrirCajaModal />;
+  } else {
+    // Usuario sin permiso específico - validar autorización tradicional
+    if (!authorized && !currentAperturaCaja) return <LoginForm />;
+  }
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">

@@ -8,6 +8,7 @@ import {
   supabase,
 } from "../lib/supabase";
 import toast from "react-hot-toast";
+import { useUserPermissions } from "../hooks/usePermissions";
 
 interface Movement {
   id: number;
@@ -21,6 +22,7 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({
   onClose,
 }) => {
   const { user, empresaId, sucursalId } = useAuth();
+  const { hasPermission, PERMISOS } = useUserPermissions();
   const today = new Date().toISOString().split("T")[0];
 
   const [aperturasDisponibles, setAperturasDisponibles] = useState<
@@ -371,7 +373,11 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({
 
           {/* Lista de movimientos */}
           <div className="space-y-3">
-            {loading ? (
+            {!hasPermission(PERMISOS.ConsultarMovimientos) ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>No tienes permisos para consultar movimientos de caja</p>
+              </div>
+            ) : loading ? (
               <div className="text-center py-4">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                 <p className="text-sm text-gray-500 mt-2">

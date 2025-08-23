@@ -60,6 +60,9 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
 
   // Obtener notificaciones desde Supabase
   React.useEffect(() => {
+    if (!sucursalId) {
+      return;
+    }
     const fetchNotificaciones = async () => {
       setLoading(true);
       const { data, error } = await supabase
