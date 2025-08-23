@@ -699,6 +699,7 @@ const Dashboard: React.FC = () => {
   } else {
     // Usuario sin permiso específico - validar autorización tradicional
     if (!authorized && !currentAperturaCaja) return <LoginForm />;
+    if (!currentAperturaCaja) return <AbrirCajaModal />;
   }
 
   return (
