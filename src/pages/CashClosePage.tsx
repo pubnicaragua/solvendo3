@@ -3,12 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { MovimientoCaja, supabase, Venta } from "../lib/supabase";
 import { usePOS } from "../contexts/POSContext";
 import { useAuth } from "../contexts/AuthContext";
-import {
-  DollarSign,
-  Calendar,
-  Clock,
-  ClipboardList,
-} from "lucide-react";
+import { DollarSign, Calendar, Clock, ClipboardList } from "lucide-react";
 import { HeaderWithMenu } from "../components/common/HeaderWithMenu";
 import toast from "react-hot-toast";
 import AbrirCajaModal from "../components/pos/AbrirCajaModal";
@@ -45,6 +40,7 @@ export const CashClosePage: React.FC = () => {
 
   // Local state
   const [isClosing, setIsClosing] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [ventas, setVentas] = useState<Venta[]>([]);
   const [movimientos, setMovimientos] = useState<MovimientoCaja[]>([]);
   const [montoFinalInput, setMontoFinalInput] = useState("");
@@ -53,10 +49,11 @@ export const CashClosePage: React.FC = () => {
 
   // Cargar ventas y movimientos asociados a la apertura de caja actual
   useEffect(() => {
-    if (!currentAperturaCaja) {
+    if (!currentAperturaCaja && isInitialized) {
       setVentas([]);
       setMovimientos([]);
       setMontoFinalInput("");
+      setIsInitialized(false);
       return;
     }
 
@@ -69,7 +66,7 @@ export const CashClosePage: React.FC = () => {
           .order("fecha", { ascending: true });
 
         if (ventasError) {
-          console.log("ventas ", ventasError)
+          console.log("ventas ", ventasError);
           toast.error("Error cargando ventas.");
           setVentas([]);
         } else {
@@ -91,7 +88,7 @@ export const CashClosePage: React.FC = () => {
         }
 
         // Inicializar monto final con el monto esperado si está vacío
-        if (!montoFinalInput) {
+        if (!montoFinalInput && !isInitialized) {
           const montoEsperadoCalc =
             (currentAperturaCaja?.monto_inicial || 0) +
             (ventasData ?? [])
@@ -104,6 +101,7 @@ export const CashClosePage: React.FC = () => {
               .filter((m: MovimientoCaja) => m.tipo === "retiro")
               .reduce((acc: number, m: MovimientoCaja) => acc + m.monto, 0);
           setMontoFinalInput(montoEsperadoCalc.toFixed(2));
+          setIsInitialized(true);
         }
       } catch {
         toast.error("Error al cargar datos.");
@@ -112,7 +110,7 @@ export const CashClosePage: React.FC = () => {
       }
     };
     fetchData();
-  }, [currentAperturaCaja, montoFinalInput]);
+  }, [currentAperturaCaja]);
 
   // Cálculos resumen totales
   const {
@@ -137,7 +135,7 @@ export const CashClosePage: React.FC = () => {
       .filter((m) => m.tipo === "retiro")
       .reduce((acc, m) => acc + m.monto, 0);
 
-    console.log(currentAperturaCaja)
+    console.log(currentAperturaCaja);
     const montoEsperadoCalc =
       (currentAperturaCaja?.saldo_inicial || 0) +
       ventasEfectivoVal +
@@ -188,11 +186,11 @@ export const CashClosePage: React.FC = () => {
       const success = await closeCaja(montoFinal);
       if (!success) throw new Error("Error al cerrar la caja");
 
-      await signOut()
+      await signOut();
 
       toast.success("✅ Caja cerrada exitosamente.");
 
-      navigate('/login')
+      navigate("/login");
     } catch (error: any) {
       toast.error("Error al cerrar la caja: " + error.message);
     } finally {
@@ -215,26 +213,32 @@ export const CashClosePage: React.FC = () => {
   }
 
   // Si no hay caja abierta, mostrar UI para abrir caja (selección de caja está habilitada)
-  if (!currentAperturaCaja) return <AbrirCajaModal />
+  if (!currentAperturaCaja) return <AbrirCajaModal />;
 
   // Pantalla principal con caja abierta
   const isLoading = contextLoading || isClosing;
 
   const fechaApertura = currentAperturaCaja
     ? new Date(
-      currentAperturaCaja.abierta_en ||
-      currentAperturaCaja.created_at ||
-      Date.now()
-    ).toLocaleDateString("es-CL")
+        currentAperturaCaja.abierta_en ||
+          currentAperturaCaja.created_at ||
+          Date.now()
+      ).toLocaleDateString("es-CL")
     : "";
   const horaCierrePropuesta = new Date().toLocaleTimeString("es-CL", {
     hour: "2-digit",
     minute: "2-digit",
   });
 
-  const cajaNombreReal = user?.nombres
-    ? `${user.nombres}`
-    : "Usuario";
+  const cajaNombreReal = user?.nombres ? `${user.nombres}` : "Usuario";
+
+  const handleMontoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    // regex: solo números, opcional un punto y decimales
+    if (/^\d*\.?\d*$/.test(val)) {
+      setMontoFinalInput(val);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F8F9FB] flex flex-col font-sans">
@@ -313,8 +317,8 @@ export const CashClosePage: React.FC = () => {
                   label="Efectivo (2)"
                   value={`+ ${formatPrice(
                     (currentAperturaCaja?.monto_inicial || 0) +
-                    ventasEfectivo +
-                    totalIngresos
+                      ventasEfectivo +
+                      totalIngresos
                   )}`}
                 />
                 <SummaryLine
@@ -341,13 +345,12 @@ export const CashClosePage: React.FC = () => {
                     Total Real
                   </label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     value={montoFinalInput}
-                    onChange={(e) => setMontoFinalInput(e.target.value)}
+                    onChange={handleMontoChange}
                     className="w-full text-center text-xl font-bold text-[#505050] bg-transparent focus:outline-none"
                     placeholder="0"
-                    min={0}
-                    step={0.01}
                   />
                 </div>
                 <div className="bg-[#F8F9FB] p-4 rounded-lg border border-[#E0E0E0] flex flex-col justify-between">
@@ -355,12 +358,13 @@ export const CashClosePage: React.FC = () => {
                     Diferencia
                   </label>
                   <p
-                    className={`text-xl font-bold ${diferencia === 0
-                      ? "text-[#2196F3]"
-                      : diferencia > 0
+                    className={`text-xl font-bold ${
+                      diferencia === 0
+                        ? "text-[#2196F3]"
+                        : diferencia > 0
                         ? "text-green-500"
                         : "text-red-500"
-                      }`}
+                    }`}
                   >
                     {formatPrice(Math.abs(diferencia))}
                   </p>
