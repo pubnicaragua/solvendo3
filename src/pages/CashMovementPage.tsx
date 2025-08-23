@@ -2,7 +2,11 @@ import React, { useState, useEffect } from "react";
 import { DollarSign, X as XIcon } from "lucide-react";
 import { HeaderWithMenu } from "../components/common/HeaderWithMenu";
 import { useAuth } from "../contexts/AuthContext";
-import { AperturaCaja, AperturaCajaConUsuario, supabase } from "../lib/supabase";
+import {
+  AperturaCaja,
+  AperturaCajaConUsuario,
+  supabase,
+} from "../lib/supabase";
 import toast from "react-hot-toast";
 
 interface Movement {
@@ -63,7 +67,7 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({
         }
 
         // 2. Traer usuarios únicos
-        const usuarioIds = [...new Set(aperturas.map(a => a.usuario_id))];
+        const usuarioIds = [...new Set(aperturas.map((a) => a.usuario_id))];
         const { data: usuarios, error: usuariosError } = await supabase
           .from("usuarios")
           .select("id, nombres, apellidos")
@@ -75,14 +79,15 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({
         }
 
         // 3. Unir datos manualmente
-        const aperturasConUsuario: AperturaCajaConUsuario[] = aperturas.map(a => ({
-          ...a,
-          usuario: usuarios?.find(u => u.id === a.usuario_id) || null
-        }));
+        const aperturasConUsuario: AperturaCajaConUsuario[] = aperturas.map(
+          (a) => ({
+            ...a,
+            usuario: usuarios?.find((u) => u.id === a.usuario_id) || null,
+          })
+        );
 
         setAperturasDisponibles(aperturasConUsuario);
         setAperturaSeleccionada(aperturasConUsuario[0].id);
-
       } catch (error) {
         console.error("Error loading aperturas:", error);
         toast.error("Error al cargar las aperturas de caja");
@@ -160,6 +165,10 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({
           sesiones_caja_id: aperturaSeleccionada,
           usuario_id: user.id,
           empresa_id: empresaId,
+          sucursal_id: sucursalId,
+          caja_id: aperturasDisponibles.find(
+            (a) => a.id === aperturaSeleccionada
+          )?.caja_id,
           tipo,
           monto: montoNumber,
           observacion: obs || null,
@@ -197,7 +206,7 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({
     const fechaFormateada = fecha.toLocaleDateString("es-CL", {
       day: "2-digit",
       month: "2-digit",
-      year: "numeric"
+      year: "numeric",
     });
     const usuario = apertura.usuario
       ? `${apertura.usuario.nombres}`
