@@ -102,7 +102,9 @@ export const CashClosePage: React.FC = () => {
             (movimientosData ?? [])
               .filter((m: MovimientoCaja) => m.tipo === "retiro")
               .reduce((acc: number, m: MovimientoCaja) => acc + m.monto, 0);
-          setMontoFinalInput(montoEsperadoCalc.toFixed(2));
+          if (montoEsperadoCalc > 0) {
+            setMontoFinalInput(montoEsperadoCalc.toFixed(2));
+          }
           setIsInitialized(true);
         }
       } catch {
