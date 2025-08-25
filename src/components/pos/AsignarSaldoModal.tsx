@@ -51,6 +51,7 @@ function AsignarSaldoInicialModal() {
             setCurrentAperturaCaja({
                 ...currentAperturaCaja,
                 saldo_inicial: parseFloat(montoInicial),
+                inicializada: true
             });
 
             setMontoInicial("");

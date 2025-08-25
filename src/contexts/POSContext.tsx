@@ -694,6 +694,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
           abierta_en: now,
           creada_en: now,
           actualizada_en: now,
+          inicializada: false,
         })
         .select()
         .single();
