@@ -694,7 +694,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
           abierta_en: now,
           creada_en: now,
           actualizada_en: now,
-          inicializada: false,
+          inicializada: true,
         })
         .select()
         .single();
@@ -777,7 +777,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
           estado: "cerrada",
           saldo_final: montoFinal,
           monto_efectivo: totalVentasEfectivo,
-          monto_tarjeta: 0, // aquí podrías calcularlo también si lo necesitas
+          monto_tarjeta: 0,
           monto_transferencia: 0,
           monto_otros: 0,
           observaciones: observaciones || null,

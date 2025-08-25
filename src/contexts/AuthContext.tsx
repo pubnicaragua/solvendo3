@@ -8,6 +8,7 @@ import React, {
 import { supabase, supabaseAnonKey, supabaseUrl, Usuario, UsuarioEmpresa } from "../lib/supabase";
 import toast from "react-hot-toast";
 import { createClient } from "@supabase/supabase-js";
+import { useNavigate } from "react-router-dom";
 
 interface AuthContextType {
   user: Usuario | null;
@@ -25,10 +26,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<Usuario | null>(null);
+  const navigator = useNavigate()
   const [authorized, setAuthorized] = useState<boolean>(false);
   const [empresaId, setEmpresaId] = useState<string | null>(null);
   const [sucursalId, setSucursalId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   // Ref para evitar llamadas simultáneas a fetchUserProfile
   const isFetchingProfile = useRef(false);
@@ -47,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from("usuarios")
         .select("*")
         .eq("id", userId)
+        .eq("sesion_activa", true)
         .single();
 
       setUser(userData);
@@ -84,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     } catch (error) {
       console.error("❌ Error crítico en fetchUserProfile:", error);
-
+      setUser(null)
       setEmpresaId(null);
     } finally {
       setLoading(false);
@@ -241,44 +245,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      const { error: errorDesactivarSesion } = await
-        supabase.
-          from("usuarios").
-          update({ sesion_activa: false }).
-          eq("id", user?.id)
-
-      if (errorDesactivarSesion) {
-        toast.error("Error al desactivar la sesión del usuario")
-        return
+      setIsSigningOut(true)
+      // 1. Cerrar sesión en Supabase
+      const { error: errorSupabase } = await supabase.auth.signOut();
+      if (errorSupabase) {
+        toast.error("Error cerrando sesión en Supabase");
+        return;
       }
 
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        throw error;
+      // 2. Actualizar tabla usuarios
+      if (user?.id) {
+        const { error: errorDesactivarSesion } = await supabase
+          .from("usuarios")
+          .update({ sesion_activa: false })
+          .eq("id", user.id);
+
+        if (errorDesactivarSesion) {
+          console.error("Error al desactivar la sesión en usuarios:", errorDesactivarSesion);
+          // aquí no retornamos, porque ya cerraste la sesión de Supabase
+        }
       }
+
+      // 3. Limpiar estados locales
       setEmpresaId(null);
-      setAuthorized(false)
+      setAuthorized(false);
       setUser(null);
     } catch (error) {
-      throw error;
+      console.error("Error en signOut:", error);
+    } finally {
+      setIsSigningOut(false)
     }
   };
+
 
   useEffect(() => {
     if (!user) return;
 
-    const interval = setInterval(async () => {
-      const { data, error } = await supabase
-        .from("usuarios")
-        .select("sesion_activa")
-        .eq("id", user.id)
-        .single();
+    const channel = supabase
+      .channel('sesion_activa_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'usuarios',
+          filter: `id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log("Cambio detectado:", payload);
 
-      if (!error && data && data.sesion_activa === false) {
-        await signOut();
-      }
-    }, 2000);
-    return () => clearInterval(interval);
+          if (payload.new.sesion_activa === false) {
+            signOut();
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log("Estado canal:", status);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   useEffect(() => {
