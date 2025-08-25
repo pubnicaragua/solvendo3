@@ -208,12 +208,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data: usuarioEmpresa, error: errorUsuarioEmpresa } = await
         supabase.from("usuario_empresa").select("rol").eq("usuario_id", usuario.id).single()
 
-      console.log(usuarioEmpresa)
-
       if (usuarioEmpresa?.rol === "empleado") {
         setAuthorized(false)
       } else {
         setAuthorized(true)
+      }
+
+      const { error: errorActivarSesion } = await supabase.from("usuarios").update({
+        sesion_activa: true,
+      }).eq("id", usuario.id)
+
+      if (errorActivarSesion) {
+        toast.error("Error al activar la sesión")
+        return
       }
 
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -234,6 +241,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      const { error: errorDesactivarSesion } = await
+        supabase.
+          from("usuarios").
+          update({ sesion_activa: false }).
+          eq("id", user?.id)
+
+      if (errorDesactivarSesion) {
+        toast.error("Error al desactivar la sesión del usuario")
+        return
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) {
         throw error;
@@ -245,6 +263,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw error;
     }
   };
+
+  useEffect(() => {
+    if (!user) return;
+
+    const interval = setInterval(async () => {
+      const { data, error } = await supabase
+        .from("usuarios")
+        .select("sesion_activa")
+        .eq("id", user.id)
+        .single();
+
+      if (!error && data && data.sesion_activa === false) {
+        await signOut();
+      }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   useEffect(() => {
     setLoading(true);
