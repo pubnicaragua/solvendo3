@@ -687,7 +687,9 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  if (currentAperturaCaja?.saldo_inicial === 0)
+  console.log(currentAperturaCaja?.inicializada)
+
+  if (currentAperturaCaja?.inicializada === false)
     return <AsignarSaldoInicialModal />;
 
   const tienePermisoAbrirCaja = hasPermission(PERMISOS.AbrirCaja);

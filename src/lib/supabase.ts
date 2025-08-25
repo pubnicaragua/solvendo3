@@ -160,6 +160,7 @@ export interface AperturaCaja {
   monto_final?: number
   diferencia?: number
   estado: 'abierta' | 'cerrada'
+  inicializada: boolean
   observaciones?: string
   created_at: string
 }
