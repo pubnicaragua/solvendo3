@@ -75,6 +75,7 @@ export interface POSContextType {
 
   // Caja
   cajaAbierta: boolean;
+  cajaLoading: boolean;
   currentAperturaCaja: AperturaCaja | null;
   setCurrentAperturaCaja: (caja: any) => void
   checkCajaStatus: () => Promise<void>;
@@ -119,6 +120,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
   // --- Estados ---
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(false);
+  const [cajaLoading, setCajaLoading] = useState<boolean>(true)
   const [carrito, setCarrito] = useState<CartItem[]>([]);
   const total = carrito.reduce((sum, i) => sum + i.precio * i.quantity, 0);
   const [borradores, setBorradores] = useState<DraftSale[]>([]);
@@ -617,12 +619,14 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
   const checkCajaStatus = useCallback(async () => {
     if (!user) {
       setCajaAbierta(false);
+      setCajaLoading(false)
       setCurrentAperturaCaja(null);
       return;
     }
 
     try {
       setLoading(true);
+      setCajaLoading(true)
 
       const { data, error } = await supabase
         .from("sesiones_caja")
@@ -650,6 +654,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
       setCurrentAperturaCaja(null);
     } finally {
       setLoading(false);
+      setCajaLoading(false)
     }
   }, [user]);
 
@@ -679,6 +684,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
 
     try {
       setLoading(true);
+      setCajaLoading(true)
 
       const now = new Date().toISOString();
 
@@ -719,6 +725,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
       toast.error("Error al abrir la caja: " + error.message);
       return false;
     } finally {
+      setCajaLoading(false)
       setLoading(false);
     }
   };
@@ -1052,6 +1059,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
     generarDTE,
     enviarDTEAlSII,
     setCurrentAperturaCaja,
+    cajaLoading,
   };
 
   return <POSContext.Provider value={value}>{children}</POSContext.Provider>;
