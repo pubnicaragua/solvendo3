@@ -30,7 +30,7 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
   showClock = true,
 }) => {
   const { toggleSidebar } = useSidebar();
-  const { user, signOut } = useAuth();
+  const { user, signOut, sucursalId, empresaId } = useAuth();
   const navigate = useNavigate();
   const { productos } = usePOS();
   const [time, setTime] = React.useState("");
@@ -38,7 +38,6 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
     any[]
   >([]);
   const [loading, setLoading] = React.useState(true);
-  const { sucursalId } = useAuth();
 
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
@@ -65,11 +64,20 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
     }
     const fetchNotificaciones = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("notificaciones")
-        .select("*")
-        .eq("sucursal_id", sucursalId)
-        .order("created_at", { ascending: false });
+      let query = supabase.from("notificaciones").select("*");
+
+      if (user?.rol === "admin") {
+        // 🔑 filtrar por empresa
+        query = query.eq("empresa_id", empresaId);
+      } else if (user?.rol === "supervisor") {
+        // 🔑 filtrar por sucursal
+        query = query.eq("sucursal_id", sucursalId);
+      } else if (user?.rol === "empleado") {
+        // 🔑 solo puede ver sus propias "ayudas"
+        query = query.eq("usuario_id", user.id);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Error al obtener notificaciones:", error.message);
@@ -106,13 +114,13 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
       mensaje: notif.mensaje,
       hora: notif.created_at
         ? new Date(notif.created_at).toLocaleTimeString("es-CL", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
+          hour: "2-digit",
+          minute: "2-digit",
+        })
         : today.toLocaleTimeString("es-CL", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       icono: <Bell className="w-4 h-4 text-blue-500" />,
     }));
 
@@ -183,7 +191,7 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
 
               <div
                 className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-2 rounded-lg"
-                // onClick={() => setShowLogoutModal(true)}
+              // onClick={() => setShowLogoutModal(true)}
               >
                 {userAvatarUrl ? (
                   <img
