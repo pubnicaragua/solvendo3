@@ -66,7 +66,7 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
       setLoading(true);
       let query = supabase.from("notificaciones").select("*");
 
-      if (user?.rol === "admin" && "administrador") {
+      if (user?.rol === "admin" || "administrador") {
         // 🔑 filtrar por empresa
         query = query.eq("empresa_id", empresaId);
       } else if (user?.rol === "supervisor") {
