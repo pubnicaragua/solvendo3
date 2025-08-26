@@ -66,24 +66,23 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
       setLoading(true);
       let query = supabase.from("notificaciones").select("*");
 
-      if (user?.rol === "admin") {
+      if (user?.rol === "admin" && "administrador") {
         // 🔑 filtrar por empresa
         query = query.eq("empresa_id", empresaId);
       } else if (user?.rol === "supervisor") {
         // 🔑 filtrar por sucursal
         query = query.eq("sucursal_id", sucursalId);
-      } else if (user?.rol === "empleado") {
-        // 🔑 solo puede ver sus propias "ayudas"
-        query = query.eq("usuario_id", user.id);
       }
 
-      const { data, error } = await query;
-
-      if (error) {
-        console.error("Error al obtener notificaciones:", error.message);
-      } else {
-        setSupabaseNotificaciones(data || []);
+      if (user?.rol !== "empleado") {
+        const { data, error } = await query;
+        if (error) {
+          console.error("Error al obtener notificaciones:", error.message);
+        } else {
+          setSupabaseNotificaciones(data || []);
+        }
       }
+
       setLoading(false);
     };
 
