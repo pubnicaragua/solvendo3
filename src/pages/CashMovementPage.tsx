@@ -53,7 +53,9 @@ export const CashMovementPage: React.FC<{ onClose: () => void }> = ({
           .from("sesiones_caja")
           .select("id, caja_id, usuario_id, abierta_en, saldo_inicial, estado")
           .eq("sucursal_id", sucursalId)
-          .order("abierta_en", { ascending: false });
+          .eq("estado", "abierta")
+          .eq("usuario_id", user?.id)
+          .order("abierta_en", { ascending: false })
 
         if (aperturasError) {
           console.error("Error loading aperturas:", aperturasError);
