@@ -14,6 +14,7 @@ interface AuthContextType {
   user: Usuario | null;
   empresaId: string | null;
   authorized: boolean;
+  initialized: boolean
   sucursalId: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
@@ -32,6 +33,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [sucursalId, setSucursalId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+
 
   // Ref para evitar llamadas simultáneas a fetchUserProfile
   const isFetchingProfile = useRef(false);
@@ -351,6 +354,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       sucursalId,
       loading,
       signIn,
+      initialized,
       authorized,
       authorize,
       signOut,

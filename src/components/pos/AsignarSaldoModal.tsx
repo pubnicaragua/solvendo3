@@ -36,7 +36,7 @@ function AsignarSaldoInicialModal() {
 
             const { error } = await supabase
                 .from("sesiones_caja")
-                .update({ saldo_inicial: parseFloat(montoInicial) })
+                .update({ saldo_inicial: parseFloat(montoInicial), inicializada: true })
                 .eq("id", currentAperturaCaja.id);
 
             if (error) {

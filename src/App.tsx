@@ -34,7 +34,6 @@ const AppRoutes: React.FC = () => {
   }
 
   if (!user) {
-
     return (
       <Routes> {/* Nuevas Routes aquí para rutas públicas */}
         <Route path="/login" element={<LoginPage />} />

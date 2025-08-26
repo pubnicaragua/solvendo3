@@ -21,7 +21,7 @@ import {
   Legend,
 } from "recharts";
 import { HeaderWithMenu } from "../components/common/HeaderWithMenu";
-import { supabase } from "../lib/supabase";
+import { Caja, supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
 import toast from "react-hot-toast";
 import { useUserPermissions } from "../hooks/usePermissions";
@@ -76,6 +76,7 @@ export const ReportsPage: React.FC = () => {
   const [lastUpdate, setLastUpdate] = useState<string>(
     new Date().toLocaleString("es-CL")
   );
+  const [cajasData, setCajasData] = useState<Caja[]>([]);
 
   // Filter sidebar state
   const [fInicio, setFInicio] = useState(
@@ -122,6 +123,37 @@ export const ReportsPage: React.FC = () => {
     return null;
   };
 
+  const loadCajas = useCallback(async () => {
+    if (!empresaId) return;
+
+    try {
+      const { data: cajas, error: errorCajas } = await supabase
+        .from("cajas")
+        .select("*")
+        .eq("empresa_id", empresaId)
+        .eq("activo", true); // Solo cajas activas  
+
+      if (errorCajas) {
+        throw errorCajas;
+      }
+
+      // Guardar los datos de cajas  
+      setCajasData(cajas || []);
+
+      // Configurar el estado de filtros con todas las cajas seleccionadas  
+      const cajasObject = (cajas || []).reduce((acc, caja) => {
+        acc[caja.id] = true;
+        return acc;
+      }, {} as { [key: string]: boolean });
+
+      setCajeros(cajasObject);
+    } catch (error) {
+      console.error("Error loading cajas:", error);
+      setCajasData([]);
+      setCajeros({});
+    }
+  }, [empresaId]);
+
   // Load KPIs
   const loadData = useCallback(async () => {
     if (!empresaId) return;
@@ -129,6 +161,9 @@ export const ReportsPage: React.FC = () => {
     setKpiError(null);
 
     try {
+      // Jalar y setear cajas
+      await loadCajas()
+
       // Nota: Aquí puedes usar productoMovimiento para filtrar la consulta si aplica
 
       const { data: ventas, error } = await supabase
@@ -398,10 +433,10 @@ export const ReportsPage: React.FC = () => {
                       ? kpi.format === "currency"
                         ? formatPrice(kpi.value)
                         : kpi.format === "units"
-                        ? kpi.value.toLocaleString("es-CL")
-                        : kpi.format === "number"
-                        ? kpi.value.toLocaleString("es-CL")
-                        : formatPrice(kpi.value)
+                          ? kpi.value.toLocaleString("es-CL")
+                          : kpi.format === "number"
+                            ? kpi.value.toLocaleString("es-CL")
+                            : formatPrice(kpi.value)
                       : "N/A"}
                   </span>
                   {/* <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-lg">
@@ -602,26 +637,26 @@ export const ReportsPage: React.FC = () => {
             {/* Cashiers */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Cajeros
+                Cajas
               </label>
               <div className="space-y-2 text-sm">
-                {Object.entries(cajeros).map(([key, val]) => (
+                {cajasData.map((caja) => (
                   <label
-                    key={key}
+                    key={caja.id}
                     className="flex items-center gap-2 cursor-pointer"
                   >
                     <input
                       type="checkbox"
-                      checked={val}
+                      checked={cajeros[caja.id] || false}
                       onChange={(e) =>
                         setCajeros((prev) => ({
                           ...prev,
-                          [key]: e.target.checked,
+                          [caja.id]: e.target.checked,
                         }))
                       }
                       className="rounded text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
-                    <span className="text-gray-800">{key.toUpperCase()}</span>
+                    <span className="text-gray-800">{caja.nombre.toUpperCase()}</span>
                   </label>
                 ))}
               </div>
