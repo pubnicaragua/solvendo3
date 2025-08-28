@@ -152,7 +152,7 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
 
         <div className="flex items-center gap-4">
           {/* Mostrar notificación solo si hay productos con stock bajo */}
-          {productosStockBajo.length > 0 && (
+          {/* {productosStockBajo.length > 0 && (
             <div
               className="relative cursor-pointer"
               onClick={() => setShowNotifications(true)}
@@ -163,7 +163,7 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
                 </span>
               </div>
             </div>
-          )}
+          )} */}
 
           {showClock && (
             <div className="flex items-center px-3 py-1 bg-gray-100 rounded-lg">
