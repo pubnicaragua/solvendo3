@@ -159,7 +159,7 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
             >
               <div className="bg-red-100 border border-red-200 rounded-lg px-3 py-1 text-xs text-red-800">
                 <span className="font-medium">
-                  ⚠️ Stock bajo ({productosStockBajo.length})
+                  ⚠️
                 </span>
               </div>
             </div>

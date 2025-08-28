@@ -851,17 +851,10 @@ const Dashboard: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  <button
-                    onClick={() => setShowClientModal(true)}
-                    className="absolute right-8 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800"
-                    title="Agregar cliente"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
                   {currentCliente && (
                     <button
                       onClick={() => selectClient(null)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-red-500 hover:text-red-700"
+                      className="absolute top-1/2 right-6 -translate-y-1/2 text-red-500 hover:text-red-700"
                       title="Quitar cliente"
                     >
                       <XIcon className="w-4 h-4" />
