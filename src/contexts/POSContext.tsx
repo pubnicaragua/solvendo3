@@ -65,6 +65,7 @@ export interface POSContextType {
   procesarVenta: (
     metodoPago: string,
     tipoDte: "boleta" | "factura" | "nota_credito",
+    cardType?: "Credito" | "Debito" | null,
     clienteId?: string,
     enviarSII?: boolean
   ) => Promise<ApiResult<Venta>>;
@@ -503,6 +504,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
   const procesarVenta = async (
     metodoPago: string,
     tipoDte: "boleta" | "factura" | "nota_credito",
+    cardType: string,
     clienteId?: string,
     enviarSII: boolean = false
   ): Promise<ApiResult<Venta>> => {
@@ -557,6 +559,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
           subtotal: total,
           total: total,
           estado: "completada",
+          tipo_tarjeta: cardType
         })
         .select()
         .single();

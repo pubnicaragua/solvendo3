@@ -109,7 +109,7 @@ const Dashboard: React.FC = () => {
   const [selectedMethod, setSelectedMethod] = useState<string>("efectivo");
   const [selectedDte, setSelectedDte] = useState<string>("boleta");
   const [montoRecibido, setMontoRecibido] = useState<number>(0);
-
+  const [cardType, setCardType] = useState<"Credito" | "Debito" | null>(null)
   // Estados para opciones de entrega
   const [tipoEntrega, setTipoEntrega] = useState<
     "inmediata" | "despacho" | null
@@ -266,6 +266,11 @@ const Dashboard: React.FC = () => {
       return;
     }
 
+    if (selectedMethod === "tarjeta" && cardType === null) {
+      toast.error("Se necesita saber el tipo de tarjeta")
+      return
+    }
+
     if (!hasPermission(PERMISOS.RealizarVentas)) {
       toast.error("No cuentas con permisos para realizar ventas");
       return;
@@ -301,7 +306,8 @@ const Dashboard: React.FC = () => {
       const result = await procesarVenta(
         selectedMethod,
         selectedDte as "boleta" | "factura" | "nota_credito",
-        currentCliente?.id
+        cardType,
+        currentCliente?.id,
       );
 
       if (result.success) {
@@ -1250,11 +1256,31 @@ const Dashboard: React.FC = () => {
 
                 {/* No terminal selection for card payments */}
                 {selectedMethod === "tarjeta" && (
-                  <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-sm text-yellow-700">
-                      Seleccione el tipo de tarjeta al momento de pagar con el
-                      datáfono
+                  <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl shadow-sm">
+                    <p className="text-sm text-yellow-800 mb-3 font-medium">
+                      Tipo de tarjeta
                     </p>
+
+                    <div className="relative">
+                      <select
+                        className="w-full appearance-none bg-white border border-yellow-300 rounded-lg py-2 px-4 pr-10 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
+                        value={cardType ?? ""}
+                        onChange={(e) => setCardType(e.target.value as "Credito" | "Debito")}
+                      >
+                        <option value="">-- Seleccione --</option>
+                        <option value="Credito">Crédito</option>
+                        <option value="Debito">Débito</option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <svg
+                          className="fill-current h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M5.516 7.548l4.484 4.484 4.484-4.484-1.032-1.032L10 10.468 6.548 6.516z" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                 )}
 
