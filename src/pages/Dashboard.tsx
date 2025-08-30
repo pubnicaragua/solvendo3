@@ -297,7 +297,7 @@ const Dashboard: React.FC = () => {
     }
 
     if (tipoEntrega === "despacho" && !currentCliente) {
-      toast.error("Debe seleccionar un cliente para factura electrónica");
+      toast.error("Debe seleccionar un cliente para despachar");
       return;
     }
 
@@ -347,8 +347,9 @@ const Dashboard: React.FC = () => {
       const result = await procesarVenta(
         selectedMethod,
         selectedDte as "boleta" | "factura" | "nota_credito",
+        tipoEntrega,
         cardType,
-        currentCliente?.id,
+        currentCliente,
       );
 
       if (result.success) {

@@ -65,6 +65,7 @@ export interface POSContextType {
   procesarVenta: (
     metodoPago: string,
     tipoDte: "boleta" | "factura" | "nota_credito",
+    tipoEntrega?: "inmediata" | "despacho" | null,
     cardType?: "Credito" | "Debito" | null,
     clienteId?: string,
     enviarSII?: boolean
@@ -504,25 +505,21 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
   const procesarVenta = async (
     metodoPago: string,
     tipoDte: "boleta" | "factura" | "nota_credito",
-    cardType: string,
-    clienteId?: string,
+    tipoEntrega?: "inmediata" | "despacho",
+    cardType?: string,
+    cliente?: Cliente | null,
     enviarSII: boolean = false
   ): Promise<ApiResult<Venta>> => {
     if (!cajaAbierta || !currentAperturaCaja) {
-      toast.error(
-        "🔴 Error: La caja está cerrada. No se puede procesar la venta."
-      );
+      toast.error("🔴 Error: La caja está cerrada. No se puede procesar la venta.");
       return { success: false, error: "Caja cerrada" };
     }
     if (!user || !empresaId || !sucursalId || carrito.length === 0) {
-      return {
-        success: false,
-        error: "Datos incompletos para procesar la venta.",
-      };
+      return { success: false, error: "Datos incompletos para procesar la venta." };
     }
 
     // Validar cliente para factura
-    if (tipoDte === "factura" && !clienteId) {
+    if (tipoDte === "factura" && !cliente?.id) {
       return {
         success: false,
         error: "Debe seleccionar un cliente para factura electrónica",
@@ -534,7 +531,6 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
       const timestamp = Date.now();
       let folio: string;
 
-      // Generar folio según tipo de documento
       if (tipoDte === "boleta") {
         folio = `${timestamp}`;
       } else if (tipoDte === "factura") {
@@ -543,7 +539,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
         folio = `V${timestamp}`;
       }
 
-      // Insertar la venta directamente
+      // Insertar la venta
       const { data: venta, error } = await supabase
         .from("ventas")
         .insert({
@@ -551,7 +547,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
           sucursal_id: sucursalId,
           caja_id: currentAperturaCaja.caja_id,
           sesiones_caja_id: currentAperturaCaja.id,
-          cliente_id: clienteId || null,
+          cliente_id: cliente?.id || null,
           usuario_id: user.id,
           folio: folio,
           tipo_dte: tipoDte,
@@ -559,7 +555,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
           subtotal: total,
           total: total,
           estado: "completada",
-          tipo_tarjeta: cardType
+          tipo_tarjeta: cardType,
         })
         .select()
         .single();
@@ -581,9 +577,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
         subtotal: item.precio * item.quantity,
       }));
 
-      const { error: itemsError } = await supabase
-        .from("venta_items")
-        .insert(ventaItems);
+      const { error: itemsError } = await supabase.from("venta_items").insert(ventaItems);
 
       if (itemsError) {
         console.error("Error al insertar items de venta:", itemsError);
@@ -591,25 +585,48 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
         return { success: false, error: itemsError?.message };
       }
 
-      // Si el método de pago es efectivo, registrar el movimiento de caja
-      if (metodoPago.toLowerCase() === "efectivo") {
-        const { error: movError } = await supabase
-          .from("movimientos_caja")
+      // Si tipoEntrega es "despacho", registrar en la tabla "despachos"
+      if (tipoEntrega === "despacho") {
+        const { error: despachoError } = await supabase
+          .from("despachos")
           .insert({
-            apertura_caja_id: currentAperturaCaja.id,
-            usuario_id: user.id,
-            tipo: "venta",
-            monto: total,
-            observacion: `Venta ${venta.folio}`,
+            empresa_id: empresaId,
+            sucursal_id: sucursalId,
+            entregado_por: null,
+            folio: venta.folio,
+            fecha: new Date().toISOString(),
+            rut: cliente?.rut || null,
+            direccion: cliente?.direccion || null,
+            estado: "pendiente",
+            cliente_id: cliente?.id || null,
           });
 
-        if (movError) {
-          console.error("Error al registrar movimiento de caja:", movError);
-          // No fallamos la venta por esto, solo registramos el error
+        if (despachoError) {
+          console.error("Error al registrar despacho:", despachoError);
+          toast.error("Error al registrar el despacho.");
+          return { success: false, error: despachoError?.message };
         }
       }
 
-      toast.success(`Venta #${venta.folio} procesada.`);
+      // Registrar movimiento de caja si es efectivo
+      if (metodoPago.toLowerCase() === "efectivo") {
+        const { error: movError } = await supabase.from("movimientos_caja").insert({
+          apertura_caja_id: currentAperturaCaja.id,
+          usuario_id: user.id,
+          tipo: "venta",
+          monto: total,
+          observacion: `Venta ${venta.folio}`,
+        });
+
+        if (movError) {
+          console.error("Error al registrar movimiento de caja:", movError);
+          // No se cancela la venta por esto
+        }
+      }
+
+      toast.success(
+        `Venta #${venta.folio} procesada.${tipoEntrega === "despacho" ? " Despacho registrado." : ""}`
+      );
       return { success: true, data: venta as Venta };
     } catch (error: any) {
       console.error("Error en procesarVenta:", error);
@@ -617,6 +634,7 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
       return { success: false, error: error.message };
     }
   };
+
 
   // --- Gestión de Caja ---
   const checkCajaStatus = useCallback(async () => {
