@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   RotateCcw,
   Search,
@@ -71,6 +71,30 @@ export const ReturnsPage: React.FC = () => {
   const [venta, setVenta] = useState<any>(null);
   const [productos, setProductos] = useState<any[]>([]);
   const [clientes, setClientes] = useState<any[]>([]);
+
+  const [userEmpresa, setUserEmpresa] = useState({})
+
+
+  const loadEmpresa = useCallback(async () => {
+    if (!empresaId) return // si no hay empresaId no hace nada
+
+    const { data: empresa, error } = await supabase
+      .from("empresas")
+      .select("*")
+      .eq("id", empresaId)
+      .single()
+
+    if (error) {
+      toast.error("Error al obtener los datos de la empresa")
+      return
+    }
+
+    setUserEmpresa(empresa)
+  }, [empresaId])
+
+  useEffect(() => {
+    loadEmpresa()
+  }, [])
 
   // Cargar productos y clientes de la empresa logueada
   const loadProductos = async () => {
@@ -319,10 +343,12 @@ export const ReturnsPage: React.FC = () => {
       const printContent = `  
         <div style="font-family: 'Courier New', monospace; width: 80mm; margin: 0 auto; padding: 20px;">  
           <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 15px; margin-bottom: 15px;">  
-            <div style="font-size: 16px; font-weight: bold;">ANROLTEC SPA</div>  
-            <div style="font-size: 10px;">RUT: 78.168.951-3</div>  
-            <div style="font-size: 10px;">Av. Providencia 1234, Santiago</div>  
-          </div>  
+          <div class="company">${userEmpresa?.razon_social || ""}</div>
+          <div class="info">${userEmpresa?.giro || ""}</div>
+          <div class="info">RUT: ${userEmpresa?.rut || ""}</div>
+          <div class="info">${userEmpresa?.direccion + "," || ""} ${userEmpresa?.comuna | ""}</div>
+          <div class="info">${userEmpresa?.telefono || ""}</div>  
+        </div>  
             
           <div style="text-align: center; font-weight: bold; margin: 10px 0;">  
             NOTA DE CRÉDITO  

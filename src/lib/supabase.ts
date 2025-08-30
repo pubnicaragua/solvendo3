@@ -33,7 +33,7 @@ export interface Usuario {
   password_hash?: string
   nombres: string
   apellidos: string
-  rol: 'admin' | 'empleado' | 'supervisor' | 'cajero'
+  rol: 'admin' | 'empleado' | 'supervisor' | 'cajero' | 'administrador'
   rut: string
   telefono?: string
   direccion?: string

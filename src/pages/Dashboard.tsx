@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { usePOS } from "../contexts/POSContext";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -115,6 +115,7 @@ const Dashboard: React.FC = () => {
     "inmediata" | "despacho" | null
   >(null);
   const [cupon, setCupon] = useState(false);
+  const [userEmpresa, setUserEmpresa] = useState({})
 
   // Estados para búsquedas
   const [productSearchTerm, setProductSearchTerm] = useState("");
@@ -137,6 +138,7 @@ const Dashboard: React.FC = () => {
           loadProductos(),
           loadBorradores(),
           loadPromociones(),
+          loadEmpresa()
         ]);
       } catch (error) {
         console.error("Error al cargar datos iniciales:", error);
@@ -148,6 +150,26 @@ const Dashboard: React.FC = () => {
     setLoading(true);
     fetchInitialData();
   }, [loadClientes, loadProductos, loadBorradores, loadPromociones]);
+
+  const loadEmpresa = useCallback(async () => {
+    if (!empresaId) return // si no hay empresaId no hace nada
+
+    const { data: empresa, error } = await supabase
+      .from("empresas")
+      .select("*")
+      .eq("id", empresaId)
+      .single()
+
+    if (error) {
+      toast.error("Error al obtener los datos de la empresa")
+      return
+    }
+
+    console.log(empresa)
+
+    setUserEmpresa(empresa)
+  }, [empresaId])
+
 
   const handleCreateClient = () => {
     setShowPaymentModal(false);
@@ -411,11 +433,11 @@ const Dashboard: React.FC = () => {
 <body>
   <div class="receipt">
     <div class="header">
-      <div class="company">ANROLTEC SPA</div>
-      <div class="info">Servicios de Tecnología</div>
-      <div class="info">RUT: 78.168.951-3</div>
-      <div class="info">Av. Providencia 1234, Santiago</div>
-      <div class="info">Teléfono: +56 2 2345 6789</div>
+      <div class="company">${userEmpresa?.razon_social || ""}</div>
+      <div class="info">${userEmpresa?.giro || ""}</div>
+      <div class="info">RUT: ${userEmpresa?.rut || ""}</div>
+      <div class="info">${userEmpresa?.direccion + "," || ""} ${userEmpresa?.comuna | ""}</div>
+      <div class="info">${userEmpresa?.telefono || ""}</div>
     </div>
     
     <div class="document-type">${selectedDte.toUpperCase()}</div>

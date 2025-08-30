@@ -1,7 +1,7 @@
 import { AlertCircle, PlayCircle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
-import { Usuario, AperturaCaja, Caja, supabase } from "../../lib/supabase";
+import { Usuario, AperturaCaja, Caja, supabase, Sucursal } from "../../lib/supabase";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePOS } from "../../contexts/POSContext";
 import { useUserPermissions } from "../../hooks/usePermissions";
@@ -11,6 +11,9 @@ function AbrirCajaModal() {
   const { hasPermission, PERMISOS } = useUserPermissions();
   const { openCaja, currentAperturaCaja, loading: isLoading } = usePOS();
 
+
+  const [sucursalesAdmin, setSucursalesAdmin] = useState<Sucursal[] | null>(null)
+  const [selectedSucursalId, setSelectedSucursalId] = useState<string>("")
   const [montoInicialApertura, setMontoInicialApertura] = useState("");
   const [cajasDisponibles, setCajasDisponibles] = useState<Caja[]>([]);
   const [cajaSeleccionada, setCajaSeleccionada] = useState<string>("");
@@ -18,35 +21,67 @@ function AbrirCajaModal() {
   // Cargar cajas disponibles de la empresa
   useEffect(() => {
     if (!empresaId) return;
-
-    const fetchCajas = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("cajas")
-          .select("*")
-          .eq("empresa_id", empresaId)
-          .eq("sucursal_id", sucursalId)
-          .eq("activo", true);
-
-        if (error) {
-          toast.error("Error cargando cajas disponibles");
-          setCajasDisponibles([]);
-          return;
-        }
-
-        setCajasDisponibles(data ?? []);
-        if (data && data.length > 0 && !cajaSeleccionada) {
-          setCajaSeleccionada(data[0].id);
-        }
-      } catch (error) {
-        console.error("Error fetching cajas:", error);
-        toast.error("Error cargando cajas disponibles");
-        setCajasDisponibles([]);
-      }
-    };
-
+    fetchSucursales()
     fetchCajas();
   }, [empresaId, supabase, cajaSeleccionada]);
+
+  const fetchSucursales = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("sucursales")
+        .select("*")
+        .eq("empresa_id", empresaId)
+
+      if (error) {
+        toast.error("Error al obtener sucursales")
+        return
+      }
+
+      setSucursalesAdmin(data)
+
+    } catch (e) {
+      console.log(e)
+      toast.error("Ocurrió un error en el servidor")
+    }
+  }
+
+  // Callback para cargar cajas según sucursal seleccionada
+  const fetchCajas = useCallback(async () => {
+    if (!empresaId || !selectedSucursalId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("cajas")
+        .select("*")
+        .eq("empresa_id", empresaId)
+        .eq("sucursal_id", selectedSucursalId)
+        .eq("activo", true);
+
+      if (error) {
+        toast.error("Error cargando cajas disponibles");
+        setCajasDisponibles([]);
+        return;
+      }
+
+      setCajasDisponibles(data ?? []);
+      if (data && data.length > 0 && !cajaSeleccionada) {
+        setCajaSeleccionada(data[0].id);
+      }
+    } catch (error) {
+      console.error("Error fetching cajas:", error);
+      toast.error("Error cargando cajas disponibles");
+      setCajasDisponibles([]);
+    }
+  }, [empresaId, selectedSucursalId, cajaSeleccionada, supabase]);
+
+  useEffect(() => {
+    fetchCajas();
+  }, [fetchCajas]);
+
+  useEffect(() => {
+    if (!empresaId) return;
+    fetchSucursales();
+  }, [empresaId, supabase]);
 
   // Abrir caja, validando usuario y campos
   const handleOpenCash = async () => {
@@ -161,6 +196,31 @@ function AbrirCajaModal() {
             disabled={isLoading}
           />
         </div>
+
+        {(user?.rol === "admin" || user?.rol === "administrador") && (
+          <div className="mb-6">
+            <label
+              htmlFor="sucursal_id"
+              className="block text-sm text-left font-medium text-gray-700 mb-1"
+            >
+              Sucursal
+            </label>
+            <select
+              id="sucursal_id"
+              value={selectedSucursalId || ""}
+              onChange={(e) => setSelectedSucursalId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="" disabled>-- Seleccionar sucursal --</option>
+              {sucursalesAdmin?.map((sucursal) => (
+                <option key={sucursal.id} value={sucursal.id}>
+                  {sucursal.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="mb-6 text-left">
           <label

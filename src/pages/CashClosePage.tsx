@@ -127,17 +127,25 @@ export const CashClosePage: React.FC = () => {
     totalRetiros,
     totalVentasNeto,
     montoEsperado,
+    cantidadEfectivo,
+    cantidadTarjeta,
   } = useMemo(() => {
-    const ventasEfectivoVal = ventas
-      .filter((v) => v.metodo_pago.toLowerCase() === "efectivo")
-      .reduce((acc, v) => acc + v.total, 0);
-    const ventasTarjetaVal = ventas
-      .filter((v) => v.metodo_pago.toLowerCase() !== "efectivo")
-      .reduce((acc, v) => acc + v.total, 0);
+    const ventasEfectivoList = ventas.filter(
+      (v) => v.metodo_pago.toLowerCase() === "efectivo"
+    );
+    const ventasTarjetaList = ventas.filter(
+      (v) => v.metodo_pago.toLowerCase() !== "efectivo"
+    );
+
+    const ventasEfectivoVal = ventasEfectivoList.reduce((acc, v) => acc + v.total, 0);
+    const ventasTarjetaVal = ventasTarjetaList.reduce((acc, v) => acc + v.total, 0);
+
     const totalVentasNetoVal = ventasEfectivoVal + ventasTarjetaVal;
+
     const totalIngresosVal = movimientos
       .filter((m) => m.tipo === "ingreso")
       .reduce((acc, m) => acc + m.monto, 0);
+
     const totalRetirosVal = movimientos
       .filter((m) => m.tipo === "retiro")
       .reduce((acc, m) => acc + m.monto, 0);
@@ -146,6 +154,7 @@ export const CashClosePage: React.FC = () => {
       (currentAperturaCaja?.saldo_inicial || 0) +
       ventasEfectivoVal +
       totalIngresosVal;
+
     return {
       ventasEfectivo: ventasEfectivoVal,
       ventasTarjeta: ventasTarjetaVal,
@@ -153,8 +162,11 @@ export const CashClosePage: React.FC = () => {
       totalRetiros: totalRetirosVal,
       totalVentasNeto: totalVentasNetoVal,
       montoEsperado: montoEsperadoCalc,
+      cantidadEfectivo: ventasEfectivoList.length,
+      cantidadTarjeta: ventasTarjetaList.length,
     };
   }, [ventas, movimientos, currentAperturaCaja]);
+
 
   // Formatear moneda
   const formatPrice = (price: number) =>
@@ -232,10 +244,10 @@ export const CashClosePage: React.FC = () => {
 
   const fechaApertura = currentAperturaCaja
     ? new Date(
-        currentAperturaCaja.abierta_en ||
-          currentAperturaCaja.created_at ||
-          Date.now()
-      ).toLocaleDateString("es-CL")
+      currentAperturaCaja.abierta_en ||
+      currentAperturaCaja.created_at ||
+      Date.now()
+    ).toLocaleDateString("es-CL")
     : "";
   const horaCierrePropuesta = new Date().toLocaleTimeString("es-CL", {
     hour: "2-digit",
@@ -308,11 +320,11 @@ export const CashClosePage: React.FC = () => {
                 </h3>
                 <div className="space-y-2 border-b border-[#E0E0E0] pb-4 mb-4">
                   <SummaryLine
-                    label="Tarjeta (1)"
+                    label={`Tarjeta (${cantidadTarjeta})`}
                     value={`+ ${formatPrice(ventasTarjeta)}`}
                   />
                   <SummaryLine
-                    label="Efectivo (2)"
+                    label={`Efectivo (${cantidadEfectivo})`}
                     value={`+ ${formatPrice(ventasEfectivo)}`}
                   />
                   <SummaryLine
@@ -327,15 +339,16 @@ export const CashClosePage: React.FC = () => {
                 </h3>
                 <div className="space-y-2 border-b border-[#E0E0E0] pb-4 mb-4">
                   <SummaryLine
-                    label="Efectivo (2)"
+                    label={`Efectivo (${cantidadEfectivo})`}
                     value={`+ ${formatPrice(
-                      (currentAperturaCaja?.monto_inicial || 0) +
-                        ventasEfectivo +
-                        totalIngresos
+                      (currentAperturaCaja?.saldo_inicial || 0) +
+                      ventasEfectivo +
+                      totalIngresos
                     )}`}
                   />
+
                   <SummaryLine
-                    label="Tarjeta (1)"
+                    label={`Tarjeta (${cantidadTarjeta})`}
                     value={`+ ${formatPrice(ventasTarjeta)}`}
                   />
                   <SummaryLine
@@ -371,13 +384,12 @@ export const CashClosePage: React.FC = () => {
                       Diferencia
                     </label>
                     <p
-                      className={`text-xl font-bold ${
-                        diferencia === 0
-                          ? "text-[#2196F3]"
-                          : diferencia > 0
+                      className={`text-xl font-bold ${diferencia === 0
+                        ? "text-[#2196F3]"
+                        : diferencia > 0
                           ? "text-green-500"
                           : "text-red-500"
-                      }`}
+                        }`}
                     >
                       {formatPrice(Math.abs(diferencia))}
                     </p>

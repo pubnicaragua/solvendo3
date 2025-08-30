@@ -212,6 +212,7 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({
             .select("id, folio, tipo_dte, total")
             .eq("empresa_id", empresaId)
             .eq("cliente_id", selectedClient.id)
+            .order("created_at", { ascending: false })
             .limit(10);
 
           if (!docsError && docs && docs.length > 0) {
@@ -666,11 +667,10 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({
                       setDeliveryClientSearchTerm(c.razon_social);
                       selectClient(c);
                     }}
-                    className={`p-3 border rounded hover:bg-gray-50 cursor-pointer flex justify-between items-center ${
-                      selectedClient?.id === c.id
+                    className={`p-3 border rounded hover:bg-gray-50 cursor-pointer flex justify-between items-center ${selectedClient?.id === c.id
                         ? "bg-blue-50 border-blue-200"
                         : "bg-white"
-                    }`}
+                      }`}
                   >
                     <div>
                       <span className="font-medium">{c.razon_social}</span>
@@ -688,12 +688,12 @@ export const DeliveryPage: React.FC<{ onClose: () => void }> = ({
                   .toLowerCase()
                   .includes(deliveryClientSearchTerm.toLowerCase())
               ).length === 0 && (
-                <li className="text-gray-500 text-center py-4">
-                  {deliveryClientSearchTerm
-                    ? "Sin resultados"
-                    : "Aquí aparecerán tus clientes"}
-                </li>
-              )}
+                  <li className="text-gray-500 text-center py-4">
+                    {deliveryClientSearchTerm
+                      ? "Sin resultados"
+                      : "Aquí aparecerán tus clientes"}
+                  </li>
+                )}
             </ul>
           </div>
 

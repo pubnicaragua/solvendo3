@@ -83,12 +83,7 @@ export const ReportsPage: React.FC = () => {
     new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
   );
   const [fFin, setFFin] = useState(new Date().toISOString().split("T")[0]);
-  const [cajeros, setCajeros] = useState<{ [key: string]: boolean }>({
-    caja1: true,
-    caja2: true,
-    caja3: true,
-    caja4: true,
-  });
+  const [cajeros, setCajeros] = useState<{ [key: string]: boolean }>({});
   // Estado agregado para filtro de productos (selección única)
   const [productoMovimiento, setProductoMovimiento] = useState<string>("");
 
@@ -154,6 +149,11 @@ export const ReportsPage: React.FC = () => {
     }
   }, [empresaId]);
 
+  useEffect(() => {
+    loadCajas();
+    handleApplyFilters()
+  }, [empresaId]);
+
   // Load KPIs
   const loadData = useCallback(async () => {
     if (!empresaId) return;
@@ -161,47 +161,44 @@ export const ReportsPage: React.FC = () => {
     setKpiError(null);
 
     try {
-      // Jalar y setear cajas
-      await loadCajas()
-
-      // Nota: Aquí puedes usar productoMovimiento para filtrar la consulta si aplica
-
+      // Obtener ventas del rango de fechas
       const { data: ventas, error } = await supabase
         .from("ventas")
-        .select("id, total")
+        .select("id, total, caja_id")
         .eq("empresa_id", empresaId)
         .gte("fecha", fInicio)
         .lte("fecha", fFin);
-      if (error) {
-        throw error;
-      }
 
-      // Ejemplo: si quieres filtrar ventas según productoMovimiento, deberías hacerlo aquí con otra consulta / join (no implementado)
+      if (error) throw error;
 
-      // Obtener detalles de venta para contar unidades vendidas
+      // Filtrar por cajeros seleccionados
+      const ventasFiltradas = ventas?.filter(v => {
+        if (!cajeros || Object.keys(cajeros).length === 0) return true;
+        return cajeros[v.caja_id];
+      }) || [];
+
+      // Obtener detalles de venta
       const { data: ventaItems, error: itemsError } = await supabase
         .from("venta_items")
         .select("cantidad")
-        .in("venta_id", ventas?.map((v) => v.id) || []);
-      if (itemsError) {
-        console.error("Error loading venta items:", itemsError);
-      }
+        .in("venta_id", ventasFiltradas.map((v) => v.id) || []);
 
-      const total = ventas?.reduce((s, v) => s + (v.total || 0), 0) || 0;
-      const count = ventas?.length || 0;
-      const unidades =
-        ventaItems?.reduce((s, i) => s + (i.cantidad || 0), 0) || 0;
-      const margen = total * 0.3; // Asumimos un margen del 30% para demo
+      if (itemsError) console.error("Error loading venta items:", itemsError);
+
+      const total = ventasFiltradas.reduce((s, v) => s + (v.total || 0), 0);
+      const count = ventasFiltradas.length;
+      const unidades = ventaItems?.reduce((s, i) => s + (i.cantidad || 0), 0) || 0;
+      const margen = total * 0.3; // Asumimos margen 30%
       const ticketPromedio = count ? total / count : 0;
 
       setLastUpdate(new Date().toLocaleString("es-CL"));
 
       setData({
         ventasTotales: total,
-        margen: margen,
+        margen,
         unidadesVendidas: unidades,
         numeroVentas: count,
-        ticketPromedio: ticketPromedio,
+        ticketPromedio,
       });
     } catch (e) {
       console.error("Error loading real data, using mock data:", e);
@@ -216,15 +213,19 @@ export const ReportsPage: React.FC = () => {
     } finally {
       setLoadingKpis(false);
     }
-  }, [empresaId, fInicio, fFin, productoMovimiento]);
+  }, [cajeros, empresaId, fInicio, fFin, productoMovimiento]);
 
   // Load monthly chart data via RPC
   const loadMonthlyData = useCallback(async () => {
     if (!empresaId) return;
     setLoadingChart(true);
     setChartError(null);
+
     try {
-      // Nota: Aquí también podrías filtrar según productoMovimiento si aplica
+      // Obtener array de cajas seleccionadas
+      const cajasSeleccionadas = Object.entries(cajeros)
+        .filter(([_, checked]) => checked)
+        .map(([cajaId]) => cajaId);
 
       let data;
       try {
@@ -232,7 +233,7 @@ export const ReportsPage: React.FC = () => {
           empresa_id_arg: empresaId,
           fecha_inicio: fInicio,
           fecha_fin: fFin,
-          // No estás pasando filtro productoMovimiento, agregar si tu RPC lo soporta
+          cajas_id: cajasSeleccionadas.length ? cajasSeleccionadas : null // NULL = todas las cajas
         });
         if (error) throw error;
         data = rows;
@@ -300,18 +301,12 @@ export const ReportsPage: React.FC = () => {
     } finally {
       setLoadingChart(false);
     }
-  }, [empresaId, fInicio, fFin, productoMovimiento]);
-
-  useEffect(() => {
-    loadData();
-    loadMonthlyData();
-  }, [empresaId, loadData, loadMonthlyData]);
+  }, [empresaId, fInicio, fFin, cajeros]);
 
   const handleApplyFilters = () => {
     loadData();
     loadMonthlyData();
     setShowFilters(false);
-    toast.success("Filtros aplicados");
   };
 
   const handleRefresh = () => {

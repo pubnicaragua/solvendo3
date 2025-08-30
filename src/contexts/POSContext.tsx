@@ -816,13 +816,14 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
     if (!empresaId) return;
     setLoading(true);
 
+    console.log(empresaId)
+
     try {
       const { data, error } = await supabase
         .from("promociones")
         .select("*")
         .eq("empresa_id", empresaId)
         .eq("activo", true)
-        .order("nombre", { ascending: true });
 
       if (error) {
         console.error("Error loading promociones", error);
