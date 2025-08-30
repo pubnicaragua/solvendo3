@@ -14,6 +14,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { usePOS } from "../../contexts/POSContext";
 import { supabase } from "../../lib/supabase";
+import { NotificationsPanel } from "./NotificationsPanel";
 
 interface HeaderWithMenuProps {
   title: string;
@@ -87,7 +88,11 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
     };
 
     fetchNotificaciones();
-  }, [sucursalId]);
+  }, [sucursalId, loading]);
+
+  const refetchNotifications = () => {
+    setLoading(false)
+  }
 
   // Productos con stock bajo
   const productosStockBajo = productos.filter((p) => p.stock < 5);
@@ -172,22 +177,31 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
             </div>
           )}
 
+          <div className="relative">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className={`relative p-2 rounded-md hover:bg-gray-100 transition-all ${loading ? "animate-pulse" : ""
+                }`}
+            >
+              <Bell className="w-5 h-5 text-gray-700" />
+              {notificaciones.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">
+                  {notificaciones.length}
+                </span>
+              )}
+            </button>
+
+            {showNotifications && (
+              <NotificationsPanel
+                notifications={notificaciones}
+                onClose={() => setShowNotifications(false)}
+                onRefresh={refetchNotifications}
+              />
+            )}
+          </div>
+
           {user && (
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => setShowNotifications(true)}
-                className="p-2 hover:bg-gray-100 rounded-full"
-                aria-label="Notifications"
-                disabled={productosStockBajo.length === 0}
-              >
-                <Bell className="w-5 h-5 text-gray-600" />
-                {/* {productosStockBajo.length > 0 && (
-                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {productosStockBajo.length}
-                  </span>
-                )} */}
-              </button>
-
               <div
                 className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-2 rounded-lg"
               // onClick={() => setShowLogoutModal(true)}
@@ -213,59 +227,6 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
           )}
         </div>
       </header>
-
-      {/* Notifications Modal */}
-      {showNotifications && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Notificaciones
-              </h3>
-              <button
-                onClick={() => setShowNotifications(false)}
-                className="text-gray-400 hover:text-gray-600"
-                aria-label="Close notifications"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto">
-              {notificaciones.length > 0 ? (
-                <div className="space-y-3">
-                  {notificaciones.map((notif) => (
-                    <div
-                      key={notif.id}
-                      className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
-                    >
-                      {notif.icono}
-                      <div className="flex-1">
-                        <p className="text-sm text-gray-900">{notif.mensaje}</p>
-                        <p className="text-xs text-gray-500">{notif.hora}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Bell className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                  <p>No hay productos con stock bajo</p>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-4 pt-4 border-t">
-              <button
-                onClick={() => setShowNotifications(false)}
-                className="w-full py-2 px-4 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Logout Confirmation Modal */}
       {showLogoutModal && (

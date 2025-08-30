@@ -113,7 +113,7 @@ const Dashboard: React.FC = () => {
   // Estados para opciones de entrega
   const [tipoEntrega, setTipoEntrega] = useState<
     "inmediata" | "despacho" | null
-  >(null);
+  >("inmediata");
   const [cupon, setCupon] = useState(false);
   const [userEmpresa, setUserEmpresa] = useState({})
 
@@ -1126,7 +1126,7 @@ const Dashboard: React.FC = () => {
                     <button
                       onClick={() =>
                         setTipoEntrega(
-                          tipoEntrega === "inmediata" ? null : "inmediata"
+                          tipoEntrega === "inmediata" ? "inmediata" : "inmediata"
                         )
                       }
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${tipoEntrega === "inmediata"
@@ -1138,26 +1138,6 @@ const Dashboard: React.FC = () => {
                       <span>Entrega inmediata</span>
                     </button>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() =>
-                        setTipoEntrega(
-                          tipoEntrega === "despacho" ? null : "despacho"
-                        )
-                      }
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${tipoEntrega === "despacho"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        }`}
-                    >
-                      <Truck className="w-4 h-4" />
-                      <span>Despacho</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Descuentos y Cupones */}
-                <div className="flex items-center gap-6">
                   <button
                     onClick={() => setDescuentosEnabled(!descuentosEnabled)}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${descuentosEnabled
@@ -1178,6 +1158,27 @@ const Dashboard: React.FC = () => {
                     <Plus className="w-4 h-4" />
                     <span className="text-sm">Agregar cupón</span>
                   </button>
+                  {/* <div className="flex items-center gap-2">
+                    <button
+                      onClick={() =>
+                        setTipoEntrega(
+                          tipoEntrega === "despacho" ? null : "despacho"
+                        )
+                      }
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${tipoEntrega === "despacho"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                    >
+                      <Truck className="w-4 h-4" />
+                      <span>Despacho</span>
+                    </button>
+                  </div> */}
+                </div>
+
+                {/* Descuentos y Cupones */}
+                <div className="flex items-center gap-6">
+
                 </div>
 
                 {/* Selección de Cliente para Factura */}
