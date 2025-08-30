@@ -23,7 +23,7 @@ import ProductsPanel from "../components/pos/ProductsPanel";
 import ClientsPanel from "../components/pos/ClientsPanel";
 import { ReceiptModal } from "../components/pos/ReceiptModal";
 import { DraftSaveModal } from "../components/pos/DraftSaveModal";
-import { supabase } from "../lib/supabase";
+import { Cupon, supabase } from "../lib/supabase";
 import { HeaderWithMenu } from "../components/common/HeaderWithMenu";
 import { Promocion } from "../lib/supabase";
 import AbrirCajaModal from "../components/pos/AbrirCajaModal";
@@ -128,6 +128,7 @@ const Dashboard: React.FC = () => {
   const [cuponDescuento, setCuponDescuento] = useState<number>(0);
   const [cuponValido, setCuponValido] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
+  const [cupones, setCupones] = useState<Cupon[]>([])
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -138,7 +139,8 @@ const Dashboard: React.FC = () => {
           loadProductos(),
           loadBorradores(),
           loadPromociones(),
-          loadEmpresa()
+          loadEmpresa(),
+          loadCupones()
         ]);
       } catch (error) {
         console.error("Error al cargar datos iniciales:", error);
@@ -150,6 +152,23 @@ const Dashboard: React.FC = () => {
     setLoading(true);
     fetchInitialData();
   }, [loadClientes, loadProductos, loadBorradores, loadPromociones]);
+
+  const loadCupones = useCallback(async () => {
+    if (!empresaId) return
+
+    const { data: cupones, error } = await supabase
+      .from("cupones")
+      .select("*")
+      .eq("empresa_id", empresaId)
+
+    if (error) {
+      toast.error("Error al obtener los cupones")
+      return
+    }
+
+    setCupones(cupones)
+
+  }, [empresaId])
 
   const loadEmpresa = useCallback(async () => {
     if (!empresaId) return // si no hay empresaId no hace nada
@@ -590,23 +609,29 @@ const Dashboard: React.FC = () => {
     }
 
     try {
-      // Buscar cupón en promociones
-      const cuponEncontrado = promociones.find(
-        (p) => p.nombre.toLowerCase().includes(codigo.toLowerCase()) && p.activo
+      // Buscar cupón en los cupones traídos desde Supabase
+      const cuponEncontrado = cupones.find(
+        (c) => c.codigo.toLowerCase() === codigo.toLowerCase() && c.activo
       );
 
       if (cuponEncontrado) {
         let descuento = 0;
-        if (cuponEncontrado.tipo === "descuento_monto") {
-          descuento = cuponEncontrado.valor || 0;
-        } else if (cuponEncontrado.tipo === "descuento_porcentaje") {
+
+        if (cuponEncontrado.tipo === "descuento") {
+          // siempre es porcentaje
           descuento = total * ((cuponEncontrado.valor || 0) / 100);
+        } else if (cuponEncontrado.tipo === "envio") {
+          // no aplicamos descuento por ahora
+          descuento = 0;
         }
 
         setCuponValido(true);
         setCuponDescuento(descuento);
+
         toast.success(
-          `Cupón aplicado: ${cuponEncontrado.nombre} - $${descuento} de descuento`
+          cuponEncontrado.tipo === "descuento"
+            ? `Cupón aplicado: ${cuponEncontrado.codigo} - ${cuponEncontrado.valor}% de descuento`
+            : `Cupón aplicado: ${cuponEncontrado.codigo} - Envío Gratis`
         );
       } else {
         setCuponValido(false);
@@ -614,6 +639,7 @@ const Dashboard: React.FC = () => {
         toast.error("Cupón no válido");
       }
     } catch (error) {
+      console.error(error);
       setCuponValido(false);
       setCuponDescuento(0);
       toast.error("Error al validar cupón");
@@ -674,6 +700,8 @@ const Dashboard: React.FC = () => {
         return false;
       }
 
+      console.log(promocion)
+
       // Si productos_id es un array de IDs
       const productosIds = Array.isArray(promocion.productos_id)
         ? promocion.productos_id
@@ -696,7 +724,7 @@ const Dashboard: React.FC = () => {
       productosPromo.forEach((producto) => {
         const productoConPrecioPromo = {
           ...producto,
-          precio: promocion.precio_prom || producto.precio,
+          precio: producto.precio - promocion.precio_prom,
         };
         addToCart(productoConPrecioPromo);
       });

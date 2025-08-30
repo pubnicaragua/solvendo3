@@ -26,6 +26,30 @@ export const supabase = createClient(
   }
 )
 
+export interface Cupon {
+  id: string; // uuid
+  empresa_id: string; // FK a empresas
+  sucursal_id: string; // FK a sucursales (puede ser null si aplica)
+  producto_id?: string | null; // FK a productos (nullable)
+
+  codigo: string;
+  nombre: string;
+  descripcion?: string | null;
+
+  tipo: "descuento" | "envio"; // más valores si los necesitas
+  valor: number;
+  usos_maximos: number;
+
+  fecha_inicio?: string | null; // formato ISO (ej: "2025-08-29")
+  fecha_fin?: string | null;
+
+  activo: boolean;
+
+  creado_en: string; // timestamp ISO
+  actualizado_en: string; // timestamp ISO
+}
+
+
 // Database Types
 export interface Usuario {
   id: string
