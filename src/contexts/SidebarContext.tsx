@@ -19,13 +19,13 @@ interface SidebarContextValue {
 }
 
 type SidebarItem =
-  | { id: 'inicio';    label: 'Inicio';                 icon: React.ReactNode }
-  | { id: 'cierre';    label: 'Cierre de caja';         icon: React.ReactNode }
-  | { id: 'devolucion';label: 'Devolución';             icon: React.ReactNode }
-  | { id: 'movimiento';label: 'Movimiento de efectivo'; icon: React.ReactNode }
-  | { id: 'reimprimir';label: 'Reimprimir';             icon: React.ReactNode }
-  | { id: 'reportes';  label: 'Reportes';               icon: React.ReactNode }
-  | { id: 'despacho';  label: 'Despacho';               icon: React.ReactNode }
+  | { id: 'inicio'; label: 'Inicio'; icon: React.ReactNode }
+  | { id: 'cierre'; label: 'Cierre de caja'; icon: React.ReactNode }
+  | { id: 'devolucion'; label: 'Devolución'; icon: React.ReactNode }
+  | { id: 'movimiento'; label: 'Movimiento de efectivo'; icon: React.ReactNode }
+  | { id: 'reimprimir'; label: 'Reimprimir'; icon: React.ReactNode }
+  | { id: 'reportes'; label: 'Reportes'; icon: React.ReactNode }
+  | { id: 'despacho'; label: 'Despacho'; icon: React.ReactNode }
 
 const SidebarContext = createContext<SidebarContextValue | undefined>(undefined)
 
@@ -37,13 +37,13 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const closeSidebar = () => setIsOpen(false); // Definir la función closeSidebar
 
   const items: SidebarItem[] = [
-    { id: 'inicio',     label: 'Inicio',                  icon: <Home className="w-5 h-5" /> },
-    { id: 'cierre',     label: 'Cierre de caja',          icon: <DollarSign className="w-5 h-5" /> },
-    { id: 'devolucion', label: 'Devolución',              icon: <RotateCcw className="w-5 h-5" /> },
-    { id: 'movimiento', label: 'Movimiento de efectivo',  icon: <TrendingUp className="w-5 h-5" /> },
-    { id: 'reimprimir', label: 'Reimprimir',              icon: <Printer className="w-5 h-5" /> },
-    { id: 'reportes',   label: 'Reportes',                icon: <BarChart3 className="w-5 h-5" /> },
-    { id: 'despacho',   label: 'Despacho',                icon: <Truck className="w-5 h-5" /> }
+    { id: 'inicio', label: 'Inicio', icon: <Home className="w-5 h-5" /> },
+    { id: 'cierre', label: 'Cierre de caja', icon: <DollarSign className="w-5 h-5" /> },
+    { id: 'devolucion', label: 'Devolución', icon: <RotateCcw className="w-5 h-5" /> },
+    { id: 'movimiento', label: 'Movimiento de efectivo', icon: <TrendingUp className="w-5 h-5" /> },
+    { id: 'reimprimir', label: 'Reimprimir', icon: <Printer className="w-5 h-5" /> },
+    { id: 'reportes', label: 'Reportes', icon: <BarChart3 className="w-5 h-5" /> },
+    // { id: 'despacho',   label: 'Despacho',                icon: <Truck className="w-5 h-5" /> }
   ]
 
   const handleSidebarAction = (action: SidebarItem['id']) => {

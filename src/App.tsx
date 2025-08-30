@@ -55,7 +55,7 @@ const AppRoutes: React.FC = () => {
             <Route path="/movimiento" element={<CashMovementPage onClose={() => { }} />} />
             <Route path="/reimprimir" element={<ReprintPage onClose={() => { }} />} />
             <Route path="/reportes" element={<ReportsPage onClose={() => { }} />} />
-            <Route path="/despacho" element={<DeliveryPage onClose={() => { }} />} />
+            {/* <Route path="/despacho" element={<DeliveryPage onClose={() => { }} />} /> */}
             <Route path="/cierre" element={<CashClosePage onClose={() => { }} />} />
             <Route path="/devolucion" element={<ReturnsPage onClose={() => { }} />} />
             <Route path="/arqueo" element={<CashAuditPage onClose={() => { }} />} />
