@@ -13,7 +13,7 @@ function AbrirCajaModal() {
 
 
   const [sucursalesAdmin, setSucursalesAdmin] = useState<Sucursal[] | null>(null)
-  const [selectedSucursalId, setSelectedSucursalId] = useState<string>("")
+  const [selectedSucursalId, setSelectedSucursalId] = useState<string | null>(null)
   const [montoInicialApertura, setMontoInicialApertura] = useState("");
   const [cajasDisponibles, setCajasDisponibles] = useState<Caja[]>([]);
   const [cajaSeleccionada, setCajaSeleccionada] = useState<string>("");
@@ -47,14 +47,20 @@ function AbrirCajaModal() {
 
   // Callback para cargar cajas según sucursal seleccionada
   const fetchCajas = useCallback(async () => {
-    if (!empresaId || !selectedSucursalId) return;
+    if (!empresaId) return;
+
+    // Usar selectedSucursalId si existe, si no fallback a sucursalId
+    const sucursalFiltro = selectedSucursalId || sucursalId;
+
+    // Si no hay sucursal, no hacemos nada
+    if (!sucursalFiltro) return;
 
     try {
       const { data, error } = await supabase
         .from("cajas")
         .select("*")
         .eq("empresa_id", empresaId)
-        .eq("sucursal_id", selectedSucursalId)
+        .eq("sucursal_id", sucursalFiltro)
         .eq("activo", true);
 
       if (error) {
@@ -64,6 +70,7 @@ function AbrirCajaModal() {
       }
 
       setCajasDisponibles(data ?? []);
+
       if (data && data.length > 0 && !cajaSeleccionada) {
         setCajaSeleccionada(data[0].id);
       }
@@ -72,7 +79,7 @@ function AbrirCajaModal() {
       toast.error("Error cargando cajas disponibles");
       setCajasDisponibles([]);
     }
-  }, [empresaId, selectedSucursalId, cajaSeleccionada, supabase]);
+  }, [empresaId, selectedSucursalId, sucursalId, cajaSeleccionada]);
 
   useEffect(() => {
     fetchCajas();
@@ -232,11 +239,10 @@ function AbrirCajaModal() {
           <select
             id="selectCaja"
             className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            value={cajaSeleccionada}
+            value={cajaSeleccionada || (cajasDisponibles[0]?.id || "")}
             onChange={(e) => setCajaSeleccionada(e.target.value)}
-            disabled={isLoading}
+            disabled={isLoading || cajasDisponibles.length === 0}
           >
-            <option value="">-- Seleccionar caja --</option>
             {cajasDisponibles.map((caja) => (
               <option key={caja.id} value={caja.id}>
                 {caja.nombre}
