@@ -100,7 +100,7 @@ export function NotificationsPanel({ notifications, onClose, onRefresh }: Notifi
                                             {notification.mensaje}
                                         </p>
                                         <p className="text-gray-400 text-xs mt-1">
-                                            {new Date(notification.created_at).toLocaleString('es-CL')}
+                                            {notification.created_at}
                                         </p>
                                     </div>
                                 </div>

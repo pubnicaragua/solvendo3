@@ -105,10 +105,13 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
       id: `stock-${producto.id}`,
       tipo: "stock_bajo",
       mensaje: `Stock bajo: ${producto.nombre} (${producto.stock} unidades)`,
-      hora: today.toLocaleTimeString("es-CL", {
+      created_at: today.toLocaleString("es-CL", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
         hour: "2-digit",
         minute: "2-digit",
-      }),
+      }),      
       icono: <AlertTriangle className="w-4 h-4 text-orange-500" />,
     }));
 
@@ -116,14 +119,20 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
       id: `supabase-${notif.id}`,
       tipo: notif.tipo,
       mensaje: notif.mensaje,
-      hora: notif.created_at
+      created_at: notif.created_at
         ? new Date(notif.created_at).toLocaleTimeString("es-CL", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
           hour: "2-digit",
           minute: "2-digit",
         })
         : today.toLocaleTimeString("es-CL", {
-          hour: "2-digit",
-          minute: "2-digit",
+          year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
         }),
       icono: <Bell className="w-4 h-4 text-blue-500" />,
     }));
