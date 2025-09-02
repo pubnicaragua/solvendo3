@@ -31,6 +31,7 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
   showClock = true,
 }) => {
   const { toggleSidebar } = useSidebar();
+  const { currentAperturaCaja } = usePOS()
   const { user, signOut, sucursalId, empresaId } = useAuth();
   const navigate = useNavigate();
   const { productos } = usePOS();
@@ -65,18 +66,17 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
     }
     const fetchNotificaciones = async () => {
       setLoading(true);
-      let query = supabase.from("notificaciones").select("*").eq("leida", false)
+      let query = supabase.from("notificaciones").select("*").eq("leida", false).eq("sesion_caja_id", currentAperturaCaja?.id)
 
-      if (user?.rol === "admin" || "administrador") {
-        // 🔑 filtrar por empresa
+      if (user?.rol === "admin" || user?.rol === "administrador") {
         query = query.eq("empresa_id", empresaId);
       } else if (user?.rol === "supervisor") {
-        // 🔑 filtrar por sucursal
         query = query.eq("sucursal_id", sucursalId);
       }
 
       if (user?.rol !== "empleado") {
         const { data, error } = await query;
+
         if (error) {
           console.error("Error al obtener notificaciones:", error.message);
         } else {

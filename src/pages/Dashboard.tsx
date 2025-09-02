@@ -182,8 +182,6 @@ const Dashboard: React.FC = () => {
       return
     }
 
-    console.log(empresa)
-
     setUserEmpresa(empresa)
   }, [empresaId])
 
@@ -697,8 +695,6 @@ const Dashboard: React.FC = () => {
         toast.error("Promoción no encontrada");
         return false;
       }
-
-      console.log(promocion)
 
       // Si productos_id es un array de IDs
       const productosIds = Array.isArray(promocion.productos_id)

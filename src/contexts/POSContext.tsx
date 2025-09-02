@@ -834,8 +834,6 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
     if (!empresaId) return;
     setLoading(true);
 
-    console.log(empresaId)
-
     try {
       const { data, error } = await supabase
         .from("promociones")
