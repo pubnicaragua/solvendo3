@@ -65,7 +65,7 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
     }
     const fetchNotificaciones = async () => {
       setLoading(true);
-      let query = supabase.from("notificaciones").select("*");
+      let query = supabase.from("notificaciones").select("*").eq("leida", false)
 
       if (user?.rol === "admin" || "administrador") {
         // 🔑 filtrar por empresa
@@ -111,7 +111,7 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
         day: "2-digit",
         hour: "2-digit",
         minute: "2-digit",
-      }),      
+      }),
       icono: <AlertTriangle className="w-4 h-4 text-orange-500" />,
     }));
 
@@ -129,10 +129,10 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
         })
         : today.toLocaleTimeString("es-CL", {
           year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
         }),
       icono: <Bell className="w-4 h-4 text-blue-500" />,
     }));

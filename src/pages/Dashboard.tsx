@@ -162,7 +162,6 @@ const Dashboard: React.FC = () => {
       .eq("empresa_id", empresaId)
 
     if (error) {
-      toast.error("Error al obtener los cupones")
       return
     }
 
@@ -180,7 +179,6 @@ const Dashboard: React.FC = () => {
       .single()
 
     if (error) {
-      toast.error("Error al obtener los datos de la empresa")
       return
     }
 
@@ -332,7 +330,7 @@ const Dashboard: React.FC = () => {
       }
 
       if (stockErrors.length > 0) {
-        let errorMessage = "Stock insuficiente para:\n";
+        let errorMessage = "Stock insuficiente proceder con precaución:\n";
         stockErrors.forEach((error) => {
           errorMessage += `- ${error.producto} (Disponible: ${error.stockDisponible})\n`;
         });
@@ -340,7 +338,6 @@ const Dashboard: React.FC = () => {
           duration: 5000,
           style: { whiteSpace: "pre-line" },
         });
-        return;
       }
 
       // Si pasa la validación de stock, procesar la venta
