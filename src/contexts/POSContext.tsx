@@ -195,7 +195,6 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({
 
       if (error) {
         console.error("Error loading productos", error);
-        toast.error("No se pudieron cargar productos");
         setProductos([]);
       } else {
         const productosConPreciosCorrectos = (data || []).map((p) => ({
