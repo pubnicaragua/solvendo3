@@ -31,6 +31,7 @@ import SearchBarClientes from "../components/pos/SearchBarClientes";
 import { LoginForm } from "../components/auth/LoginForm";
 import AsignarSaldoInicialModal from "../components/pos/AsignarSaldoModal";
 import { useUserPermissions } from "../hooks/usePermissions";
+import { AutorizacionCancelarVentaModal } from "../components/pos/AuthorizeClearCart";
 
 export type TabId = "destacado" | "borradores" | "productos" | "clientes";
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
@@ -92,7 +93,7 @@ const Dashboard: React.FC = () => {
     cajaLoading,
   } = usePOS();
 
-  const { hasPermission, PERMISOS } = useUserPermissions();
+  const { hasPermission, PERMISOS, sucursalConfig } = useUserPermissions();
 
   // Alias for selectClient to avoid naming conflicts
   const handleSelectClient = selectClient;
@@ -129,6 +130,7 @@ const Dashboard: React.FC = () => {
   const [cuponValido, setCuponValido] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [cupones, setCupones] = useState<Cupon[]>([])
+  const [autorizacionCancelarVentaModal, setAutorizacionCancelarVentaModal] = useState(false)
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -755,6 +757,34 @@ const Dashboard: React.FC = () => {
     if (!currentAperturaCaja) return <AbrirCajaModal />;
   }
 
+  const handleCancelarVenta = async () => {
+    let hasPermission = await sucursalConfig(currentAperturaCaja.caja_id)
+
+    if (carrito.length === 0) return
+
+    if (hasPermission) {
+      clearCart()
+    } else {
+      setAutorizacionCancelarVentaModal(true)
+    }
+  }
+
+  const handleCancelacionAutorizada = () => {
+    console.log("Cancelación autorizada, limpiando carrito...");
+    clearCart();
+    toast.success("Venta cancelada exitosamente");
+  };
+
+  const handleRemoveFromCart = async (itemId: string) => {
+    let hasPermission = await sucursalConfig(currentAperturaCaja.caja_id)
+
+    if (hasPermission) {
+      removeFromCart(itemId)
+    } else {
+      setAutorizacionCancelarVentaModal(true)
+    }
+  }
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Reemplazamos el <header> manual con el componente HeaderWithMenu */}
@@ -814,7 +844,7 @@ const Dashboard: React.FC = () => {
                     {fmt(item.precio * item.quantity)}
                   </span>
                   <button
-                    onClick={() => removeFromCart(item.id)}
+                    onClick={() => handleRemoveFromCart(item.id)}
                     className="text-gray-600 p-1 rounded-full hover:bg-gray-100"
                   >
                     <XIcon className="w-4 h-4" />
@@ -958,7 +988,7 @@ const Dashboard: React.FC = () => {
 
             <div className="mt-auto flex gap-2">
               <button
-                onClick={() => clearCart()}
+                onClick={handleCancelarVenta}
                 className="flex-1 px-4 py-2 bg-gray-100 rounded flex items-center justify-center text-sm"
               >
                 <XIcon className="w-4 h-4 mr-1" />
@@ -1445,6 +1475,12 @@ const Dashboard: React.FC = () => {
         onClose={handleReceiptClose}
         onPrint={handleReceiptClose}
         onSendEmail={() => toast.success("Enviado por email")}
+      />
+
+      <AutorizacionCancelarVentaModal
+        isOpen={autorizacionCancelarVentaModal}
+        onClose={() => setAutorizacionCancelarVentaModal(false)}
+        onSuccess={handleCancelacionAutorizada}
       />
 
       {/* Print Dialog */}

@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
+import toast from "react-hot-toast";
 
 interface UserPermissionWithName {
   id: string;
   usuario_id: string;
   permiso_id: string;
-  otorgado: boolean; // Cambiar de 'activo' a 'otorgado'
+  otorgado: boolean;
   created_at: string;
   permisos: {
     nombre: string;
@@ -74,11 +75,35 @@ export const useUserPermissions = () => {
   }, [user?.id]);
 
   const hasPermission = (nombrePermiso: string): boolean => {
-    if (user?.rol === "admin" || "administrador") return true;
+    if (user?.rol === "admin" || user?.rol === "administrador") {
+      return true;
+    }
     return permissions.some(
       (p) => p.permisos?.nombre === nombrePermiso && p.otorgado
     );
   };
+
+  const sucursalConfig = async (cajaId: string): Promise<boolean> => {
+    if (user?.rol === "admin" || user?.rol === "administrador" || user?.rol === "supervisor") {
+      return true;
+    }
+
+
+    const { data, error } = await
+      supabase.from("configuracion_pos").select("*").eq("caja_id", cajaId).single()
+
+    if (error) {
+      toast.error("Error al obtener la configuración de la caja, se permitirá la venta")
+      return true
+    }
+
+    console.log("paput", data)
+    if (data.solicitar_autorizacion) {
+      return false
+    } else {
+      return true
+    }
+  }
 
   const hasAnyPermission = (nombresPermisos: string[]): boolean => {
     return nombresPermisos.some((nombre) => hasPermission(nombre));
@@ -90,6 +115,7 @@ export const useUserPermissions = () => {
     error,
     hasPermission,
     hasAnyPermission,
+    sucursalConfig,
     PERMISOS,
   };
 };

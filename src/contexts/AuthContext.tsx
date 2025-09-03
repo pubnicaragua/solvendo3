@@ -20,6 +20,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   authorize: (rut: string, password: string) => Promise<void>
+  authorizeCancelarVenta: (rut: string, password: string) => Promise<void>
   refetchUserProfile: () => Promise<void>;
 }
 
@@ -280,6 +281,90 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const authorizeCancelarVenta = async (rut: string, password: string) => {
+    console.log("Iniciando autorización de cancelación de venta...", { rut });
+
+    try {
+      // 1. Validar RUT antes de hacer cualquier llamada
+      if (!validarRut(rut)) {
+        toast.error("RUT inválido");
+        console.warn("RUT inválido:", rut);
+        return { success: false, message: "RUT inválido" };
+      }
+
+      // 2. Buscar usuario en la tabla "usuarios"
+      const { data: usuario, error: errorUsuario } = await supabase
+        .from("usuarios")
+        .select("id, nombres, email")
+        .eq("rut", rut)
+        .single();
+
+      if (errorUsuario || !usuario) {
+        toast.error("RUT no encontrado");
+        console.warn("Usuario no encontrado:", errorUsuario);
+        return { success: false, message: "RUT no encontrado" };
+      }
+
+      console.log("Usuario encontrado:", usuario);
+
+      // 3. Validar si tiene permiso (no debe ser "empleado")
+      const { data: usuarioEmpresa, error: errorUsuarioEmpresa } = await supabase
+        .from("usuario_empresa")
+        .select("rol")
+        .eq("usuario_id", usuario.id)
+        .single();
+
+      if (errorUsuarioEmpresa || !usuarioEmpresa) {
+        toast.error("Error obteniendo permisos del usuario");
+        console.error("Error en usuario_empresa:", errorUsuarioEmpresa);
+        return { success: false, message: "Error al obtener permisos" };
+      }
+
+      console.log("Rol de usuario:", usuarioEmpresa.rol);
+
+      if (usuarioEmpresa.rol === "empleado") {
+        toast.error(
+          `El usuario ${usuario.nombres} no está autorizado para cancelar ventas`
+        );
+        return {
+          success: false,
+          message: "Usuario sin permisos para cancelar ventas",
+        };
+      }
+
+      // 4. Validar credenciales llamando al endpoint de autorización
+      console.log("Validando credenciales con Supabase Function...");
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/authorize`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({
+          email: usuario.email,
+          password,
+        }),
+      });
+
+      const data = await res.json();
+      console.log("Respuesta del endpoint de autorización:", data);
+
+      if (!res.ok) {
+        toast.error(data.error || "Error en autorización");
+        return { success: false, message: data.error || "Error en autorización" };
+      }
+
+      // 5. Autorización exitosa
+      toast.success("Autorización exitosa. Cancelación permitida.");
+      return { success: true, usuario };
+
+    } catch (error: any) {
+      console.error("Error inesperado en authorizeCancelarVenta:", error);
+      toast.error("Error interno en la autorización");
+      return { success: false, message: error.message || "Error inesperado" };
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -359,6 +444,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       authorize,
       signOut,
       refetchUserProfile,
+      authorizeCancelarVenta,
     }),
     [user, empresaId, sucursalId, loading, authorized, authorize]
   );
