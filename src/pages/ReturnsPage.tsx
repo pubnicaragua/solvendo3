@@ -12,13 +12,15 @@ import {
   CreditCard,
 } from "lucide-react";
 import { HeaderWithMenu } from "../components/common/HeaderWithMenu";
-import { supabase } from "../lib/supabase";
+import { Cliente, Empresa, Producto, supabase, Venta } from "../lib/supabase";
 import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
-import { ReturnsModal } from "../components/pos/ReturnsModal";
+import { useNavigate } from "react-router-dom";
+import MermaModal from "../components/pos/MermaModal";
 
 interface VentaItem {
   id: string;
+  producto_id: string;
   nombre: string;
   cantidad: number;
   precio: number;
@@ -37,8 +39,7 @@ export const ReturnsPage: React.FC = () => {
   const [folio, setFolio] = useState("");
   const [folioInput, setFolioInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [clientSearchTerm, setClientSearchTerm] = useState("");
-  const { empresaId, user } = useAuth();
+  const { empresaId, user, sucursalId } = useAuth();
   const [ventaItems, setVentaItems] = useState<VentaItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<Record<string, number>>(
     {}
@@ -47,7 +48,6 @@ export const ReturnsPage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [tipoNota, setTipoNota] = useState("Nota de crédito manual");
   const [clienteSearch, setClienteSearch] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [showClienteForm, setShowClienteForm] = useState(false);
   const [clienteDevolucion, setClienteDevolucion] = useState<ClienteDevolucion>(
     {
@@ -58,22 +58,25 @@ export const ReturnsPage: React.FC = () => {
       cuentaTarjeta: "",
     }
   );
-  const [productSearchResults, setProductSearchResults] = useState<any[]>([]);
-  const [clientSearchResults, setClientSearchResults] = useState<any[]>([]);
+  const [productSearchResults, setProductSearchResults] = useState<Producto[]>([]);
+  const [clientSearchResults, setClientSearchResults] = useState<Cliente[]>([]);
   const [tipoReembolsoData, setTipoReembolsoData] = useState({
     tipoCuenta: "",
     numeroCuenta: "",
     nombreBanco: "",
   });
-  const [showMotivoInput, setShowMotivoInput] = useState(false);
   const [motivoDevolucion, setMotivoDevolucion] = useState("");
   const [showBoletaModal, setShowBoletaModal] = useState(false);
-  const [venta, setVenta] = useState<any>(null);
-  const [productos, setProductos] = useState<any[]>([]);
-  const [clientes, setClientes] = useState<any[]>([]);
+  const [venta, setVenta] = useState<Venta | null>(null);
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [showMermaModal, setShowMermaModal] = useState<boolean>(false)
+  const [productosParaMerma, setProductosParaMerma] = useState<any>()
 
-  const [userEmpresa, setUserEmpresa] = useState({})
+  const [userEmpresa, setUserEmpresa] = useState<Empresa | null>(null)
+  const [selectedClient, setSelectedClient] = useState<Cliente | null>(null)
 
+  const navigate = useNavigate();
 
   const loadEmpresa = useCallback(async () => {
     if (!empresaId) return // si no hay empresaId no hace nada
@@ -95,6 +98,29 @@ export const ReturnsPage: React.FC = () => {
   useEffect(() => {
     loadEmpresa()
   }, [])
+
+  useEffect(() => {
+    if (!selectedClient) return;
+
+    // 1. Setear datos principales del cliente
+    setClienteDevolucion(prev => ({
+      ...prev,
+      nombre: selectedClient.razon_social || "",
+      rut: selectedClient.rut || "",
+      correo: selectedClient.email || "",
+      tipoReembolso: prev.tipoReembolso || "efectivo", // Por defecto efectivo
+    }));
+
+    // 2. Resetear el motivo de devolución (si quieres limpiarlo cada vez)
+    setMotivoDevolucion("");
+
+    // 3. Resetear datos bancarios
+    setTipoReembolsoData({
+      tipoCuenta: "",
+      numeroCuenta: "",
+      nombreBanco: "",
+    });
+  }, [selectedClient]);
 
   // Cargar productos y clientes de la empresa logueada
   const loadProductos = async () => {
@@ -170,6 +196,20 @@ export const ReturnsPage: React.FC = () => {
       setVenta(venta);
       setFolio(folioInput);
 
+      if (venta.cliente_id) {
+        const { data, error } = await
+          supabase.from("clientes").select("*").eq("id", venta.cliente_id).single()
+
+        if (error) {
+          toast.error("Error al seleccionar el cliente automaticamente")
+          return
+        }
+
+        console.log(data)
+
+        setSelectedClient(data)
+      }
+
       // Cargar ítems de la venta
       const { data: items, error: itemsError } = await supabase
         .from("venta_items")
@@ -200,11 +240,11 @@ export const ReturnsPage: React.FC = () => {
 
       // Verificar qué cantidad ya ha sido devuelta
       const { data: devolucionesExistentes } = await supabase
-        .from("devolucion_items")
+        .from("devoluciones_items")
         .select(
           `  
           venta_item_id,  
-          cantidad_devuelta,  
+          cantidad,  
           devoluciones!inner(venta_id)  
         `
         )
@@ -214,7 +254,7 @@ export const ReturnsPage: React.FC = () => {
       const cantidadesDevueltas: Record<string, number> = {};
       devolucionesExistentes?.forEach((dev) => {
         cantidadesDevueltas[dev.venta_item_id] =
-          (cantidadesDevueltas[dev.venta_item_id] || 0) + dev.cantidad_devuelta;
+          (cantidadesDevueltas[dev.venta_item_id] || 0) + dev.cantidad;
       });
 
       // Mapear los ítems con cantidades disponibles para devolución
@@ -225,7 +265,8 @@ export const ReturnsPage: React.FC = () => {
 
           return {
             id: item.id,
-            nombre: item.productos?.nombre || "Producto sin nombre",
+            producto_id: item.productos?.id || "999",
+            nombre: item.productos?.nombre || "Producto Eliminado",
             cantidad: item.cantidad,
             precio: item.precio_unitario,
             returnable: Math.max(0, cantidadDisponible),
@@ -287,7 +328,7 @@ export const ReturnsPage: React.FC = () => {
 
   // Función para buscar clientes
   const handleClientSearchReturns = (termino: string) => {
-    setClientSearchTerm(termino);
+    setClienteSearch(termino);
     if (!termino.trim()) {
       setClientSearchResults([]);
       return;
@@ -314,29 +355,219 @@ export const ReturnsPage: React.FC = () => {
     setShowClienteForm(true);
   };
 
-  const handleConfirmDevolucion = () => {
-    if (
-      !clienteDevolucion.nombre ||
-      !clienteDevolucion.rut ||
-      !clienteDevolucion.correo
-    ) {
-      toast.error("Por favor complete todos los campos del cliente");
-      return;
-    }
+  const handleConfirmDevolucion = async () => {
+    try {
+      // 1. Validaciones iniciales
+      if (!clienteDevolucion.nombre || !clienteDevolucion.rut || !clienteDevolucion.correo) {
+        toast.error("Por favor complete todos los campos del cliente");
+        return;
+      }
 
-    if (
-      clienteDevolucion.tipoReembolso === "bancario" &&
-      !clienteDevolucion.cuentaTarjeta
-    ) {
-      toast.error(
-        "Por favor ingrese la cuenta/tarjeta para reembolso bancario"
-      );
-      return;
-    }
+      if (
+        clienteDevolucion.tipoReembolso === "bancario" &&
+        !clienteDevolucion.cuentaTarjeta
+      ) {
+        toast.error("Por favor ingrese la cuenta/tarjeta para reembolso bancario");
+        return;
+      }
 
-    setShowClienteForm(false);
-    setShowBoletaModal(true);
+      // 2.Validar que haya productos seleccionados
+      const itemsSeleccionados = Object.entries(selectedItems)
+        .filter(([_, cantidad]) => cantidad > 0)
+        .map(([id, cantidad]) => ({
+          venta_item_id: id,
+          cantidad: cantidad,
+        }));
+
+
+      if (itemsSeleccionados.length === 0) {
+        toast.error("Debe seleccionar al menos un producto para devolver");
+        return;
+      }
+
+      setLoading(true);
+
+      // 3. Calcular monto total devuelto
+      const montoDevuelto = itemsSeleccionados.reduce((total, item) => {
+        const ventaItem = ventaItems.find(v => v.id === item.venta_item_id);
+        return total + (ventaItem?.precio || 0) * item.cantidad;
+      }, 0);
+
+      const todosDevueltos = ventaItems.every(ventaItem => {
+        const itemSeleccionado = itemsSeleccionados.find(
+          i => i.venta_item_id === ventaItem.id
+        );
+        return itemSeleccionado && itemSeleccionado.cantidad === ventaItem.returnable;
+      });
+
+      // 4. Si todos están devueltos, actualizar venta a "anulada" y tipo_dte = "nota_credito"
+      if (todosDevueltos) {
+        const { error: ventaError } = await supabase
+          .from("ventas")
+          .update({ tipo_dte: "nota_credito", estado: "anulada" })
+          .eq("folio", folio);
+
+        if (ventaError) {
+          toast.error("Ocurrió un error al actualizar la venta");
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 5. Crear el registro principal en la tabla devoluciones
+      const { data: devolucionData, error: devolucionError } = await supabase
+        .from("devoluciones")
+        .insert([
+          {
+            venta_id: venta?.id,
+            usuario_id: user?.id,
+            tipo: todosDevueltos ? "total" : "parcial",
+            motivo: motivoDevolucion,
+            monto_devuelto: montoDevuelto,
+            fecha: new Date().toISOString(),
+            empresa_id: empresaId,
+          },
+        ])
+        .select()
+        .single();
+
+      if (devolucionError) {
+        toast.error("Error al registrar la devolución");
+        setLoading(false);
+        return;
+      }
+
+      const devolucionId = devolucionData.id;
+
+      // 6. Insertar productos devueltos en devoluciones_items
+      const devolucionItems = itemsSeleccionados.map(item => ({
+        devolucion_id: devolucionId,
+        venta_item_id: item.venta_item_id,
+        cantidad: item.cantidad,
+        razon: motivoDevolucion || "", // opcional
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("devoluciones_items")
+        .insert(devolucionItems);
+
+      if (itemsError) {
+        toast.error("Error al registrar los productos devueltos");
+        setLoading(false);
+        return;
+      }
+
+      toast.success("Devolución registrada correctamente");
+
+      const productosParaMerma = Object.entries(selectedItems)
+        .filter(([_, cantidad]) => cantidad > 0)
+        .map(([id, cantidad,]) => {
+          const ventaItem = ventaItems.find(v => v.id === id);
+          console.log(ventaItem)
+          return {
+            producto_id: ventaItem?.producto_id || "000",
+            nombre: ventaItem?.nombre || "Producto Eliminado",
+            cantidad: cantidad,
+            precio_unitario: ventaItem?.precio || 0,
+          };
+        });
+
+      // Limpiar estados
+      setProductosParaMerma(productosParaMerma)
+      setShowClienteForm(false);
+      setShowMermaModal(true);
+      setVentaItems([]);
+      setSelectedClient(null);
+      setMotivoDevolucion("");
+
+    } catch (error) {
+      console.error("Error al confirmar devolución:", error);
+      toast.error("Ocurrió un error inesperado al procesar la devolución");
+    } finally {
+      setLoading(false);
+    }
   };
+
+
+
+  const handleCloseModal = () => {
+    setShowMermaModal(false)
+    setShowBoletaModal(true)
+    setSelectedItems({});
+  }
+
+  const handleCancelMermaModal = async () => {
+    try {
+      setLoading(true);
+
+      // Para cada producto devuelto
+      const inserts = await Promise.all(
+        productosParaMerma.map(async (producto: any) => {
+
+          // 1. Obtener el stock actual del producto en esa sucursal
+          const { data: stockData, error: stockError } = await supabase
+            .from("inventario")
+            .select("stock_final")
+            .eq("empresa_id", empresaId)
+            .eq("sucursal_id", sucursalId)
+            .eq("producto_id", producto.producto_id)
+            .order("fecha", { ascending: false })
+            .limit(1)
+            .single();
+
+          if (stockError && stockError.code !== "PGRST116") {
+            console.error("Error obteniendo stock:", stockError);
+            throw stockError;
+          }
+
+          const stockAnterior = parseFloat(stockData?.stock_final || 0);
+          const nuevoStock = stockAnterior + producto.cantidad;
+
+          // 2. Registrar la entrada en inventario
+          const { error: insertError } = await supabase
+            .from("inventario")
+            .insert([
+              {
+                empresa_id: empresaId,
+                sucursal_id: sucursalId,
+                producto_id: producto.producto_id,
+                fecha: new Date().toISOString(),
+                movimiento: "entrada", // entrada porque vuelve al stock
+                cantidad: producto.cantidad,
+                stock_anterior: stockAnterior,
+                stock_final: nuevoStock,
+                referencia: "Devolución de venta",
+                usuario_id: user?.id || null,
+              },
+            ]);
+
+          if (insertError) {
+            console.error("Error insertando en inventario:", insertError);
+            throw insertError;
+          }
+
+          return {
+            ...producto,
+            stockAnterior,
+            nuevoStock,
+          };
+        })
+      );
+
+      toast.success("Productos devueltos al inventario correctamente");
+
+      // Cerrar modal y limpiar selección
+      setShowMermaModal(false);
+      setShowBoletaModal(true);
+      setSelectedItems({});
+    } catch (error) {
+      console.error("Error procesando devolución al inventario:", error);
+      toast.error("Error al devolver productos al inventario");
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const handlePrintBoleta = () => {
     try {
@@ -346,7 +577,7 @@ export const ReturnsPage: React.FC = () => {
           <div class="company">${userEmpresa?.razon_social || ""}</div>
           <div class="info">${userEmpresa?.giro || ""}</div>
           <div class="info">RUT: ${userEmpresa?.rut || ""}</div>
-          <div class="info">${userEmpresa?.direccion + "," || ""} ${userEmpresa?.comuna | ""}</div>
+          <div class="info">${userEmpresa?.direccion + "," || ""} ${userEmpresa?.comuna || ""}</div>
           <div class="info">${userEmpresa?.telefono || ""}</div>  
         </div>  
             
@@ -395,20 +626,6 @@ export const ReturnsPage: React.FC = () => {
 
     setShowBoletaModal(false);
     toast.success("Devolución procesada correctamente");
-    // Preparar los datos para el modal de devoluciones
-    const itemsToReturn = Object.entries(selectedItems).map(([id, qty]) => {
-      const item = ventaItems.find((i) => i.id === id);
-      return {
-        id: id,
-        nombre: item?.nombre || "Producto desconocido",
-        cantidad: qty,
-        precio: item?.precio || 0,
-        subtotal: (item?.precio || 0) * qty,
-      };
-    });
-
-    // Abrir el modal con los datos preparados
-    setIsModalOpen(true);
   };
 
   const handleCancel = () => {
@@ -422,12 +639,6 @@ export const ReturnsPage: React.FC = () => {
     setShowClienteForm(false);
     setShowBoletaModal(false);
     toast("Devolución cancelada.", { icon: "👋" });
-  };
-
-  const handleAnularVenta = () => {
-    toast.error(
-      "La anulación de venta completa requiere autorización especial"
-    );
   };
 
   return (
@@ -591,7 +802,8 @@ export const ReturnsPage: React.FC = () => {
                         rut: cliente.rut || "",
                         correo: cliente.email || "",
                       }));
-                      setClienteSearch(cliente.razon_social);
+                      setClienteSearch("");
+                      setSelectedClient(cliente)
                       setClientSearchResults([]);
                     }}
                   >
@@ -606,6 +818,34 @@ export const ReturnsPage: React.FC = () => {
               </div>
             )}
 
+            {selectedClient && (
+              <div className="mb-4 p-3 bg-white border-2 border-blue-500 rounded-lg shadow-md">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <div className="font-semibold text-gray-900 text-sm">
+                      {selectedClient.razon_social}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      RUT: {selectedClient.rut || "N/A"}
+                    </div>
+                    {selectedClient.email && (
+                      <div className="text-xs text-gray-600">
+                        Email: {selectedClient.email}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Botón para quitar selección */}
+                  <button
+                    onClick={() => setSelectedClient(null)}
+                    className="ml-3 px-2 py-1 text-xs font-medium text-red-600 border border-red-600 rounded hover:bg-red-50 transition"
+                  >
+                    Quitar
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Fila inferior: Botones de acción y Total/Devolver */}
             <div className="flex items-center justify-between mt-4">
               {/* Botones de acción */}
@@ -616,12 +856,12 @@ export const ReturnsPage: React.FC = () => {
                 >
                   <XIcon className="w-4 h-4 text-gray-500" /> Cancelar
                 </button>
-                <button
+                {/* <button
                   onClick={handleAnularVenta}
                   className="px-4 py-2 bg-gray-100 rounded-lg flex items-center gap-1 text-sm text-gray-700 hover:bg-gray-200 transition-colors border border-gray-200 shadow-sm"
                 >
                   <XIcon className="w-4 h-4 text-gray-500" /> Anular venta
-                </button>
+                </button> */}
               </div>
 
               {/* Total y botón "Devolver" */}
@@ -919,7 +1159,7 @@ export const ReturnsPage: React.FC = () => {
 
               <button
                 onClick={handlePrintBoleta}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700"
+                className="w-full bg-blue-600 text-white py-3 mb-3 rounded-lg font-medium hover:bg-blue-700"
               >
                 Imprimir
               </button>
@@ -928,22 +1168,11 @@ export const ReturnsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Renderiza el ReturnsModal */}
-      <ReturnsModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        ventaId={venta?.id}
-        itemsToReturn={Object.entries(selectedItems).map(([id, qty]) => {
-          const item = ventaItems.find((i) => i.id === id);
-          return {
-            id: id,
-            nombre: item?.nombre || "Producto desconocido",
-            cantidad: qty,
-            precio: item?.precio || 0,
-            subtotal: (item?.precio || 0) * qty,
-          };
-        })}
-        total={total}
+      <MermaModal
+        isOpen={showMermaModal}
+        onClose={handleCloseModal}
+        onCancel={handleCancelMermaModal}
+        selectedProducts={productosParaMerma}
       />
     </div>
   );

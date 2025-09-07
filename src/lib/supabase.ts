@@ -260,13 +260,14 @@ export interface Devolucion {
   monto_devuelto: number
   fecha: string
   created_at: string
+  empresa_id: string
 }
 
 export interface DevolucionItem {
   id: string
   devolucion_id: string
   venta_item_id: string
-  cantidad_devuelta: number
+  cantidad: number
   created_at: string
 }
 

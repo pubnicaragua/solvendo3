@@ -39,7 +39,7 @@ export const HeaderWithMenu: React.FC<HeaderWithMenuProps> = ({
   const [supabaseNotificaciones, setSupabaseNotificaciones] = React.useState<
     any[]
   >([]);
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(false);
 
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
